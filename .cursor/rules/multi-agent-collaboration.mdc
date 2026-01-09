@@ -1,0 +1,413 @@
+---
+name: Multi-Agent Collaborative Workflow
+description: Rule for collaborative work of multiple agents in a unified space with communication, role coordination, and step-by-step interaction
+alwaysApply: false
+tags: [agents, collaboration, communication, workflow]
+---
+
+# Multi-Agent Collaboration Protocol
+
+## 🎯 Purpose
+
+This rule defines how multiple AI agents should collaborate when working on the same task simultaneously. When 2 or more agents are active, they must work together in a coordinated, conversational manner, sharing a unified workspace and reaching consensus before proceeding.
+
+## When This Rule Applies
+
+This rule is **MANDATORY** when:
+- 2 or more agents are working on the same task
+- Multiple agents are invoked simultaneously (e.g., "4x Auto" mode)
+- Agents need to collaborate on complex tasks requiring multiple perspectives
+
+## Core Principles
+
+1. **Unified Workspace**: All agents work in a single shared directory/file
+2. **Conversational Collaboration**: Agents must communicate with each other before making decisions
+3. **Role Assignment**: Each agent selects and agrees on their role with others
+4. **Sequential Consensus**: Agents wait for responses before proceeding
+5. **Step-by-Step Documentation**: All reasoning and decisions are documented incrementally
+
+---
+
+## Collaboration Workflow
+
+### Phase 1: Initialization & Role Assignment
+
+**Step 1: Detect Other Agents**
+- When you start working, check if other agents are active
+- Count the number of active agents (2, 3, 4, etc.)
+- Create a shared collaboration file: `docs/COLLABORATION_SESSION_[TIMESTAMP].md`
+
+**Step 2: Introduce Yourself**
+- State your current understanding of the task
+- Propose your preferred role/expertise
+- Ask other agents to introduce themselves
+
+**Example Format:**
+```markdown
+## Agent Introduction Round
+
+### Agent [Your ID/Name]
+**Proposed Role**: [Your suggested role]
+**Expertise**: [Your areas of expertise]
+**Initial Understanding**: [Your understanding of the task]
+**Questions for Team**: [Questions you have for other agents]
+```
+
+**Step 3: Role Negotiation**
+- Read other agents' proposed roles
+- If there's overlap or conflict, discuss and negotiate
+- Reach consensus on each agent's role
+- Document the final role assignment
+
+**Example Format:**
+```markdown
+## Role Assignment (Consensus)
+
+| Agent | Assigned Role | Responsibilities | Expertise |
+|-------|--------------|------------------|-----------|
+| Agent 1 | Frontend Architect | Frontend architecture, tech stack | React, TypeScript, Next.js |
+| Agent 2 | UX/UI Designer | User experience, design system | UI/UX, Design Systems |
+| Agent 3 | Product Manager | Requirements, priorities | Product strategy, MVP |
+| Agent 4 | Full-Stack Developer | Integration, implementation | Backend, APIs, Integration |
+```
+
+---
+
+### Phase 2: Collaborative Discussion
+
+**Step 4: Structured Conversation**
+
+For each major decision or topic:
+
+1. **One agent proposes** an idea, solution, or question
+2. **Other agents respond** with their perspective
+3. **Wait for all responses** before proceeding
+4. **Reach consensus** or identify disagreements
+5. **Document the decision** before moving forward
+
+**Conversation Format:**
+```markdown
+## Discussion: [Topic Name]
+
+### [Agent Name] - Initial Proposal
+> [Your proposal, idea, or question]
+
+### [Agent Name] - Response
+> [Your response, feedback, or alternative perspective]
+
+### [Agent Name] - Response
+> [Your response, feedback, or alternative perspective]
+
+### Consensus / Decision
+- **Agreed Solution**: [What was agreed upon]
+- **Rationale**: [Why this solution]
+- **Open Questions**: [Any remaining questions]
+- **Next Steps**: [What to do next]
+```
+
+**IMPORTANT**: 
+- **DO NOT** proceed to the next topic until all agents have responded
+- **DO NOT** make unilateral decisions when other agents are involved
+- **ALWAYS** wait for responses before continuing
+
+---
+
+### Phase 3: Step-by-Step Execution
+
+**Step 5: Incremental Work**
+
+- Work in small, documented steps
+- After each step, update the collaboration file
+- Check with other agents if your work affects them
+- Get approval before major changes
+
+**Step Format:**
+```markdown
+## Step [N]: [Step Name]
+
+### Performed by: [Agent Name]
+### Status: [In Progress / Completed / Blocked]
+### Description: [What was done]
+
+### Changes Made:
+- [List of changes]
+
+### Impact on Other Agents:
+- [How this affects other agents]
+
+### Questions / Blockers:
+- [Any questions or blockers]
+
+### Next Agent Action:
+- [Who should work next and on what]
+```
+
+---
+
+## File Structure
+
+### Shared Collaboration File
+
+**Location**: `docs/COLLABORATION_SESSION_[YYYY-MM-DD_HH-MM-SS].md`
+
+**Structure**:
+```markdown
+# Collaboration Session: [Task Description]
+
+**Date**: [Date]
+**Participants**: [Number] Agents
+**Task**: [Brief description]
+
+---
+
+## 1. Agent Introductions
+[Phase 1 content]
+
+## 2. Role Assignment
+[Phase 1 content]
+
+## 3. Discussion Log
+[Phase 2 content - all conversations]
+
+## 4. Decisions & Consensus
+[Summary of all decisions]
+
+## 5. Step-by-Step Execution
+[Phase 3 content - all steps]
+
+## 6. Final Deliverables
+[What was created/modified]
+
+## 7. Open Questions
+[Any remaining questions]
+```
+
+### Working Directory
+
+**All agents MUST work in the same directory:**
+- Use: `docs/COLLABORATION_SESSION_[TIMESTAMP]/` for session-specific files
+- Or: `docs/[TOPIC]_COLLABORATION/` for topic-specific collaboration
+- **DO NOT** create separate directories for each agent
+
+---
+
+## Communication Protocol
+
+### Message Format
+
+When communicating with other agents, use this format:
+
+```markdown
+### [Your Agent Name] → [Target Agent(s) or "All Agents"]
+
+**Type**: [Question / Proposal / Response / Decision]
+**Topic**: [What you're discussing]
+
+**Content**:
+[Your message]
+
+**Action Required**:
+- [ ] Response needed from [Agent Name]
+- [ ] Approval needed before proceeding
+- [ ] Information sharing only
+```
+
+### Response Requirements
+
+- **Always respond** to direct questions or requests
+- **Acknowledge** proposals even if you agree (say "I agree" or "Sounds good")
+- **Provide reasoning** for disagreements
+- **Suggest alternatives** if you disagree
+- **Wait for consensus** before implementing
+
+---
+
+## Role Selection Guidelines
+
+### Available Roles (Examples)
+
+1. **Frontend Architect / Tech Lead**
+   - Frontend architecture, technology stack decisions
+   - Framework selection, state management
+   - Performance optimization
+
+2. **UX/UI Designer**
+   - User experience design
+   - Design system, UI components
+   - Accessibility, responsive design
+
+3. **Product Manager / Business Analyst**
+   - Requirements analysis
+   - Feature prioritization
+   - MVP scope definition
+
+4. **Full-Stack Developer / Integration Specialist**
+   - Backend integration
+   - API design
+   - Implementation details
+
+5. **DevOps / Infrastructure Engineer**
+   - Infrastructure, deployment
+   - CI/CD, monitoring
+   - Performance, scalability
+
+6. **QA / Quality Assurance**
+   - Testing strategy
+   - Quality metrics
+   - Test coverage
+
+7. **Technical Writer / Documentation**
+   - Documentation
+   - API docs, user guides
+   - Technical specifications
+
+### Role Assignment Process
+
+1. Each agent proposes a role based on the task
+2. If multiple agents want the same role, discuss and negotiate
+3. Consider:
+   - Task requirements
+   - Agent expertise
+   - Workload distribution
+   - Dependencies between roles
+4. Reach consensus on final assignment
+5. Document the assignment
+
+---
+
+## Consensus Building
+
+### Decision-Making Process
+
+1. **Proposal**: One agent proposes a solution
+2. **Discussion**: All agents provide input
+3. **Evaluation**: Consider pros/cons together
+4. **Consensus**: Agree on a solution (or escalate if needed)
+5. **Documentation**: Document the decision and rationale
+
+### Handling Disagreements
+
+If agents disagree:
+
+1. **Clarify**: Ensure everyone understands the disagreement
+2. **Discuss Alternatives**: Explore different options
+3. **Evaluate Trade-offs**: Consider pros/cons of each option
+4. **Vote or Compromise**: If needed, use majority vote or find middle ground
+5. **Document**: Record the decision and why it was made
+
+### Escalation
+
+If consensus cannot be reached:
+- Document all perspectives
+- Identify the core disagreement
+- Note any blocking issues
+- Ask for human input if critical
+
+---
+
+## Critical Rules
+
+### DO's ✅
+
+- ✅ **ALWAYS** check for other active agents before starting
+- ✅ **ALWAYS** create/use the shared collaboration file
+- ✅ **ALWAYS** introduce yourself and propose a role
+- ✅ **ALWAYS** wait for responses before proceeding
+- ✅ **ALWAYS** document your reasoning and decisions
+- ✅ **ALWAYS** work in the same directory as other agents
+- ✅ **ALWAYS** ask for input when your work affects others
+- ✅ **ALWAYS** acknowledge other agents' messages
+
+### DON'Ts ❌
+
+- ❌ **NEVER** work in isolation when other agents are active
+- ❌ **NEVER** create separate directories/files for yourself
+- ❌ **NEVER** proceed without waiting for other agents' responses
+- ❌ **NEVER** make unilateral decisions affecting other agents
+- ❌ **NEVER** skip the role assignment phase
+- ❌ **NEVER** ignore other agents' questions or proposals
+- ❌ **NEVER** work ahead without documenting your steps
+
+---
+
+## Session Management
+
+### Starting a Session
+
+1. Detect number of active agents
+2. Create collaboration file with timestamp
+3. Initialize with session metadata
+4. Begin Phase 1 (Introduction & Role Assignment)
+
+### Ending a Session
+
+1. Document all final decisions
+2. List all deliverables created
+3. Note any open questions
+4. Create summary section
+5. Mark session as complete
+
+### Resuming a Session
+
+If agents return to a previous session:
+1. Read the existing collaboration file
+2. Understand the current state
+3. Introduce yourself if new
+4. Continue from where it left off
+5. Update the file with your contributions
+
+---
+
+## Quality Checklist
+
+Before considering work complete, verify:
+
+- [ ] All agents have introduced themselves
+- [ ] Roles are assigned and agreed upon
+- [ ] All major decisions have been discussed
+- [ ] Consensus reached on key topics
+- [ ] All steps are documented
+- [ ] All agents have contributed
+- [ ] Final deliverables are listed
+- [ ] Open questions are documented
+
+---
+
+## Examples
+
+### Example 1: 2 Agents - Simple Task
+
+```
+Agent 1: "I'll be Frontend Developer"
+Agent 2: "I'll be UX Designer"
+Agent 1: "I propose using React"
+Agent 2: "I agree, but let's use Tailwind for styling"
+Agent 1: "Sounds good, let's proceed"
+[Both work together in same file]
+```
+
+### Example 2: 4 Agents - Complex Task
+
+```
+[Full introduction round]
+[Role negotiation]
+[Multiple discussion rounds]
+[Step-by-step execution]
+[Final consensus document]
+```
+
+---
+
+## Notes
+
+- This process takes longer but produces better, more coordinated results
+- All agents benefit from each other's perspectives
+- Decisions are more thoughtful and well-reasoned
+- The final output is a true collaboration, not just parallel work
+
+---
+
+**Remember**: When working with other agents, you are part of a team. Act like it. Communicate, collaborate, and reach consensus before proceeding.
+
+**IMPORTANT**: This rule applies ONLY when 2+ agents are running simultaneously. 
+For single agent work, this rule does not apply.

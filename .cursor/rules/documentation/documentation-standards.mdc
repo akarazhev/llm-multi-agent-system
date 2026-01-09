@@ -1,0 +1,328 @@
+# Documentation Standards
+
+## Code Documentation
+
+### Docstrings
+Use Google-style docstrings for all public functions, classes, and modules:
+
+```python
+def process_workflow(
+    workflow_id: str,
+    requirements: str,
+    priority: int = 1,
+) -> WorkflowState:
+    """Process a workflow with given requirements.
+    
+    This function creates a new workflow, analyzes requirements,
+    and orchestrates agent execution.
+    
+    Args:
+        workflow_id: Unique identifier for the workflow
+        requirements: Text description of requirements
+        priority: Priority level (1-5), defaults to 1
+        
+    Returns:
+        WorkflowState object with workflow details
+        
+    Raises:
+        ValueError: If requirements are empty or invalid
+        WorkflowError: If workflow creation fails
+        
+    Example:
+        >>> state = process_workflow(
+        ...     "wf-123",
+        ...     "Build a todo app",
+        ...     priority=2
+        ... )
+        >>> state.status
+        'pending'
+    """
+    if not requirements or not requirements.strip():
+        raise ValueError("Requirements cannot be empty")
+    # Implementation
+    pass
+```
+
+### Class Documentation
+```python
+class BaseAgent(ABC):
+    """Base agent class for all agents in the system.
+    
+    This class provides common functionality for all agents,
+    including LLM communication, tool management, and error handling.
+    
+    Attributes:
+        agent_id: Unique identifier for the agent
+        agent_name: Human-readable agent name
+        llm_client: LLM client for generating responses
+        tools: List of tools available to the agent
+        system_prompt: System prompt for the agent
+        
+    Example:
+        >>> agent = BusinessAnalystAgent(
+        ...     agent_id="ba-001",
+        ...     agent_name="Business Analyst",
+        ...     llm_client=llm_client
+        ... )
+        >>> result = await agent.execute({"requirements": "..."})
+    """
+    pass
+```
+
+### Module Documentation
+```python
+"""
+Agent implementations for the LLM Multi-Agent System.
+
+This module contains all agent implementations, including:
+- BusinessAnalystAgent: Analyzes requirements and creates user stories
+- DeveloperAgent: Designs architecture and generates code
+- QAAgent: Creates test plans and validates quality
+- DevOpsAgent: Configures infrastructure and CI/CD
+- TechnicalWriterAgent: Generates documentation
+
+All agents inherit from BaseAgent and implement the execute() method.
+"""
+```
+
+## API Documentation
+
+### FastAPI Route Documentation
+```python
+@router.post(
+    "/workflows",
+    response_model=WorkflowResponse,
+    status_code=201,
+    summary="Create a new workflow",
+    description="Create a new workflow with requirements and priority",
+    response_description="Created workflow details",
+    tags=["workflows"],
+)
+async def create_workflow(
+    workflow: WorkflowCreate,
+    background_tasks: BackgroundTasks,
+) -> WorkflowResponse:
+    """Create a new workflow.
+    
+    This endpoint creates a new workflow, validates requirements,
+    and starts the workflow orchestration process.
+    
+    Args:
+        workflow: Workflow creation request
+        background_tasks: FastAPI background tasks
+        
+    Returns:
+        WorkflowResponse with workflow details
+        
+    Raises:
+        HTTPException: If validation fails or workflow creation fails
+    """
+    pass
+```
+
+### Pydantic Model Documentation
+```python
+class WorkflowCreate(BaseModel):
+    """Request model for workflow creation.
+    
+    Attributes:
+        requirements: Requirements text (min 10 characters)
+        priority: Priority level from 1 (low) to 5 (critical)
+        agent_configs: Optional agent-specific configurations
+    """
+    
+    requirements: str = Field(
+        ...,
+        min_length=10,
+        description="Requirements text",
+        example="Build a todo application with user authentication"
+    )
+    priority: int = Field(
+        default=1,
+        ge=1,
+        le=5,
+        description="Priority level (1-5)",
+        example=3
+    )
+    agent_configs: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Agent-specific configurations"
+    )
+```
+
+## Architecture Documentation
+
+### System Design
+Document architecture decisions in `docs/ARCHITECTURE.md`:
+
+```markdown
+## Component: Orchestrator
+
+### Purpose
+The orchestrator manages workflow execution and agent coordination.
+
+### Design Decisions
+- Use LangGraph for state management
+- Support conditional routing
+- Implement retry logic for failed steps
+
+### Dependencies
+- LangGraph for workflow engine
+- PostgreSQL for state persistence
+- RabbitMQ for agent communication
+```
+
+### Data Flow
+Document data flow between components:
+
+```markdown
+## Data Flow: Workflow Execution
+
+1. Client sends request to API Gateway
+2. API Gateway validates and routes to Orchestrator
+3. Orchestrator creates workflow state
+4. Orchestrator routes to Business Analyst Agent
+5. Agent writes output to Shared Context
+6. Orchestrator routes to Developer Agent
+7. Developer Agent reads from Shared Context
+8. Process continues until completion
+```
+
+## README Documentation
+
+### Project README
+Include in README.md:
+- Project overview
+- Quick start guide
+- Installation instructions
+- Configuration guide
+- Usage examples
+- API documentation links
+- Contributing guidelines
+
+### Example README Section
+```markdown
+## Quick Start
+
+### Prerequisites
+- Python 3.11+
+- Docker and Docker Compose
+- PostgreSQL 14+
+- Redis 7+
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd llm-multi-agent-system
+```
+
+2. Create virtual environment:
+```bash
+python3.11 -m venv venv
+source venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Configure environment:
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+5. Start infrastructure:
+```bash
+docker-compose up -d
+```
+
+6. Run the application:
+```bash
+uvicorn src.main:app --reload
+```
+
+## Usage
+
+### Create a Workflow
+
+```python
+from src.orchestrator.workflow import WorkflowOrchestrator
+
+orchestrator = WorkflowOrchestrator()
+result = await orchestrator.execute({
+    "requirements": "Build a todo app",
+    "priority": 1
+})
+```
+```
+
+## Inline Comments
+
+### When to Comment
+- Explain complex algorithms
+- Document non-obvious decisions
+- Clarify business logic
+- Note workarounds or temporary solutions
+
+### Comment Style
+```python
+# Use descriptive comments that explain why, not what
+# Bad: Increment counter
+counter += 1
+
+# Good: Retry counter for exponential backoff
+retry_count += 1
+
+# Complex algorithm explanation
+def calculate_score(items: List[Item]) -> float:
+    """Calculate weighted score.
+    
+    Uses weighted average with exponential decay for older items.
+    Formula: sum(weight * score) / sum(weight)
+    where weight = exp(-age / decay_factor)
+    """
+    # Calculate weights with exponential decay
+    # This ensures recent items have more influence
+    weights = [exp(-item.age / DECAY_FACTOR) for item in items]
+    # ... rest of implementation
+```
+
+## Type Hints as Documentation
+
+### Use Type Hints
+Type hints serve as inline documentation:
+
+```python
+from typing import Optional, List, Dict, Any
+from uuid import UUID
+
+def get_workflow(
+    workflow_id: UUID,
+    include_outputs: bool = True,
+) -> Optional[WorkflowState]:
+    """Get workflow by ID.
+    
+    Type hints clearly show:
+    - workflow_id must be a UUID
+    - include_outputs is optional boolean
+    - Returns WorkflowState or None
+    """
+    pass
+```
+
+## Best Practices Summary
+
+1. **Document all public APIs** - Functions, classes, modules
+2. **Use Google-style docstrings** - Consistent format
+3. **Include examples** - Show usage patterns
+4. **Document exceptions** - What can go wrong
+5. **Keep docs up-to-date** - Update with code changes
+6. **Use type hints** - Self-documenting code
+7. **Write clear comments** - Explain why, not what
+8. **Document architecture** - Design decisions
+9. **Include usage examples** - Help users get started
+10. **Review documentation** - Part of code review

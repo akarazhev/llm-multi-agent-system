@@ -1,0 +1,220 @@
+# Git Commit Standards
+
+## Commit Message Format
+
+### Conventional Commits
+Use conventional commit format for all commits:
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Types
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, missing semicolons, etc.)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks (dependencies, build, etc.)
+- `ci`: CI/CD changes
+- `build`: Build system changes
+
+### Examples
+```bash
+feat(agents): add Business Analyst agent implementation
+
+fix(workflow): resolve state update race condition
+
+docs(api): update API documentation with examples
+
+refactor(models): simplify WorkflowState model
+
+test(agents): add unit tests for BaseAgent
+
+chore(deps): update langchain to 0.1.0
+```
+
+## Commit Message Guidelines
+
+### Description
+- Use imperative mood ("add" not "added" or "adds")
+- First line should be 50 characters or less
+- Capitalize first letter
+- No period at the end
+- Be specific and descriptive
+
+### Body (Optional)
+- Separate from subject with blank line
+- Explain what and why, not how
+- Wrap at 72 characters
+- Use bullet points for multiple changes
+
+### Footer (Optional)
+- Reference issues: `Closes #123`, `Fixes #456`
+- Breaking changes: `BREAKING CHANGE: description`
+
+### Good Examples
+```bash
+feat(orchestrator): implement LangGraph workflow engine
+
+Add LangGraph-based workflow orchestration with state management.
+Supports conditional routing and error handling.
+
+Closes #42
+
+---
+
+fix(integrations): handle Jira API rate limits
+
+Add exponential backoff retry logic for Jira API calls.
+Prevents 429 errors during bulk operations.
+
+Fixes #78
+
+---
+
+docs(architecture): update system architecture diagram
+
+Add message queue and shared context store to architecture.
+Update data flow documentation.
+```
+
+## Branch Naming
+
+### Branch Format
+```
+<type>/<short-description>
+```
+
+### Types
+- `feature/`: New features
+- `fix/`: Bug fixes
+- `hotfix/`: Critical production fixes
+- `refactor/`: Code refactoring
+- `docs/`: Documentation updates
+- `test/`: Test additions/updates
+- `chore/`: Maintenance tasks
+
+### Examples
+```bash
+feature/business-analyst-agent
+fix/workflow-state-race-condition
+hotfix/jira-api-timeout
+refactor/workflow-state-model
+docs/api-documentation
+test/agent-unit-tests
+```
+
+## Commit Frequency
+
+### Best Practices
+- Commit often, push regularly
+- Each commit should be a logical unit
+- Don't commit broken code
+- Run tests before committing
+- Use `--no-verify` only when necessary
+
+### Commit Size
+- Small, focused commits are better
+- One logical change per commit
+- Easy to review and revert
+- Clear commit history
+
+## Git Workflow
+
+### Feature Development
+```bash
+# Create feature branch
+git checkout -b feature/new-agent
+
+# Make changes and commit
+git add .
+git commit -m "feat(agents): add new agent implementation"
+
+# Push and create PR
+git push origin feature/new-agent
+```
+
+### Bug Fixes
+```bash
+# Create fix branch
+git checkout -b fix/bug-description
+
+# Fix and commit
+git add .
+git commit -m "fix(module): fix bug description"
+
+# Push and create PR
+git push origin fix/bug-description
+```
+
+## Pull Request Guidelines
+
+### PR Title
+- Use conventional commit format
+- Be descriptive
+- Include issue number if applicable
+
+### PR Description
+- Explain what changes were made
+- Explain why changes were made
+- Link to related issues
+- Include testing instructions
+- Add screenshots if UI changes
+
+### Example PR Description
+```markdown
+## Description
+Implements Business Analyst agent with requirement analysis capabilities.
+
+## Changes
+- Add BusinessAnalystAgent class
+- Implement requirement parsing
+- Add user story generation
+- Create unit tests
+
+## Related Issues
+Closes #42
+
+## Testing
+- Run `pytest tests/unit/test_agents.py`
+- Test with sample requirements
+```
+
+## Code Review
+
+### Before Requesting Review
+- [ ] Code formatted (Black)
+- [ ] Linting passes (Ruff)
+- [ ] Type checking passes (MyPy)
+- [ ] All tests pass
+- [ ] Documentation updated
+- [ ] No hardcoded secrets
+- [ ] Commit messages follow standards
+
+### Review Checklist
+- [ ] Code follows project standards
+- [ ] Tests are adequate
+- [ ] Documentation is updated
+- [ ] No security issues
+- [ ] Performance considerations addressed
+- [ ] Error handling implemented
+
+## Best Practices Summary
+
+1. **Use conventional commits** - Consistent commit messages
+2. **Write clear descriptions** - Explain what and why
+3. **Commit often** - Small, focused commits
+4. **Follow branch naming** - Consistent naming convention
+5. **Write good PR descriptions** - Help reviewers understand changes
+6. **Review before requesting** - Self-review first
+7. **Link issues** - Reference related issues
+8. **Test before committing** - Don't commit broken code
+9. **Keep commits focused** - One logical change per commit
+10. **Use meaningful messages** - Future you will thank you

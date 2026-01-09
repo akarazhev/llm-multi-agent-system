@@ -1,0 +1,94 @@
+# LLM Multi-Agent System - Project Overview
+
+## Project Description
+
+LLM Multi-Agent System is an intelligent LLM-based system that accepts incoming requirements and uses multiple specialized agents (Business Analyst, Developer, QA, DevOps, Technical Writer) to collaboratively create action plans, design architecture, select technology stack, organize Jira tickets, prepare Confluence documentation, and implement projects with code stored in GitLab.
+
+## Technology Stack
+
+### Core
+- **Python 3.11+** - Main programming language
+- **FastAPI** - Web framework for API
+- **LangGraph** - Agent orchestration and workflow management
+- **LangChain** - LLM integration
+- **Pydantic** - Data validation and settings
+
+### LLM Providers
+- **OpenAI GPT-4** - Primary provider
+- **Anthropic Claude 3** - Alternative provider
+
+### Data Storage
+- **PostgreSQL 14+** - Relational database
+- **ChromaDB** - Vector database for embeddings
+- **Redis 7+** - Caching and message queues
+
+### Message Queue
+- **RabbitMQ** - Message queue for agent communication
+
+### External Integrations
+- **Jira** - Task management
+- **Confluence** - Documentation
+- **GitLab** - Code management
+
+## Project Structure
+
+```
+llm-multi-agent-system/
+├── src/
+│   ├── agents/          # Agent implementations
+│   ├── orchestrator/    # Workflow orchestrator
+│   ├── integrations/    # External API integrations
+│   ├── models/          # Data models
+│   └── utils/           # Utilities
+├── tests/               # Tests
+├── docs/                # Documentation
+├── docker/              # Docker configurations
+└── scripts/             # Scripts
+```
+
+## Key Principles
+
+1. **Type Safety** - Always use type hints
+2. **Async First** - Use async/await for I/O operations
+3. **Error Handling** - Handle errors explicitly and log them
+4. **Testing** - 80%+ test coverage for critical code
+5. **Documentation** - Document all public APIs
+6. **Code Quality** - Use Black, Ruff, MyPy
+7. **Architecture** - Follow patterns from architecture-standards.mdc
+
+## Development Workflow
+
+1. Create feature branch: `git checkout -b feature/description`
+2. Make changes following project rules
+3. Run tests: `pytest tests/`
+4. Check formatting: `black --check src/ tests/`
+5. Check linting: `ruff check src/ tests/`
+6. Check types: `mypy src/`
+7. Create commit with conventional commit format
+8. Create Pull Request
+
+## Current Phase
+
+**Phase 1: Foundation & Setup (Week 1-2)**
+
+- ✅ Project structure created
+- ✅ Development environment configured
+- ✅ Basic configuration files
+- ✅ Data models (WorkflowState, AgentOutput, SharedContext)
+- 🚧 Basic agent framework
+- 🚧 LLM client abstraction
+- 🚧 Orchestrator service
+
+## Next Steps
+
+1. Setup Docker Compose with PostgreSQL, Redis, ChromaDB
+2. Create base Agent class
+3. Setup LLM client
+4. Start working with LangGraph
+
+## Resources
+
+- [Implementation Plan](../docs/IMPLEMENTATION_PLAN.md)
+- [Architecture](../docs/ARCHITECTURE.md)
+- [Technology Stack](../docs/TECH_STACK.md)
+- [Agent Specifications](../docs/AGENT_SPECS.md)

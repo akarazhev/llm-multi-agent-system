@@ -1,0 +1,346 @@
+# LangChain & LangGraph Best Practices
+
+## LangGraph Workflow Design
+
+### State Management
+- Use TypedDict for state schemas
+- Keep state immutable when possible
+- Use state reducers for updates
+- Document state transitions
+
+```python
+from typing import TypedDict, Annotated
+from langgraph.graph import StateGraph
+import operator
+
+class WorkflowState(TypedDict):
+    """Workflow state schema."""
+    request_id: str
+    requirements: str
+    current_step: str
+    agent_outputs: Annotated[dict, operator.add]
+    shared_context: Annotated[dict, operator.add]
+    errors: Annotated[list, operator.add]
+
+def create_workflow_graph() -> StateGraph:
+    """Create LangGraph workflow."""
+    workflow = StateGraph(WorkflowState)
+    
+    # Add nodes
+    workflow.add_node("analyze_requirements", analyze_requirements)
+    workflow.add_node("design_architecture", design_architecture)
+    workflow.add_node("generate_code", generate_code)
+    
+    # Add edges
+    workflow.set_entry_point("analyze_requirements")
+    workflow.add_edge("analyze_requirements", "design_architecture")
+    workflow.add_conditional_edges(
+        "design_architecture",
+        should_continue,
+        {
+            "continue": "generate_code",
+            "stop": END,
+        }
+    )
+    
+    return workflow.compile()
+```
+
+### Node Functions
+- Keep nodes focused on single responsibility
+- Use async for I/O operations
+- Handle errors gracefully
+- Return state updates
+
+```python
+from typing import TypedDict
+
+async def analyze_requirements(state: WorkflowState) -> dict:
+    """Analyze requirements using Business Analyst agent."""
+    try:
+        agent = BusinessAnalystAgent()
+        result = await agent.analyze(state["requirements"])
+        return {
+            "agent_outputs": {"business_analyst": result},
+            "shared_context": {"requirements_analysis": result},
+            "current_step": "requirements_analyzed",
+        }
+    except Exception as e:
+        return {
+            "errors": [f"Requirements analysis failed: {str(e)}"],
+            "current_step": "error",
+        }
+```
+
+## LangChain Integration
+
+### LLM Client Abstraction
+- Create abstraction layer for LLM providers
+- Support multiple providers (OpenAI, Anthropic)
+- Handle rate limits and retries
+- Cache responses when appropriate
+
+```python
+from abc import ABC, abstractmethod
+from typing import Optional, List, Dict, Any
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+
+class LLMClient(ABC):
+    """Abstract LLM client interface."""
+    
+    @abstractmethod
+    async def generate(
+        self,
+        prompt: str,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> str:
+        """Generate text from prompt."""
+        pass
+
+class OpenAILLMClient(LLMClient):
+    """OpenAI LLM client implementation."""
+    
+    def __init__(self, model: str = "gpt-4", api_key: Optional[str] = None):
+        self.client = ChatOpenAI(
+            model=model,
+            temperature=0.7,
+            api_key=api_key,
+        )
+    
+    async def generate(
+        self,
+        prompt: str,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+    ) -> str:
+        """Generate text using OpenAI."""
+        response = await self.client.ainvoke(prompt)
+        return response.content
+```
+
+### Prompt Management
+- Use prompt templates
+- Store prompts in separate files or config
+- Version control prompts
+- Test prompt variations
+
+```python
+from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate
+
+SYSTEM_PROMPT = """You are a Business Analyst Agent in a multi-agent system.
+
+Your role is to:
+1. Analyze incoming requirements
+2. Extract key entities and relationships
+3. Create user stories with acceptance criteria
+
+Output your analysis in JSON format."""
+
+USER_PROMPT = """Analyze the following requirements:
+
+{requirements}
+
+Provide a structured analysis."""
+
+def create_business_analyst_prompt() -> ChatPromptTemplate:
+    """Create prompt template for Business Analyst."""
+    return ChatPromptTemplate.from_messages([
+        SystemMessagePromptTemplate.from_template(SYSTEM_PROMPT),
+        ("human", USER_PROMPT),
+    ])
+```
+
+## Agent Architecture
+
+### Base Agent Pattern
+- Create base agent class
+- Implement common functionality
+- Use composition for tools
+- Support multiple LLM providers
+
+```python
+from abc import ABC, abstractmethod
+from typing import List, Dict, Any, Optional
+from langchain.tools import BaseTool
+
+class BaseAgent(ABC):
+    """Base agent class for all agents."""
+    
+    def __init__(
+        self,
+        agent_id: str,
+        agent_name: str,
+        llm_client: LLMClient,
+        tools: Optional[List[BaseTool]] = None,
+    ):
+        self.agent_id = agent_id
+        self.agent_name = agent_name
+        self.llm_client = llm_client
+        self.tools = tools or []
+        self.system_prompt = self._get_system_prompt()
+    
+    @abstractmethod
+    def _get_system_prompt(self) -> str:
+        """Get system prompt for this agent."""
+        pass
+    
+    @abstractmethod
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute agent task."""
+        pass
+    
+    async def _call_llm(
+        self,
+        prompt: str,
+        temperature: float = 0.7,
+    ) -> str:
+        """Call LLM with prompt."""
+        return await self.llm_client.generate(prompt, temperature)
+```
+
+### Tool Integration
+- Use LangChain tools for agent capabilities
+- Create custom tools for domain-specific actions
+- Document tool usage
+- Handle tool errors
+
+```python
+from langchain.tools import BaseTool
+from typing import Optional
+from pydantic import BaseModel, Field
+
+class JiraCreateTicketInput(BaseModel):
+    """Input for Jira ticket creation."""
+    project_key: str = Field(..., description="Jira project key")
+    summary: str = Field(..., description="Ticket summary")
+    description: str = Field(..., description="Ticket description")
+    issue_type: str = Field(default="Story", description="Issue type")
+
+class JiraCreateTicketTool(BaseTool):
+    """Tool for creating Jira tickets."""
+    
+    name = "jira_create_ticket"
+    description = "Create a new Jira ticket"
+    args_schema = JiraCreateTicketInput
+    
+    def __init__(self, jira_client):
+        super().__init__()
+        self.jira_client = jira_client
+    
+    def _run(
+        self,
+        project_key: str,
+        summary: str,
+        description: str,
+        issue_type: str = "Story",
+    ) -> str:
+        """Create Jira ticket."""
+        ticket = self.jira_client.create_issue(
+            project=project_key,
+            summary=summary,
+            description=description,
+            issuetype={"name": issue_type},
+        )
+        return f"Created ticket: {ticket.key}"
+    
+    async def _arun(
+        self,
+        project_key: str,
+        summary: str,
+        description: str,
+        issue_type: str = "Story",
+    ) -> str:
+        """Async create Jira ticket."""
+        # Use async Jira client
+        pass
+```
+
+## Error Handling
+
+### Workflow Error Handling
+- Use try/except in nodes
+- Add errors to state
+- Implement retry logic
+- Support human-in-the-loop
+
+```python
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+)
+async def call_llm_with_retry(prompt: str) -> str:
+    """Call LLM with retry logic."""
+    try:
+        return await llm_client.generate(prompt)
+    except Exception as e:
+        logger.error(f"LLM call failed: {e}")
+        raise
+```
+
+## State Reducers
+
+### Use Reducers for State Updates
+- Use `operator.add` for dict/list merging
+- Use custom reducers for complex logic
+- Keep reducers pure functions
+
+```python
+from typing import Annotated
+import operator
+
+class WorkflowState(TypedDict):
+    agent_outputs: Annotated[dict, operator.add]
+    shared_context: Annotated[dict, operator.add]
+    errors: Annotated[list, operator.add]
+
+# Custom reducer example
+def merge_context(old: dict, new: dict) -> dict:
+    """Merge context with conflict resolution."""
+    merged = old.copy()
+    for key, value in new.items():
+        if key in merged:
+            # Resolve conflicts (e.g., keep latest)
+            merged[key] = value
+        else:
+            merged[key] = value
+    return merged
+```
+
+## Testing
+
+### Test Workflows
+- Test individual nodes
+- Test state transitions
+- Mock LLM calls
+- Test error scenarios
+
+```python
+import pytest
+from unittest.mock import AsyncMock, patch
+
+@pytest.mark.asyncio
+async def test_analyze_requirements_node():
+    """Test requirements analysis node."""
+    state = {
+        "request_id": "test-123",
+        "requirements": "Build a todo app",
+        "current_step": "initial",
+        "agent_outputs": {},
+        "shared_context": {},
+        "errors": [],
+    }
+    
+    with patch("src.agents.business_analyst.BusinessAnalystAgent") as mock_agent:
+        mock_agent.return_value.analyze = AsyncMock(
+            return_value={"user_stories": ["As a user..."]}
+        )
+        
+        result = await analyze_requirements(state)
+        
+        assert "agent_outputs" in result
+        assert "business_analyst" in result["agent_outputs"]
+```

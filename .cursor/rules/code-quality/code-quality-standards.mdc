@@ -1,0 +1,288 @@
+# Code Quality Standards
+
+## Code Formatting
+
+### Black Configuration
+- Use Black for automatic code formatting
+- Line length: 100 characters
+- Target Python 3.11+
+- Run before every commit
+
+```toml
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+```
+
+### Usage
+```bash
+# Format all files
+black src/ tests/
+
+# Check without formatting
+black --check src/ tests/
+
+# Format specific file
+black src/models/workflow.py
+```
+
+## Linting
+
+### Ruff Configuration
+- Use Ruff for fast linting
+- Enable comprehensive rule sets
+- Ignore line length (handled by Black)
+- Run in CI/CD pipeline
+
+```toml
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",  # Line too long (handled by black)
+    "B008",  # Do not perform function calls in argument defaults
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+```
+
+### Usage
+```bash
+# Lint all files
+ruff check src/ tests/
+
+# Auto-fix issues
+ruff check --fix src/ tests/
+
+# Format imports
+ruff check --select I --fix src/ tests/
+```
+
+## Type Checking
+
+### MyPy Configuration
+- Use MyPy for static type checking
+- Enable strict mode gradually
+- Check all code, including tests
+- Use type stubs for third-party libraries
+
+```toml
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "langchain.*",
+    "langgraph.*",
+    "chromadb.*",
+]
+ignore_missing_imports = true
+```
+
+### Usage
+```bash
+# Type check all files
+mypy src/ tests/
+
+# Type check specific file
+mypy src/models/workflow.py
+
+# Show error codes
+mypy src/ --show-error-codes
+```
+
+## Pre-commit Hooks
+
+### Setup Pre-commit
+- Install pre-commit hooks
+- Run checks before every commit
+- Fail fast on errors
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: debug-statements
+
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3.11
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.6
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+        args: [--ignore-missing-imports]
+```
+
+### Installation
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install hooks
+pre-commit install
+
+# Run on all files
+pre-commit run --all-files
+```
+
+## Code Review Checklist
+
+### Before Submitting PR
+- [ ] Code formatted with Black
+- [ ] Linting passes (Ruff)
+- [ ] Type checking passes (MyPy)
+- [ ] All tests pass
+- [ ] Test coverage maintained
+- [ ] Documentation updated
+- [ ] No hardcoded secrets
+- [ ] Error handling implemented
+- [ ] Logging added where needed
+- [ ] Type hints added
+
+## Complexity Guidelines
+
+### Function Complexity
+- Keep functions under 50 lines
+- Maximum cyclomatic complexity: 10
+- Extract complex logic into helper functions
+- Use early returns to reduce nesting
+
+### Class Complexity
+- Keep classes focused on single responsibility
+- Maximum methods per class: 20
+- Use composition over inheritance
+- Prefer small, focused classes
+
+## Naming Conventions
+
+### Follow PEP 8
+- **Classes**: PascalCase (`WorkflowState`, `BaseAgent`)
+- **Functions/Methods**: snake_case (`process_data`, `get_agent`)
+- **Constants**: UPPER_SNAKE_CASE (`MAX_RETRIES`, `DEFAULT_TIMEOUT`)
+- **Private**: Prefix with `_` (`_internal_method`)
+- **Type Variables**: PascalCase (`T`, `K`, `V`)
+
+## Documentation Standards
+
+### Docstrings
+- Use Google-style docstrings
+- Document all public functions/classes
+- Include parameter and return types
+- Document exceptions
+
+### Comments
+- Explain why, not what
+- Remove commented-out code
+- Keep comments up-to-date
+- Use comments for complex logic
+
+## Import Organization
+
+### Import Order
+1. Standard library
+2. Third-party
+3. Local application
+- Use absolute imports
+- Group with blank lines
+- Sort with isort/Ruff
+
+```python
+# Standard library
+from typing import Optional, List, Dict
+from enum import Enum
+import asyncio
+
+# Third-party
+from pydantic import BaseModel, Field
+from fastapi import FastAPI
+
+# Local
+from src.models.workflow import WorkflowState
+from src.agents.base import BaseAgent
+```
+
+## Best Practices Summary
+
+1. **Format code automatically** - Use Black before committing
+2. **Lint regularly** - Catch issues early with Ruff
+3. **Type check** - Use MyPy for type safety
+4. **Use pre-commit hooks** - Automate quality checks
+5. **Keep functions small** - Single responsibility principle
+6. **Document public APIs** - Use docstrings
+7. **Follow naming conventions** - PEP 8 standards
+8. **Organize imports** - Use isort/Ruff
+9. **Review before PR** - Use checklist
+10. **Maintain test coverage** - 80%+ for critical code

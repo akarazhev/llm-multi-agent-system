@@ -1,0 +1,338 @@
+# Testing Best Practices
+
+## Test Structure
+
+### Test Organization
+- Mirror source structure in tests
+- Use descriptive test names
+- Group related tests in classes
+- Use fixtures for common setup
+
+```
+tests/
+├── unit/
+│   ├── test_models.py
+│   ├── test_agents.py
+│   └── test_utils.py
+├── integration/
+│   ├── test_workflow.py
+│   └── test_integrations.py
+└── conftest.py
+```
+
+## Pytest Configuration
+
+### Use pytest.ini or pyproject.toml
+```toml
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow running tests",
+]
+```
+
+## Unit Testing
+
+### Test Structure
+- Use Arrange-Act-Assert pattern
+- One assertion per test (when possible)
+- Test edge cases and error conditions
+- Use descriptive test names
+
+```python
+import pytest
+from src.models.workflow import WorkflowState, WorkflowStatus
+
+def test_workflow_state_creation():
+    """Test workflow state creation with valid data."""
+    # Arrange
+    request_id = "test-123"
+    requirements = "Build a todo app"
+    
+    # Act
+    state = WorkflowState(
+        request_id=request_id,
+        requirements=requirements,
+    )
+    
+    # Assert
+    assert state.request_id == request_id
+    assert state.requirements == requirements
+    assert state.status == WorkflowStatus.PENDING
+    assert state.agent_outputs == {}
+    assert state.shared_context == {}
+
+def test_workflow_state_invalid_requirements():
+    """Test workflow state with invalid requirements."""
+    with pytest.raises(ValueError, match="Requirements cannot be empty"):
+        WorkflowState(
+            request_id="test-123",
+            requirements="",
+        )
+```
+
+## Async Testing
+
+### Async Test Functions
+- Use `@pytest.mark.asyncio` for async tests
+- Use `pytest-asyncio` with `asyncio_mode = "auto"`
+- Use `AsyncMock` for mocking async functions
+- Use `asyncio.gather` for concurrent test operations
+
+```python
+import pytest
+from unittest.mock import AsyncMock, patch
+from src.agents.business_analyst import BusinessAnalystAgent
+
+@pytest.mark.asyncio
+async def test_agent_analyze_requirements():
+    """Test agent requirement analysis."""
+    # Arrange
+    agent = BusinessAnalystAgent()
+    requirements = "Build a todo application"
+    
+    with patch.object(agent, 'llm_client') as mock_llm:
+        mock_llm.generate = AsyncMock(
+            return_value='{"user_stories": ["As a user..."]}'
+        )
+        
+        # Act
+        result = await agent.analyze(requirements)
+        
+        # Assert
+        assert "user_stories" in result
+        mock_llm.generate.assert_called_once()
+```
+
+## Fixtures
+
+### Use Fixtures for Setup
+- Create reusable fixtures
+- Use `conftest.py` for shared fixtures
+- Use `@pytest.fixture` for setup/teardown
+- Use `yield` for cleanup
+
+```python
+import pytest
+from src.models.workflow import WorkflowState
+from src.config import Settings
+
+@pytest.fixture
+def sample_workflow_state() -> WorkflowState:
+    """Create sample workflow state for testing."""
+    return WorkflowState(
+        request_id="test-123",
+        requirements="Build a todo app",
+    )
+
+@pytest.fixture
+def settings() -> Settings:
+    """Create test settings."""
+    return Settings(
+        debug=True,
+        log_level="DEBUG",
+        openai_api_key="test-key",
+    )
+
+@pytest.fixture
+async def db_session():
+    """Create database session for testing."""
+    # Setup
+    session = await create_test_session()
+    yield session
+    # Teardown
+    await session.close()
+```
+
+## Mocking
+
+### Mock External Dependencies
+- Mock LLM API calls
+- Mock external services (Jira, GitLab, Confluence)
+- Mock database operations
+- Use `unittest.mock` or `pytest-mock`
+
+```python
+import pytest
+from unittest.mock import Mock, AsyncMock, patch
+from src.integrations.jira import JiraClient
+
+@pytest.mark.asyncio
+async def test_create_jira_ticket(mocker):
+    """Test Jira ticket creation."""
+    # Arrange
+    mock_jira = mocker.patch('src.integrations.jira.Jira')
+    mock_jira.return_value.create_issue = Mock(
+        return_value=Mock(key="PROJ-123")
+    )
+    
+    client = JiraClient(url="https://test.atlassian.net")
+    
+    # Act
+    ticket = await client.create_ticket(
+        project="PROJ",
+        summary="Test ticket",
+        description="Test description"
+    )
+    
+    # Assert
+    assert ticket.key == "PROJ-123"
+    mock_jira.return_value.create_issue.assert_called_once()
+```
+
+## Integration Testing
+
+### Test Full Workflows
+- Test complete workflows end-to-end
+- Use test databases
+- Mock external APIs
+- Test error scenarios
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from src.main import app
+
+@pytest.fixture
+def client():
+    """Create test client."""
+    return TestClient(app)
+
+def test_create_workflow_integration(client: TestClient):
+    """Test workflow creation end-to-end."""
+    # Arrange
+    workflow_data = {
+        "requirements": "Build a todo app",
+        "priority": 1,
+    }
+    
+    # Act
+    response = client.post("/api/v1/workflows/", json=workflow_data)
+    
+    # Assert
+    assert response.status_code == 201
+    data = response.json()
+    assert "workflow_id" in data
+    assert data["status"] == "pending"
+```
+
+## Test Coverage
+
+### Aim for High Coverage
+- Target 80%+ coverage for critical code
+- Use `pytest-cov` for coverage reports
+- Focus on business logic
+- Don't test implementation details
+
+```bash
+# Run tests with coverage
+pytest tests/ --cov=src --cov-report=html --cov-report=term
+
+# Coverage configuration in pyproject.toml
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "if __name__ == .__main__.:",
+]
+```
+
+## Parametrized Tests
+
+### Use Parametrization
+- Test multiple inputs efficiently
+- Use `@pytest.mark.parametrize`
+- Test edge cases systematically
+
+```python
+import pytest
+
+@pytest.mark.parametrize("priority,expected_status", [
+    (1, "pending"),
+    (2, "pending"),
+    (5, "pending"),
+])
+def test_workflow_priority(priority, expected_status):
+    """Test workflow with different priorities."""
+    state = WorkflowState(
+        request_id="test-123",
+        requirements="Test",
+        priority=priority,
+    )
+    assert state.priority == priority
+
+@pytest.mark.parametrize("invalid_priority", [-1, 0, 6, 10])
+def test_workflow_invalid_priority(invalid_priority):
+    """Test workflow with invalid priorities."""
+    with pytest.raises(ValueError):
+        WorkflowState(
+            request_id="test-123",
+            requirements="Test",
+            priority=invalid_priority,
+        )
+```
+
+## Test Markers
+
+### Use Markers for Test Organization
+- Mark slow tests
+- Mark integration tests
+- Mark unit tests
+- Skip tests conditionally
+
+```python
+import pytest
+
+@pytest.mark.unit
+def test_model_validation():
+    """Unit test for model validation."""
+    pass
+
+@pytest.mark.integration
+@pytest.mark.slow
+def test_full_workflow():
+    """Slow integration test."""
+    pass
+
+@pytest.mark.skip(reason="Not implemented yet")
+def test_future_feature():
+    """Test for future feature."""
+    pass
+
+@pytest.mark.skipif(
+    not os.getenv("OPENAI_API_KEY"),
+    reason="OpenAI API key not set"
+)
+def test_openai_integration():
+    """Test OpenAI integration."""
+    pass
+```
+
+## Best Practices Summary
+
+1. **Write tests first** - TDD when possible
+2. **Test behavior, not implementation** - Focus on what, not how
+3. **Use descriptive names** - Test names should explain what they test
+4. **Keep tests isolated** - Tests should not depend on each other
+5. **Use fixtures** - Reuse setup code
+6. **Mock external dependencies** - Don't call real APIs in tests
+7. **Test edge cases** - Include boundary conditions
+8. **Maintain test coverage** - Aim for 80%+ on critical code
+9. **Run tests frequently** - Catch issues early
+10. **Keep tests fast** - Use mocks for slow operations

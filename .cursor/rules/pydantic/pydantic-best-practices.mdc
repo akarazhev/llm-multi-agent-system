@@ -1,0 +1,302 @@
+# Pydantic Best Practices
+
+## Model Definition
+
+### Use Pydantic v2 Features
+- Use `BaseModel` from `pydantic`
+- Use `Field` for validation and documentation
+- Use `model_config` instead of `Config` class
+- Use `SettingsConfigDict` for settings
+
+```python
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
+from datetime import datetime
+
+class WorkflowState(BaseModel):
+    """Workflow state model."""
+    
+    request_id: str = Field(..., description="Unique request identifier")
+    workflow_id: Optional[str] = Field(None, description="Workflow UUID")
+    requirements: str = Field(..., min_length=10, description="Requirements text")
+    status: str = Field(default="pending", description="Workflow status")
+    created_at: Optional[datetime] = Field(None, description="Creation timestamp")
+    
+    model_config = ConfigDict(
+        use_enum_values=True,
+        validate_assignment=True,
+        str_strip_whitespace=True,
+    )
+```
+
+## Field Validation
+
+### Use Field for Validation
+- Set min/max values for numbers
+- Set min/max length for strings
+- Use regex patterns
+- Provide default values
+- Add descriptions for API docs
+
+```python
+from pydantic import BaseModel, Field, field_validator
+from typing import List
+
+class AgentConfig(BaseModel):
+    """Agent configuration model."""
+    
+    name: str = Field(..., min_length=1, max_length=50, description="Agent name")
+    temperature: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=2.0,
+        description="LLM temperature parameter"
+    )
+    max_tokens: int = Field(
+        default=2000,
+        ge=1,
+        le=8000,
+        description="Maximum tokens to generate"
+    )
+    enabled: bool = Field(default=True, description="Whether agent is enabled")
+    tools: List[str] = Field(
+        default_factory=list,
+        description="List of tool names available to agent"
+    )
+```
+
+## Validators
+
+### Use Field Validators
+- Use `@field_validator` for field-level validation
+- Use `@model_validator` for model-level validation
+- Use `mode='before'` for pre-processing
+- Use `mode='after'` for post-processing
+
+```python
+from pydantic import BaseModel, Field, field_validator, model_validator
+from typing import Optional
+
+class WorkflowRequest(BaseModel):
+    """Workflow creation request."""
+    
+    requirements: str = Field(..., description="Requirements text")
+    priority: int = Field(default=1, ge=1, le=5)
+    agent_configs: Optional[dict] = None
+    
+    @field_validator('requirements')
+    @classmethod
+    def validate_requirements(cls, v: str) -> str:
+        """Validate and clean requirements."""
+        if not v or not v.strip():
+            raise ValueError("Requirements cannot be empty")
+        return v.strip()
+    
+    @model_validator(mode='after')
+    def validate_config(self) -> 'WorkflowRequest':
+        """Validate model after all fields are set."""
+        if self.priority == 5 and not self.agent_configs:
+            raise ValueError("High priority workflows require agent configs")
+        return self
+```
+
+## Settings Management
+
+### Use Pydantic Settings
+- Use `BaseSettings` for configuration
+- Use `SettingsConfigDict` for settings config
+- Load from environment variables
+- Support `.env` files
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
+
+class Settings(BaseSettings):
+    """Application settings."""
+    
+    # Application
+    app_name: str = "LLM Multi-Agent System"
+    debug: bool = False
+    log_level: str = "INFO"
+    
+    # API
+    api_host: str = "0.0.0.0"
+    api_port: int = 8000
+    
+    # LLM
+    openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+    
+    # Database
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    postgres_db: str = "llm_agents"
+    postgres_user: str = "postgres"
+    postgres_password: str = "postgres"
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",  # Ignore extra fields
+    )
+```
+
+## Serialization
+
+### Custom Serializers
+- Use `@field_serializer` for custom field serialization
+- Use `@model_serializer` for model-level serialization
+- Use `model_dump()` for dict conversion
+- Use `model_dump_json()` for JSON conversion
+
+```python
+from pydantic import BaseModel, Field, field_serializer
+from datetime import datetime
+from typing import Optional
+
+class WorkflowResponse(BaseModel):
+    """Workflow response model."""
+    
+    workflow_id: str
+    status: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    @field_serializer('created_at', 'updated_at')
+    def serialize_datetime(self, dt: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime to ISO format."""
+        return dt.isoformat() if dt else None
+    
+    model_config = ConfigDict(
+        json_encoders={
+            datetime: lambda v: v.isoformat()
+        }
+    )
+```
+
+## Enums
+
+### Use Enums for Constants
+- Define enums for status values
+- Use string enums for API compatibility
+- Use `use_enum_values=True` in config
+
+```python
+from enum import Enum
+from pydantic import BaseModel, Field
+
+class WorkflowStatus(str, Enum):
+    """Workflow status enum."""
+    
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+class WorkflowState(BaseModel):
+    """Workflow state with enum."""
+    
+    status: WorkflowStatus = Field(default=WorkflowStatus.PENDING)
+    
+    model_config = ConfigDict(use_enum_values=True)
+```
+
+## Nested Models
+
+### Use Nested Models
+- Create separate models for nested structures
+- Use `List[Model]` for collections
+- Use `Optional[Model]` for optional nested models
+
+```python
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+class AgentOutput(BaseModel):
+    """Agent output model."""
+    
+    agent_name: str
+    output_type: str
+    content: dict
+
+class WorkflowState(BaseModel):
+    """Workflow state with nested models."""
+    
+    request_id: str
+    agent_outputs: List[AgentOutput] = Field(default_factory=list)
+    current_agent: Optional[AgentOutput] = None
+```
+
+## JSON Schema
+
+### Customize JSON Schema
+- Use `Field` with `json_schema_extra`
+- Use `@field_validator` with schema customization
+- Document fields for OpenAPI
+
+```python
+from pydantic import BaseModel, Field
+
+class WorkflowRequest(BaseModel):
+    """Workflow request with custom schema."""
+    
+    requirements: str = Field(
+        ...,
+        description="Requirements text",
+        json_schema_extra={
+            "example": "Build a todo application with user authentication"
+        }
+    )
+    priority: int = Field(
+        default=1,
+        ge=1,
+        le=5,
+        description="Priority level (1-5)",
+        json_schema_extra={
+            "example": 3
+        }
+    )
+```
+
+## Error Handling
+
+### Validation Errors
+- Handle `ValidationError` exceptions
+- Provide clear error messages
+- Use custom validators for domain logic
+
+```python
+from pydantic import BaseModel, ValidationError, field_validator
+
+class AgentConfig(BaseModel):
+    name: str
+    temperature: float = Field(ge=0.0, le=2.0)
+    
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if not v.isalnum():
+            raise ValueError("Name must be alphanumeric")
+        return v
+
+try:
+    config = AgentConfig(name="test-agent!", temperature=1.5)
+except ValidationError as e:
+    print(e.errors())
+```
+
+## Best Practices Summary
+
+1. **Always use type hints** - Helps with validation and IDE support
+2. **Use Field for validation** - Leverage Pydantic's built-in validators
+3. **Add descriptions** - Improves API documentation
+4. **Use validators for complex logic** - Custom validation when needed
+5. **Use enums for constants** - Type-safe constant values
+6. **Use Settings for configuration** - Environment-based config management
+7. **Document models** - Add docstrings for clarity
+8. **Use model_config** - Configure model behavior consistently
+9. **Handle validation errors** - Provide user-friendly error messages
+10. **Use nested models** - Keep models focused and reusable

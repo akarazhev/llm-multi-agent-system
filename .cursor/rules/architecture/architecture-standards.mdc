@@ -1,0 +1,343 @@
+# Architecture Standards
+
+## Project Structure
+
+### Directory Organization
+Follow the established project structure:
+
+```
+src/
+├── agents/          # Agent implementations
+│   ├── base.py      # Base agent class
+│   ├── business_analyst.py
+│   ├── developer.py
+│   ├── qa.py
+│   ├── devops.py
+│   └── technical_writer.py
+├── orchestrator/    # Workflow orchestration
+│   ├── workflow.py  # LangGraph workflow
+│   └── manager.py   # Agent manager
+├── integrations/    # External API integrations
+│   ├── jira.py
+│   ├── confluence.py
+│   └── gitlab.py
+├── models/          # Data models
+│   ├── workflow.py
+│   └── context.py
+├── utils/           # Utility functions
+│   ├── llm_client.py
+│   └── helpers.py
+└── config.py        # Configuration
+```
+
+## Agent Architecture
+
+### Base Agent Pattern
+All agents must inherit from `BaseAgent`:
+
+```python
+from abc import ABC, abstractmethod
+from typing import Dict, Any, List, Optional
+from src.utils.llm_client import LLMClient
+from langchain.tools import BaseTool
+
+class BaseAgent(ABC):
+    """Base agent class for all agents."""
+    
+    def __init__(
+        self,
+        agent_id: str,
+        agent_name: str,
+        llm_client: LLMClient,
+        tools: Optional[List[BaseTool]] = None,
+    ):
+        self.agent_id = agent_id
+        self.agent_name = agent_name
+        self.llm_client = llm_client
+        self.tools = tools or []
+        self.system_prompt = self._get_system_prompt()
+    
+    @abstractmethod
+    def _get_system_prompt(self) -> str:
+        """Get system prompt for this agent."""
+        pass
+    
+    @abstractmethod
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute agent task."""
+        pass
+```
+
+### Agent Implementation
+```python
+class BusinessAnalystAgent(BaseAgent):
+    """Business Analyst agent implementation."""
+    
+    def _get_system_prompt(self) -> str:
+        return """You are a Business Analyst Agent..."""
+    
+    async def execute(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute business analysis task."""
+        requirements = task.get("requirements", "")
+        analysis = await self._analyze_requirements(requirements)
+        return {
+            "agent_name": self.agent_name,
+            "output_type": "analysis",
+            "content": analysis,
+        }
+    
+    async def _analyze_requirements(self, requirements: str) -> Dict[str, Any]:
+        """Analyze requirements."""
+        # Implementation
+        pass
+```
+
+## Orchestrator Design
+
+### Workflow Engine
+Use LangGraph for workflow orchestration:
+
+```python
+from langgraph.graph import StateGraph, END
+from typing import TypedDict, Annotated
+import operator
+
+class WorkflowState(TypedDict):
+    """Workflow state for LangGraph."""
+    request_id: str
+    requirements: str
+    current_step: str
+    agent_outputs: Annotated[dict, operator.add]
+    shared_context: Annotated[dict, operator.add]
+    errors: Annotated[list, operator.add]
+
+class WorkflowOrchestrator:
+    """Orchestrates agent workflows."""
+    
+    def __init__(self):
+        self.workflow = self._create_workflow()
+    
+    def _create_workflow(self) -> StateGraph:
+        """Create LangGraph workflow."""
+        workflow = StateGraph(WorkflowState)
+        
+        # Add nodes
+        workflow.add_node("analyze", self._analyze_requirements)
+        workflow.add_node("design", self._design_architecture)
+        workflow.add_node("implement", self._implement_code)
+        
+        # Add edges
+        workflow.set_entry_point("analyze")
+        workflow.add_edge("analyze", "design")
+        workflow.add_conditional_edges(
+            "design",
+            self._should_continue,
+            {"continue": "implement", "stop": END}
+        )
+        
+        return workflow.compile()
+    
+    async def _analyze_requirements(self, state: WorkflowState) -> dict:
+        """Analyze requirements node."""
+        agent = BusinessAnalystAgent(...)
+        result = await agent.execute({"requirements": state["requirements"]})
+        return {
+            "agent_outputs": {"business_analyst": result},
+            "current_step": "analyzed",
+        }
+```
+
+## Integration Patterns
+
+### External API Integration
+Create abstraction layer for external APIs:
+
+```python
+from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional
+
+class JiraClient(ABC):
+    """Abstract Jira client interface."""
+    
+    @abstractmethod
+    async def create_ticket(
+        self,
+        project: str,
+        summary: str,
+        description: str,
+    ) -> Dict[str, Any]:
+        """Create Jira ticket."""
+        pass
+
+class JiraAPIClient(JiraClient):
+    """Jira API client implementation."""
+    
+    def __init__(self, url: str, username: str, api_token: str):
+        self.client = Jira(url, basic_auth=(username, api_token))
+    
+    async def create_ticket(
+        self,
+        project: str,
+        summary: str,
+        description: str,
+    ) -> Dict[str, Any]:
+        """Create Jira ticket."""
+        issue = self.client.create_issue(
+            project=project,
+            summary=summary,
+            description=description,
+            issuetype={"name": "Story"},
+        )
+        return {"key": issue.key, "id": issue.id}
+```
+
+## State Management
+
+### Shared Context
+Use PostgreSQL for persistent state, ChromaDB for vector search:
+
+```python
+from typing import Dict, Any, Optional
+from uuid import UUID
+
+class ContextStore:
+    """Shared context store for agents."""
+    
+    async def read(
+        self,
+        workflow_id: UUID,
+        key: str,
+    ) -> Optional[Any]:
+        """Read context value."""
+        # Implementation
+        pass
+    
+    async def write(
+        self,
+        workflow_id: UUID,
+        key: str,
+        value: Any,
+        agent_name: str,
+    ) -> None:
+        """Write context value."""
+        # Implementation
+        pass
+    
+    async def search(
+        self,
+        workflow_id: UUID,
+        query: str,
+        limit: int = 10,
+    ) -> List[Dict[str, Any]]:
+        """Semantic search in context."""
+        # Implementation
+        pass
+```
+
+## Error Handling
+
+### Error Patterns
+- Use custom exceptions for domain errors
+- Handle errors at appropriate levels
+- Log errors with context
+- Implement retry logic for transient errors
+
+```python
+class AgentError(Exception):
+    """Base exception for agent errors."""
+    pass
+
+class LLMError(AgentError):
+    """LLM API error."""
+    pass
+
+class IntegrationError(AgentError):
+    """External integration error."""
+    pass
+
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=4, max=10),
+    retry=retry_if_exception_type(LLMError),
+)
+async def call_llm_with_retry(prompt: str) -> str:
+    """Call LLM with retry logic."""
+    try:
+        return await llm_client.generate(prompt)
+    except httpx.HTTPError as e:
+        raise LLMError(f"LLM API error: {e}") from e
+```
+
+## Configuration Management
+
+### Settings Pattern
+Use Pydantic Settings for configuration:
+
+```python
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    """Application settings."""
+    
+    # Application
+    app_name: str = "LLM Multi-Agent System"
+    debug: bool = False
+    
+    # LLM
+    openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+    
+    # Database
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+    )
+```
+
+## Dependency Injection
+
+### FastAPI Dependencies
+Use dependency injection for shared resources:
+
+```python
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def get_db() -> AsyncSession:
+    """Get database session."""
+    async with get_async_session() as session:
+        yield session
+
+async def get_settings() -> Settings:
+    """Get application settings."""
+    return settings
+
+@router.post("/workflows")
+async def create_workflow(
+    workflow: WorkflowCreate,
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> WorkflowResponse:
+    """Create workflow."""
+    # Implementation
+    pass
+```
+
+## Best Practices Summary
+
+1. **Follow project structure** - Consistent organization
+2. **Inherit from BaseAgent** - Common agent interface
+3. **Use LangGraph for workflows** - State management
+4. **Abstract integrations** - Easy to test and swap
+5. **Manage state centrally** - Shared context store
+6. **Handle errors gracefully** - Custom exceptions and retries
+7. **Use dependency injection** - Testable and flexible
+8. **Configure via settings** - Environment-based config
+9. **Document architecture** - Clear design decisions
+10. **Keep components focused** - Single responsibility

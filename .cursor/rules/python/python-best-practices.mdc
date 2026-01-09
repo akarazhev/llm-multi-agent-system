@@ -1,0 +1,176 @@
+# Python Best Practices
+
+## General Principles
+
+### Code Style
+- Follow PEP 8 style guide
+- Use Black for code formatting (line length: 100)
+- Use Ruff for linting
+- Use type hints for all function parameters and return types
+- Prefer explicit over implicit
+
+### Type Hints
+- **ALWAYS** use type hints for:
+  - Function parameters
+  - Return types
+  - Class attributes
+  - Variables in complex logic
+- Use `typing` module for complex types:
+  - `Optional[T]` for nullable values
+  - `List[T]`, `Dict[K, V]` for collections
+  - `Union[T, U]` for multiple types (prefer `|` in Python 3.10+)
+  - `Any` only when absolutely necessary
+- Use `from __future__ import annotations` for forward references
+
+### Example
+```python
+from typing import Optional, List, Dict, Any
+from __future__ import annotations
+
+def process_data(
+    items: List[Dict[str, Any]],
+    max_items: Optional[int] = None,
+    strict: bool = False,
+) -> Dict[str, int]:
+    """Process items and return statistics."""
+    if max_items is not None:
+        items = items[:max_items]
+    # ... processing logic
+    return {"total": len(items), "processed": len(items)}
+```
+
+## Async/Await Best Practices
+
+### When to Use Async
+- **ALWAYS** use async for:
+  - I/O operations (database, HTTP requests, file operations)
+  - LLM API calls
+  - External API integrations
+  - Message queue operations
+- Use `async def` for async functions
+- Use `await` for async calls
+- Never mix sync and async I/O in the same function
+
+### Async Patterns
+```python
+import asyncio
+from typing import List
+
+async def fetch_multiple(urls: List[str]) -> List[str]:
+    """Fetch multiple URLs concurrently."""
+    tasks = [fetch_url(url) for url in urls]
+    return await asyncio.gather(*tasks)
+
+async def fetch_url(url: str) -> str:
+    """Fetch a single URL."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        return response.text
+```
+
+### Error Handling in Async
+- Use `try/except` blocks around async operations
+- Handle `asyncio.TimeoutError` for timeouts
+- Use `asyncio.gather` with `return_exceptions=True` for partial failures
+
+## Error Handling
+
+### Exception Handling
+- Use specific exception types, not bare `except:`
+- Create custom exceptions for domain-specific errors
+- Always log exceptions with context
+- Use `raise ... from` for exception chaining
+
+```python
+class AgentError(Exception):
+    """Base exception for agent-related errors."""
+    pass
+
+class LLMError(AgentError):
+    """Exception for LLM API errors."""
+    pass
+
+async def call_llm(prompt: str) -> str:
+    try:
+        response = await llm_client.generate(prompt)
+        return response
+    except httpx.HTTPError as e:
+        raise LLMError(f"Failed to call LLM: {e}") from e
+```
+
+## Imports
+
+### Import Organization
+1. Standard library imports
+2. Third-party imports
+3. Local application imports
+- Use absolute imports
+- Group imports with blank lines
+- Use `from typing import ...` for type hints
+
+```python
+# Standard library
+from typing import Optional, List, Dict
+from enum import Enum
+import asyncio
+
+# Third-party
+from pydantic import BaseModel, Field
+from fastapi import FastAPI, HTTPException
+
+# Local
+from src.models.workflow import WorkflowState
+from src.agents.base import BaseAgent
+```
+
+## Naming Conventions
+
+- **Classes**: PascalCase (`WorkflowState`, `BaseAgent`)
+- **Functions/Methods**: snake_case (`process_data`, `get_agent`)
+- **Constants**: UPPER_SNAKE_CASE (`MAX_RETRIES`, `DEFAULT_TIMEOUT`)
+- **Private**: Prefix with `_` (`_internal_method`, `_private_var`)
+- **Type Variables**: PascalCase (`T`, `K`, `V`)
+
+## Documentation
+
+- Use docstrings for all public functions, classes, and modules
+- Follow Google-style docstrings
+- Include type information in docstrings when helpful
+- Document exceptions that may be raised
+
+```python
+def calculate_score(items: List[Dict[str, Any]], weight: float = 1.0) -> float:
+    """Calculate weighted score for items.
+    
+    Args:
+        items: List of items with score attributes
+        weight: Weight multiplier for calculation
+        
+    Returns:
+        Calculated weighted score
+        
+    Raises:
+        ValueError: If items list is empty or weight is negative
+    """
+    if not items:
+        raise ValueError("Items list cannot be empty")
+    if weight < 0:
+        raise ValueError("Weight must be non-negative")
+    # ... calculation
+```
+
+## Performance
+
+- Use list/dict comprehensions when appropriate
+- Prefer generators for large datasets
+- Use `functools.lru_cache` for expensive pure functions
+- Profile before optimizing
+- Use async I/O for concurrent operations
+
+## Security
+
+- Never commit secrets or API keys
+- Use environment variables for configuration
+- Validate and sanitize all user inputs
+- Use parameterized queries for database operations
+- Be cautious with `eval()` and `exec()`

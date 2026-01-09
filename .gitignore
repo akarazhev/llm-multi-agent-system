@@ -73,3 +73,5 @@ temp/
 *.tmp
 
 
+.DS_Store
+.cursor/worktrees.json

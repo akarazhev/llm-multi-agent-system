@@ -1,0 +1,261 @@
+# FastAPI Best Practices
+
+## API Design
+
+### Route Organization
+- Group related routes in routers
+- Use dependency injection for shared logic
+- Keep route handlers focused and simple
+- Use Pydantic models for request/response validation
+
+### Example Structure
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from typing import List
+
+router = APIRouter(prefix="/api/v1/workflows", tags=["workflows"])
+
+class WorkflowCreate(BaseModel):
+    requirements: str
+    priority: int = 1
+
+class WorkflowResponse(BaseModel):
+    workflow_id: str
+    status: str
+    created_at: str
+
+@router.post("/", response_model=WorkflowResponse, status_code=201)
+async def create_workflow(
+    workflow: WorkflowCreate,
+    settings: Settings = Depends(get_settings),
+) -> WorkflowResponse:
+    """Create a new workflow."""
+    # Implementation
+    pass
+```
+
+## Request/Response Models
+
+### Always Use Pydantic Models
+- Define request models for POST/PUT requests
+- Define response models for all endpoints
+- Use `response_model` parameter in decorators
+- Use `Field` for validation and documentation
+
+```python
+from pydantic import BaseModel, Field, validator
+
+class WorkflowRequest(BaseModel):
+    requirements: str = Field(..., min_length=10, description="Requirements text")
+    priority: int = Field(default=1, ge=1, le=5, description="Priority level")
+    
+    @validator('requirements')
+    def validate_requirements(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Requirements cannot be empty")
+        return v.strip()
+```
+
+## Error Handling
+
+### HTTP Exceptions
+- Use appropriate HTTP status codes
+- Provide detailed error messages
+- Use custom exception handlers
+- Log errors before raising
+
+```python
+from fastapi import HTTPException, status
+
+@router.get("/workflows/{workflow_id}")
+async def get_workflow(workflow_id: str) -> WorkflowResponse:
+    workflow = await get_workflow_by_id(workflow_id)
+    if not workflow:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Workflow {workflow_id} not found"
+        )
+    return workflow
+```
+
+### Custom Exception Handlers
+```python
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": str(exc)}
+    )
+```
+
+## Dependency Injection
+
+### Use Dependencies for:
+- Database sessions
+- Settings/configuration
+- Authentication
+- Shared services
+
+```python
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+async def get_db() -> AsyncSession:
+    async with get_async_session() as session:
+        yield session
+
+@router.get("/workflows")
+async def list_workflows(
+    db: AsyncSession = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+) -> List[WorkflowResponse]:
+    """List workflows with pagination."""
+    workflows = await db.execute(select(Workflow).offset(skip).limit(limit))
+    return workflows.scalars().all()
+```
+
+## Async Operations
+
+### Always Use Async
+- Use `async def` for route handlers
+- Use `await` for async operations
+- Use `asyncio.gather` for concurrent operations
+- Never block the event loop
+
+```python
+@router.post("/workflows/{workflow_id}/execute")
+async def execute_workflow(workflow_id: str) -> WorkflowResponse:
+    """Execute a workflow asynchronously."""
+    workflow = await get_workflow(workflow_id)
+    # Start async task
+    task = asyncio.create_task(run_workflow(workflow))
+    return {"task_id": task.get_name(), "status": "started"}
+```
+
+## Background Tasks
+
+### Use BackgroundTasks for:
+- Non-critical operations
+- Long-running tasks
+- Notifications
+- Cleanup operations
+
+```python
+from fastapi import BackgroundTasks
+
+@router.post("/workflows")
+async def create_workflow(
+    workflow: WorkflowCreate,
+    background_tasks: BackgroundTasks,
+) -> WorkflowResponse:
+    """Create workflow and send notification."""
+    workflow_response = await create_workflow_in_db(workflow)
+    background_tasks.add_task(send_notification, workflow_response.id)
+    return workflow_response
+```
+
+## Validation
+
+### Use Pydantic Validators
+- Field-level validation with `Field`
+- Model-level validation with `@validator`
+- Custom validators for complex logic
+- Use `@root_validator` for cross-field validation
+
+```python
+from pydantic import BaseModel, validator, root_validator
+
+class AgentConfig(BaseModel):
+    name: str
+    temperature: float = Field(ge=0.0, le=2.0)
+    max_tokens: int = Field(ge=1, le=8000)
+    
+    @validator('name')
+    def validate_name(cls, v: str) -> str:
+        if not v.isalnum():
+            raise ValueError("Name must be alphanumeric")
+        return v
+    
+    @root_validator
+    def validate_config(cls, values: dict) -> dict:
+        if values.get('temperature', 0) > 1.0 and values.get('max_tokens', 0) > 4000:
+            raise ValueError("High temperature with high max_tokens may be expensive")
+        return values
+```
+
+## Response Models
+
+### Always Define Response Models
+- Use `response_model` in decorators
+- Use `response_model_exclude` to hide fields
+- Use `response_model_include` to show only specific fields
+- Use `response_model_exclude_unset` for optional fields
+
+```python
+@router.get(
+    "/workflows/{workflow_id}",
+    response_model=WorkflowResponse,
+    response_model_exclude={"internal_metadata"},
+)
+async def get_workflow(workflow_id: str) -> WorkflowResponse:
+    """Get workflow details."""
+    pass
+```
+
+## Status Codes
+
+### Use Appropriate Status Codes
+- `200 OK`: Successful GET, PUT, PATCH
+- `201 Created`: Successful POST
+- `204 No Content`: Successful DELETE
+- `400 Bad Request`: Validation errors
+- `401 Unauthorized`: Authentication required
+- `403 Forbidden`: Insufficient permissions
+- `404 Not Found`: Resource not found
+- `422 Unprocessable Entity`: Pydantic validation errors
+- `500 Internal Server Error`: Server errors
+
+## CORS and Security
+
+### Configure CORS
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://example.com"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+## Testing
+
+### Test Structure
+- Use `TestClient` for integration tests
+- Use `pytest.fixture` for test dependencies
+- Mock external services
+- Test error cases
+
+```python
+from fastapi.testclient import TestClient
+import pytest
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+def test_create_workflow(client: TestClient):
+    response = client.post(
+        "/api/v1/workflows/",
+        json={"requirements": "Test requirements"}
+    )
+    assert response.status_code == 201
+    assert "workflow_id" in response.json()
+```

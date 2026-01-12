@@ -271,12 +271,32 @@ class FileWriter:
         
         # Pattern 1: ```language:filename format
         # This handles: ```markdown:analysis/file.md
-        pattern_colon = r'```(?:\w+):([^\n]+)\n(.*?)\n```'
-        matches = re.finditer(pattern_colon, text, re.DOTALL)
-        for match in matches:
-            filename = match.group(1).strip()
-            content = match.group(2).strip()
-            files[filename] = content
+        # Need to handle nested code blocks, so we manually parse
+        pattern_colon = r'```(?:\w+):([^\n]+)\n'
+        matches = list(re.finditer(pattern_colon, text, re.DOTALL))
+        
+        if matches:
+            for i, match in enumerate(matches):
+                filename = match.group(1).strip()
+                start_pos = match.end()
+                
+                # Find the matching closing ``` by counting backticks
+                # Look for the next file marker or end of text
+                if i + 1 < len(matches):
+                    end_search = matches[i + 1].start()
+                else:
+                    end_search = len(text)
+                
+                # Find the last ``` before the next file marker
+                remaining_text = text[start_pos:end_search]
+                # Look for closing ``` that's on its own line
+                close_match = None
+                for m in re.finditer(r'\n```(?:\s|$)', remaining_text):
+                    close_match = m
+                
+                if close_match:
+                    content = remaining_text[:close_match.start()].strip()
+                    files[filename] = content
         
         # If found files with colon format, return them
         if files:
@@ -287,22 +307,52 @@ class FileWriter:
         # - File: `analysis/file.md` \n```markdown\n content \n```
         # - **File: `analysis/file.md`** \n```markdown\n content \n```
         
-        # Try with bold first
-        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n```(?:\w+)?\n(.*?)\n```'
-        matches = re.finditer(pattern_bold, text, re.DOTALL)
-        for match in matches:
-            filename = match.group(1).strip()
-            content = match.group(2).strip()
-            files[filename] = content
+        # Try with bold first - use similar approach to handle nested blocks
+        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n```(?:\w+)?\n'
+        matches = list(re.finditer(pattern_bold, text, re.DOTALL))
+        
+        if matches:
+            for i, match in enumerate(matches):
+                filename = match.group(1).strip()
+                start_pos = match.end()
+                
+                if i + 1 < len(matches):
+                    end_search = matches[i + 1].start()
+                else:
+                    end_search = len(text)
+                
+                remaining_text = text[start_pos:end_search]
+                close_match = None
+                for m in re.finditer(r'\n```(?:\s|$)', remaining_text):
+                    close_match = m
+                
+                if close_match:
+                    content = remaining_text[:close_match.start()].strip()
+                    files[filename] = content
         
         # If no matches with bold, try without bold
         if not files:
-            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n(.*?)\n```'
-            matches = re.finditer(pattern_no_bold, text, re.DOTALL)
-            for match in matches:
-                filename = match.group(1).strip()
-                content = match.group(2).strip()
-                files[filename] = content
+            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n'
+            matches = list(re.finditer(pattern_no_bold, text, re.DOTALL))
+            
+            if matches:
+                for i, match in enumerate(matches):
+                    filename = match.group(1).strip()
+                    start_pos = match.end()
+                    
+                    if i + 1 < len(matches):
+                        end_search = matches[i + 1].start()
+                    else:
+                        end_search = len(text)
+                    
+                    remaining_text = text[start_pos:end_search]
+                    close_match = None
+                    for m in re.finditer(r'\n```(?:\s|$)', remaining_text):
+                        close_match = m
+                    
+                    if close_match:
+                        content = remaining_text[:close_match.start()].strip()
+                        files[filename] = content
         
         # If pattern 1 found files, return them
         if files:

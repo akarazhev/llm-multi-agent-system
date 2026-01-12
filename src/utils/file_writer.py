@@ -269,15 +269,27 @@ class FileWriter:
         """
         files = {}
         
-        # Pattern 1: File: `filename` followed by ```language code block
+        # Pattern 1: ```language:filename format
+        # This handles: ```markdown:analysis/file.md
+        pattern_colon = r'```(?:\w+):([^\n]+)\n(.*?)\n```'
+        matches = re.finditer(pattern_colon, text, re.DOTALL)
+        for match in matches:
+            filename = match.group(1).strip()
+            content = match.group(2).strip()
+            files[filename] = content
+        
+        # If found files with colon format, return them
+        if files:
+            return files
+        
+        # Pattern 2: File: `filename` followed by ```language code block
         # This handles formats:
         # - File: `analysis/file.md` \n```markdown\n content \n```
         # - **File: `analysis/file.md`** \n```markdown\n content \n```
-        # Use non-greedy match but ensure we capture until the closing ```
         
         # Try with bold first
-        pattern1 = r'\*\*File:\s*`([^`]+)`\*\*\s*\n```(?:\w+)?\n(.*?)\n```'
-        matches = re.finditer(pattern1, text, re.DOTALL)
+        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n```(?:\w+)?\n(.*?)\n```'
+        matches = re.finditer(pattern_bold, text, re.DOTALL)
         for match in matches:
             filename = match.group(1).strip()
             content = match.group(2).strip()
@@ -285,8 +297,8 @@ class FileWriter:
         
         # If no matches with bold, try without bold
         if not files:
-            pattern1_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n(.*?)\n```'
-            matches = re.finditer(pattern1_no_bold, text, re.DOTALL)
+            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n(.*?)\n```'
+            matches = re.finditer(pattern_no_bold, text, re.DOTALL)
             for match in matches:
                 filename = match.group(1).strip()
                 content = match.group(2).strip()

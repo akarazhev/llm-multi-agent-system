@@ -8,8 +8,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Get project root directory
-PROJECT_ROOT = Path(__file__).parent.absolute()
+# Get project root directory (parent of tests directory)
+PROJECT_ROOT = Path(__file__).parent.parent.absolute()
 load_dotenv()
 sys.path.insert(0, str(PROJECT_ROOT))
 

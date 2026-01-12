@@ -4,6 +4,7 @@ import json
 from typing import Dict, Any, Optional
 from pathlib import Path
 from dataclasses import dataclass, field
+from dotenv import load_dotenv
 
 
 @dataclass
@@ -61,6 +62,9 @@ class Settings:
 
 
 def load_config(config_path: Optional[str] = None) -> Settings:
+    # Load .env file to make environment variables available
+    load_dotenv()
+    
     if config_path is None:
         config_path = os.getenv('AGENT_CONFIG_PATH', 'config.yaml')
     
@@ -76,6 +80,23 @@ def load_config(config_path: Optional[str] = None) -> Settings:
             config_data = json.load(f)
         else:
             raise ValueError(f"Unsupported config file format: {config_file.suffix}")
+    
+    # Resolve cursor_workspace path to absolute path
+    if 'cursor_workspace' in config_data:
+        workspace_path = Path(config_data['cursor_workspace'])
+        if not workspace_path.is_absolute():
+            # Resolve relative to config file location
+            config_dir = config_file.parent.absolute()
+            workspace_path = (config_dir / workspace_path).resolve()
+        config_data['cursor_workspace'] = str(workspace_path)
+    
+    # Also check environment variable for workspace
+    env_workspace = os.getenv('CURSOR_WORKSPACE')
+    if env_workspace:
+        workspace_path = Path(env_workspace)
+        if not workspace_path.is_absolute():
+            workspace_path = Path.cwd() / workspace_path
+        config_data['cursor_workspace'] = str(workspace_path.resolve())
     
     return Settings.from_dict(config_data)
 

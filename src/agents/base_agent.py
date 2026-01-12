@@ -107,37 +107,25 @@ class BaseAgent(ABC):
                 for path, content in file_contents.items():
                     full_prompt += f"\n--- {path} ---\n{content[:2000]}\n"  # Limit file content
             
-            # Check if using local llama-server (OpenAI-compatible API)
+            # Enforce local llama-server usage only
             api_base = os.getenv('OPENAI_API_BASE')
-            if api_base:
-                logger.info(f"[{self.agent_id}] Using local llama-server at {api_base}")
-                return await self._call_local_llama_server(system_prompt, full_prompt, timeout)
+            if not api_base:
+                error_msg = (
+                    "OPENAI_API_BASE not configured. This system requires a local llama-server.\n"
+                    "Please set OPENAI_API_BASE in your .env file:\n"
+                    "  OPENAI_API_BASE=http://127.0.0.1:8080/v1\n"
+                    "  OPENAI_API_KEY=not-needed\n"
+                    "  OPENAI_API_MODEL=devstral\n\n"
+                    "Start llama-server with: ./scripts/start_llama_server.sh"
+                )
+                logger.error(f"[{self.agent_id}] {error_msg}")
+                return {
+                    "success": False,
+                    "error": error_msg
+                }
             
-            # Use cursor-agent-tools for cloud providers
-            from cursor_agent_tools import create_agent
-            
-            logger.info(f"[{self.agent_id}] Using auto model selection")
-            
-            # Create agent with system prompt
-            agent = create_agent(
-                model='auto',
-                system_prompt=system_prompt
-            )
-            
-            logger.info(f"[{self.agent_id}] Executing task with {len(file_contents)} files")
-            
-            # Execute the chat
-            response = await asyncio.wait_for(
-                agent.chat(full_prompt),
-                timeout=timeout
-            )
-            
-            return {
-                "success": True,
-                "stdout": response,
-                "stderr": "",
-                "returncode": 0
-            }
+            logger.info(f"[{self.agent_id}] Using local llama-server at {api_base}")
+            return await self._call_local_llama_server(system_prompt, full_prompt, timeout)
             
         except asyncio.TimeoutError:
             logger.error(f"[{self.agent_id}] Task timed out after {timeout} seconds")

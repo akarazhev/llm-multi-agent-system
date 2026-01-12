@@ -1,8 +1,12 @@
+#!/usr/bin/env python3
 import asyncio
 import sys
+import os
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Get project root directory
+PROJECT_ROOT = Path(__file__).parent.parent.absolute()
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.orchestrator import AgentOrchestrator
 from src.agents.base_agent import Task
@@ -11,7 +15,7 @@ from src.agents import AgentRole
 
 async def run_custom_workflow():
     orchestrator = AgentOrchestrator(
-        cursor_workspace="/Users/andrey.karazhev/Developer/spg/llm-multi-agent-system"
+        cursor_workspace=str(PROJECT_ROOT)
     )
     
     custom_workflow = [

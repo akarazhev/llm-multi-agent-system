@@ -4,11 +4,14 @@ Simple single-agent test - much faster than full workflow
 """
 import asyncio
 import sys
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Get project root directory
+PROJECT_ROOT = Path(__file__).parent.absolute()
 load_dotenv()
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.agents import DeveloperAgent
 from src.agents.base_agent import Task
@@ -22,7 +25,7 @@ async def simple_test():
     # Create a developer agent
     agent = DeveloperAgent(
         agent_id="dev_simple",
-        cursor_workspace="/Users/andrey.karazhev/Developer/spg/llm-multi-agent-system",
+        cursor_workspace=str(PROJECT_ROOT),
         config={'cursor_cli_path': 'cursor'}
     )
     

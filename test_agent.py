@@ -4,9 +4,12 @@ Quick test script to verify cursor-agent-tools integration
 """
 import asyncio
 import sys
+import os
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
+# Get project root directory
+PROJECT_ROOT = Path(__file__).parent.absolute()
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.agents import BusinessAnalystAgent
 from src.agents.base_agent import Task
@@ -22,7 +25,7 @@ async def test_agent():
     # Create a Business Analyst agent
     agent = BusinessAnalystAgent(
         agent_id="test_ba",
-        cursor_workspace="/Users/andrey.karazhev/Developer/spg/llm-multi-agent-system",
+        cursor_workspace=str(PROJECT_ROOT),
         config={'cursor_cli_path': 'cursor'}
     )
     

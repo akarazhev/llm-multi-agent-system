@@ -21,12 +21,34 @@ class FileWriter:
         """
         Parse code blocks from markdown-formatted text.
         Returns list of dicts with 'language', 'filename', and 'content'.
+        
+        Supports multiple formats:
+        - File: `filename` followed by code block
+        - **File: `filename`** followed by code block
+        - ```python:filename.py
+        - ```python
         """
         code_blocks = []
         
-        # Pattern to match fenced code blocks with optional filename
+        # First, try to extract File: `filename` format (same as extract_file_structure)
+        # This prevents creating duplicate files
+        files_dict = self.extract_file_structure(text)
+        if files_dict:
+            for filename, content in files_dict.items():
+                # Infer language from filename extension
+                ext = Path(filename).suffix.lower()
+                language = self._get_language_from_extension(ext)
+                
+                code_blocks.append({
+                    'language': language,
+                    'filename': filename,
+                    'content': content
+                })
+            return code_blocks
+        
+        # Fallback: Pattern to match fenced code blocks with optional filename
         # Supports: ```python, ```python:filename.py, ```filename.py
-        pattern = r'```(?:(\w+)(?::([^\n]+))?)?\n(.*?)```'
+        pattern = r'```(?:(\w+)(?::([^\n]+))?)?\n(.*?)\n```'
         
         matches = re.finditer(pattern, text, re.DOTALL)
         
@@ -46,6 +68,34 @@ class FileWriter:
             })
         
         return code_blocks
+    
+    def _get_language_from_extension(self, ext: str) -> str:
+        """Get language name from file extension"""
+        ext_to_lang = {
+            '.py': 'python',
+            '.js': 'javascript',
+            '.ts': 'typescript',
+            '.tsx': 'tsx',
+            '.jsx': 'jsx',
+            '.java': 'java',
+            '.cpp': 'cpp',
+            '.c': 'c',
+            '.go': 'go',
+            '.rs': 'rust',
+            '.rb': 'ruby',
+            '.php': 'php',
+            '.html': 'html',
+            '.css': 'css',
+            '.scss': 'scss',
+            '.sql': 'sql',
+            '.yaml': 'yaml',
+            '.yml': 'yaml',
+            '.json': 'json',
+            '.xml': 'xml',
+            '.md': 'markdown',
+            '.sh': 'bash',
+        }
+        return ext_to_lang.get(ext, 'text')
     
     def _infer_filename(self, content: str, language: str) -> str:
         """Infer filename from content or language"""

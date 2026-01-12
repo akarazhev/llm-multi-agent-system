@@ -76,20 +76,12 @@ File: path/to/file.py
             # Write files from the LLM response
             created_files = []
             try:
-                # Try to parse and write code blocks
+                # Parse and write code blocks (handles both File: format and code blocks)
                 created_files = self.file_writer.write_code_blocks(
                     implementation_text,
                     task.task_id,
                     self.role.value
                 )
-                
-                # If no code blocks found, try file structure parsing
-                if not created_files:
-                    created_files = self.file_writer.write_file_structure(
-                        implementation_text,
-                        task.task_id,
-                        self.role.value
-                    )
                 
                 logger.info(f"[{self.agent_id}] Created {len(created_files)} files")
             except Exception as e:

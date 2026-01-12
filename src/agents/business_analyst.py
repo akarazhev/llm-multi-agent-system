@@ -70,23 +70,6 @@ File: analysis/user_stories.md
                     self.role.value
                 )
                 
-                if not created_files:
-                    created_files = self.file_writer.write_file_structure(
-                        analysis_text,
-                        task.task_id,
-                        self.role.value
-                    )
-                
-                # If still no files, save as single analysis document
-                if not created_files:
-                    created_file = self.file_writer.write_file(
-                        "requirements_analysis.md",
-                        analysis_text,
-                        task.task_id,
-                        self.role.value
-                    )
-                    created_files = [created_file]
-                
                 logger.info(f"[{self.agent_id}] Created {len(created_files)} analysis files")
             except Exception as e:
                 logger.warning(f"[{self.agent_id}] Failed to write analysis files: {e}")

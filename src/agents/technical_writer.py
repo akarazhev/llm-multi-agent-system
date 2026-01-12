@@ -83,13 +83,6 @@ File: docs/API.md
                     self.role.value
                 )
                 
-                if not created_files:
-                    created_files = self.file_writer.write_file_structure(
-                        doc_text,
-                        task.task_id,
-                        self.role.value
-                    )
-                
                 logger.info(f"[{self.agent_id}] Created {len(created_files)} documentation files")
             except Exception as e:
                 logger.warning(f"[{self.agent_id}] Failed to write documentation files: {e}")

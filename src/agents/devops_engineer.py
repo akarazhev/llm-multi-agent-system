@@ -46,7 +46,7 @@ Context:
 {self._format_context(task.context)}
 
 Requirements:
-{task.context.get('requirements', 'No specific requirements provided')}
+{task.context.get('requirement', task.context.get('requirements', 'No specific requirements provided'))}
 
 Please provide:
 1. Infrastructure configuration files (Docker, K8s, Terraform, etc.)
@@ -55,6 +55,15 @@ Please provide:
 4. Monitoring and logging setup
 5. Security configurations
 6. Documentation for operations team
+
+IMPORTANT: Format your configuration files using markdown code blocks with filenames:
+```yaml:docker-compose.yml
+# Your config here
+```
+
+Or specify files explicitly:
+File: Dockerfile
+# Your config here
 """
         
         result = await self.execute_cursor_command(
@@ -63,9 +72,32 @@ Please provide:
         )
         
         if result.get("success"):
+            infra_text = result.get("stdout", "")
+            
+            # Write infrastructure files from the LLM response
+            created_files = []
+            try:
+                created_files = self.file_writer.write_code_blocks(
+                    infra_text,
+                    task.task_id,
+                    self.role.value
+                )
+                
+                if not created_files:
+                    created_files = self.file_writer.write_file_structure(
+                        infra_text,
+                        task.task_id,
+                        self.role.value
+                    )
+                
+                logger.info(f"[{self.agent_id}] Created {len(created_files)} infrastructure files")
+            except Exception as e:
+                logger.warning(f"[{self.agent_id}] Failed to write infrastructure files: {e}")
+            
             return {
                 "status": "completed",
-                "infrastructure": result.get("stdout"),
+                "infrastructure": infra_text,
+                "files_created": created_files,
                 "config_files": config_files,
                 "agent_role": self.role.value
             }

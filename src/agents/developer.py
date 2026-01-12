@@ -46,7 +46,7 @@ Context:
 {self._format_context(task.context)}
 
 Requirements:
-{task.context.get('requirements', 'No specific requirements provided')}
+{task.context.get('requirement', task.context.get('requirements', 'No specific requirements provided'))}
 
 Please implement this feature following best practices. Include:
 1. Complete implementation with all necessary imports
@@ -54,6 +54,15 @@ Please implement this feature following best practices. Include:
 3. Unit tests
 4. Documentation comments
 5. Any configuration changes needed
+
+IMPORTANT: Format your code output using markdown code blocks with filenames:
+```python:path/to/file.py
+# Your code here
+```
+
+Or specify files explicitly:
+File: path/to/file.py
+# Your code here
 """
         
         result = await self.execute_cursor_command(
@@ -62,9 +71,34 @@ Please implement this feature following best practices. Include:
         )
         
         if result.get("success"):
+            implementation_text = result.get("stdout", "")
+            
+            # Write files from the LLM response
+            created_files = []
+            try:
+                # Try to parse and write code blocks
+                created_files = self.file_writer.write_code_blocks(
+                    implementation_text,
+                    task.task_id,
+                    self.role.value
+                )
+                
+                # If no code blocks found, try file structure parsing
+                if not created_files:
+                    created_files = self.file_writer.write_file_structure(
+                        implementation_text,
+                        task.task_id,
+                        self.role.value
+                    )
+                
+                logger.info(f"[{self.agent_id}] Created {len(created_files)} files")
+            except Exception as e:
+                logger.warning(f"[{self.agent_id}] Failed to write files: {e}")
+            
             return {
                 "status": "completed",
-                "implementation": result.get("stdout"),
+                "implementation": implementation_text,
+                "files_created": created_files,
                 "files_modified": files_to_modify,
                 "agent_role": self.role.value
             }

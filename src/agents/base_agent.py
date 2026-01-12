@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging
+from ..utils import FileWriter
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,7 @@ class BaseAgent(ABC):
         self.current_task: Optional[Task] = None
         self.task_history: List[Task] = []
         self.message_queue: asyncio.Queue = asyncio.Queue()
+        self.file_writer = FileWriter(cursor_workspace)
         
     @abstractmethod
     async def process_task(self, task: Task) -> Dict[str, Any]:

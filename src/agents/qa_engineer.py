@@ -55,6 +55,15 @@ Please create comprehensive tests including:
 4. Test data fixtures
 5. Test documentation
 6. Coverage analysis recommendations
+
+IMPORTANT: Format your test code using markdown code blocks with filenames:
+```python:tests/test_feature.py
+# Your test code here
+```
+
+Or specify files explicitly:
+File: tests/test_feature.py
+# Your test code here
 """
         
         result = await self.execute_cursor_command(
@@ -63,9 +72,32 @@ Please create comprehensive tests including:
         )
         
         if result.get("success"):
+            test_text = result.get("stdout", "")
+            
+            # Write test files from the LLM response
+            created_files = []
+            try:
+                created_files = self.file_writer.write_code_blocks(
+                    test_text,
+                    task.task_id,
+                    self.role.value
+                )
+                
+                if not created_files:
+                    created_files = self.file_writer.write_file_structure(
+                        test_text,
+                        task.task_id,
+                        self.role.value
+                    )
+                
+                logger.info(f"[{self.agent_id}] Created {len(created_files)} test files")
+            except Exception as e:
+                logger.warning(f"[{self.agent_id}] Failed to write test files: {e}")
+            
             return {
                 "status": "completed",
-                "test_suite": result.get("stdout"),
+                "test_suite": test_text,
+                "files_created": created_files,
                 "files_tested": files_to_test,
                 "agent_role": self.role.value
             }

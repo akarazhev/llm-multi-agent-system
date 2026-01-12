@@ -55,6 +55,15 @@ Please create documentation including:
 4. Configuration and setup instructions
 5. Troubleshooting section
 6. References and related resources
+
+IMPORTANT: Format your documentation using markdown code blocks with filenames:
+```markdown:docs/README.md
+# Your documentation here
+```
+
+Or specify files explicitly:
+File: docs/API.md
+# Your documentation here
 """
         
         result = await self.execute_cursor_command(
@@ -63,9 +72,32 @@ Please create documentation including:
         )
         
         if result.get("success"):
+            doc_text = result.get("stdout", "")
+            
+            # Write documentation files from the LLM response
+            created_files = []
+            try:
+                created_files = self.file_writer.write_code_blocks(
+                    doc_text,
+                    task.task_id,
+                    self.role.value
+                )
+                
+                if not created_files:
+                    created_files = self.file_writer.write_file_structure(
+                        doc_text,
+                        task.task_id,
+                        self.role.value
+                    )
+                
+                logger.info(f"[{self.agent_id}] Created {len(created_files)} documentation files")
+            except Exception as e:
+                logger.warning(f"[{self.agent_id}] Failed to write documentation files: {e}")
+            
             return {
                 "status": "completed",
-                "documentation": result.get("stdout"),
+                "documentation": doc_text,
+                "files_created": created_files,
                 "source_files": source_files,
                 "agent_role": self.role.value
             }

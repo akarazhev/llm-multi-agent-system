@@ -45,14 +45,56 @@ Please analyze this requirement and provide:
 3. Business value assessment
 4. Dependencies and risks
 5. Jira ticket structure recommendations
+
+IMPORTANT: Format your analysis as markdown documents:
+```markdown:analysis/requirements.md
+# Your analysis here
+```
+
+Or specify files explicitly:
+File: analysis/user_stories.md
+# Your user stories here
 """
         
         result = await self.execute_cursor_command(prompt)
         
         if result.get("success"):
+            analysis_text = result.get("stdout", "")
+            
+            # Write analysis files from the LLM response
+            created_files = []
+            try:
+                created_files = self.file_writer.write_code_blocks(
+                    analysis_text,
+                    task.task_id,
+                    self.role.value
+                )
+                
+                if not created_files:
+                    created_files = self.file_writer.write_file_structure(
+                        analysis_text,
+                        task.task_id,
+                        self.role.value
+                    )
+                
+                # If still no files, save as single analysis document
+                if not created_files:
+                    created_file = self.file_writer.write_file(
+                        "requirements_analysis.md",
+                        analysis_text,
+                        task.task_id,
+                        self.role.value
+                    )
+                    created_files = [created_file]
+                
+                logger.info(f"[{self.agent_id}] Created {len(created_files)} analysis files")
+            except Exception as e:
+                logger.warning(f"[{self.agent_id}] Failed to write analysis files: {e}")
+            
             return {
                 "status": "completed",
-                "analysis": result.get("stdout"),
+                "analysis": analysis_text,
+                "files_created": created_files,
                 "agent_role": self.role.value
             }
         else:

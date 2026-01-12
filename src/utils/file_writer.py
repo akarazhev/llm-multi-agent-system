@@ -223,7 +223,10 @@ class FileWriter:
         # This handles formats:
         # - File: `analysis/file.md` \n```markdown\n content \n```
         # - **File: `analysis/file.md`** \n```markdown\n content \n```
-        pattern1 = r'\*\*File:\s*`([^`]+)`\*\*\s*\n```(?:\w+)?\n(.*?)```'
+        # Use non-greedy match but ensure we capture until the closing ```
+        
+        # Try with bold first
+        pattern1 = r'\*\*File:\s*`([^`]+)`\*\*\s*\n```(?:\w+)?\n(.*?)\n```'
         matches = re.finditer(pattern1, text, re.DOTALL)
         for match in matches:
             filename = match.group(1).strip()
@@ -232,7 +235,7 @@ class FileWriter:
         
         # If no matches with bold, try without bold
         if not files:
-            pattern1_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n(.*?)```'
+            pattern1_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n(.*?)\n```'
             matches = re.finditer(pattern1_no_bold, text, re.DOTALL)
             for match in matches:
                 filename = match.group(1).strip()

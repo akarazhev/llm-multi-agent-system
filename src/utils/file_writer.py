@@ -330,7 +330,7 @@ class FileWriter:
                     content = remaining_text[:close_match.start()].strip()
                     files[filename] = content
         
-        # If no matches with bold, try without bold
+        # If no matches with bold, try without bold (with backticks)
         if not files:
             pattern_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n'
             matches = list(re.finditer(pattern_no_bold, text, re.DOTALL))
@@ -354,85 +354,31 @@ class FileWriter:
                         content = remaining_text[:close_match.start()].strip()
                         files[filename] = content
         
-        # If pattern 1 found files, return them
-        if files:
-            return files
-        
-        # Pattern 2: Traditional line-by-line parsing for other formats
-        current_file = None
-        current_content = []
-        in_code_block = False
-        
-        lines = text.split('\n')
-        
-        for i, line in enumerate(lines):
-            # Check for file markers
-            file_marker = None
+        # Pattern 3: File: path/to/file.py (without backticks)
+        if not files:
+            pattern_no_backticks = r'File:\s+([^\n]+)\n```(?:\w+)?\n'
+            matches = list(re.finditer(pattern_no_backticks, text, re.DOTALL))
             
-            # Pattern: File: `path/to/file.py` or File: path/to/file.py
-            if line.strip().startswith('File:'):
-                file_part = line.split('File:', 1)[1].strip()
-                # Remove backticks if present
-                file_marker = file_part.strip('`').strip()
-                
-                # Save previous file
-                if current_file:
-                    files[current_file] = '\n'.join(current_content).strip()
-                
-                current_file = file_marker
-                current_content = []
-                in_code_block = False
-                
-                # Skip the next line if it's a code block start
-                if i + 1 < len(lines) and lines[i + 1].strip().startswith('```'):
-                    in_code_block = True
-                continue
-            
-            # Pattern: ## path/to/file.py
-            elif line.strip().startswith('##') and ('/' in line or '.' in line):
-                file_marker = line.strip('#').strip()
-                
-                if current_file:
-                    files[current_file] = '\n'.join(current_content).strip()
-                
-                current_file = file_marker
-                current_content = []
-                in_code_block = False
-                continue
-            
-            # Pattern: path/to/file.py:
-            elif line.strip().endswith(':') and ('/' in line or line.count('.') >= 1):
-                potential_marker = line.rstrip(':').strip()
-                # Check if it looks like a file path
-                if '.' in potential_marker or '/' in potential_marker:
-                    file_marker = potential_marker
+            if matches:
+                for i, match in enumerate(matches):
+                    filename = match.group(1).strip()
+                    start_pos = match.end()
                     
-                    if current_file:
-                        files[current_file] = '\n'.join(current_content).strip()
+                    if i + 1 < len(matches):
+                        end_search = matches[i + 1].start()
+                    else:
+                        end_search = len(text)
                     
-                    current_file = file_marker
-                    current_content = []
-                    in_code_block = False
-                    continue
-            
-            # Handle code block markers
-            if line.strip().startswith('```'):
-                if in_code_block:
-                    # End of code block
-                    in_code_block = False
-                else:
-                    # Start of code block
-                    in_code_block = True
-                continue
-            
-            # Add content to current file
-            if current_file:
-                current_content.append(line)
+                    remaining_text = text[start_pos:end_search]
+                    close_match = None
+                    for m in re.finditer(r'\n```(?:\s|$)', remaining_text):
+                        close_match = m
+                    
+                    if close_match:
+                        content = remaining_text[:close_match.start()].strip()
+                        files[filename] = content
         
-        # Save last file
-        if current_file:
-            files[current_file] = '\n'.join(current_content).strip()
-        
+        # Return files if any patterns matched, otherwise return empty dict
         return files
     
     def write_file_structure(

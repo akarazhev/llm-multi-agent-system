@@ -310,13 +310,41 @@ task_timeout: 900    # 15 minutes
 3. Ensure all dependencies are met
 4. Try with simpler requirement first
 
+## Running Tests
+
+The project includes a comprehensive test suite to ensure everything works correctly:
+
+```bash
+# Run all tests
+python -m pytest tests/
+
+# Run specific test
+python -m pytest tests/test_agent.py
+
+# Run with verbose output
+python -m pytest tests/ -v
+
+# Run individual test files
+python tests/simple_test.py
+python tests/test_file_writer.py
+```
+
+**Test Coverage:**
+- Agent functionality and workflows
+- File writer and format handling
+- Response parsing and extraction
+- Edge cases and error handling
+
+For detailed testing information, see [TESTING.md](./TESTING.md).
+
 ## Next Steps
 
 1. **Explore Examples**: Run all example scripts to understand capabilities
 2. **Read Documentation**: Check `docs/CURSOR_CLI_ORCHESTRATION.md` for details
 3. **Customize Configuration**: Adjust `config.yaml` for your needs
 4. **Create Custom Workflows**: Build workflows specific to your projects
-5. **Integrate with Tools**: Connect to Jira, GitLab, Confluence (future feature)
+5. **Run Tests**: Verify everything works with `python -m pytest tests/`
+6. **Integrate with Tools**: Connect to Jira, GitLab, Confluence (future feature)
 
 ## Getting Help
 

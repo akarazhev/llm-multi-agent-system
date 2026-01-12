@@ -119,8 +119,19 @@ llm-multi-agent-system/
 │   │   ├── agent_orchestrator.py  # Main orchestrator
 │   │   ├── task_manager.py        # Task queue and dependency management
 │   │   └── workflow_engine.py     # Workflow templates and execution
-│   └── config/                    # Configuration management
-│       └── settings.py            # Settings and config loading
+│   ├── config/                    # Configuration management
+│   │   └── settings.py            # Settings and config loading
+│   └── utils/                     # Utility modules
+│       └── file_writer.py         # File writing utilities
+├── tests/                          # Test suite
+│   ├── simple_test.py             # Simple workflow tests
+│   ├── test_agent.py              # Agent functionality tests
+│   ├── test_all_formats.py        # File format tests
+│   ├── test_file_writer.py        # File writer tests
+│   ├── test_full_response.py      # Full response tests
+│   ├── test_nested_blocks.py      # Nested block tests
+│   ├── test_no_backticks.py       # No backticks tests
+│   └── test_no_duplicates.py      # Duplicate prevention tests
 ├── examples/                       # Example scripts
 │   ├── simple_workflow.py         # Basic workflow example
 │   ├── custom_workflow.py         # Custom workflow example
@@ -180,6 +191,33 @@ python examples/custom_workflow.py
 python examples/agent_status_monitor.py
 ```
 
+## Testing
+
+The project includes a comprehensive test suite in the `tests/` directory:
+
+```bash
+# Run all tests
+python -m pytest tests/
+
+# Run specific test file
+python -m pytest tests/test_agent.py
+
+# Run with verbose output
+python -m pytest tests/ -v
+
+# Run individual test files
+python tests/simple_test.py
+python tests/test_file_writer.py
+python tests/test_all_formats.py
+```
+
+**Test Coverage:**
+- **Agent functionality**: Core agent behavior and workflows
+- **File writer**: File writing and format handling
+- **Response parsing**: LLM response processing
+- **Format handling**: Multiple file format support
+- **Edge cases**: Nested blocks, duplicates, special characters
+
 ## Agent Capabilities
 
 - **Business Analyst**: Requirements analysis, user stories, Jira ticket structure
@@ -194,6 +232,7 @@ All detailed documentation is located in the `docs/` directory:
 
 - **[Quick Start Guide](./docs/QUICK_START.md)** - Get started in 5 minutes
 - **[Cursor CLI Orchestration](./docs/CURSOR_CLI_ORCHESTRATION.md)** - Complete system guide
+- **[Testing Guide](./docs/TESTING.md)** - Comprehensive testing documentation
 - [Brainstorming Notes](./docs/BRAINSTORMING.md)
 - [Architecture Design](./docs/ARCHITECTURE.md)
 - [Technology Stack](./docs/TECH_STACK.md)

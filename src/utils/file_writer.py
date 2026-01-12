@@ -220,13 +220,24 @@ class FileWriter:
         files = {}
         
         # Pattern 1: File: `filename` followed by ```language code block
-        # This handles the format: File: `analysis/file.md` \n```markdown\n content \n```
-        pattern1 = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n(.*?)```'
+        # This handles formats:
+        # - File: `analysis/file.md` \n```markdown\n content \n```
+        # - **File: `analysis/file.md`** \n```markdown\n content \n```
+        pattern1 = r'\*\*File:\s*`([^`]+)`\*\*\s*\n```(?:\w+)?\n(.*?)```'
         matches = re.finditer(pattern1, text, re.DOTALL)
         for match in matches:
             filename = match.group(1).strip()
             content = match.group(2).strip()
             files[filename] = content
+        
+        # If no matches with bold, try without bold
+        if not files:
+            pattern1_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n(.*?)```'
+            matches = re.finditer(pattern1_no_bold, text, re.DOTALL)
+            for match in matches:
+                filename = match.group(1).strip()
+                content = match.group(2).strip()
+                files[filename] = content
         
         # If pattern 1 found files, return them
         if files:

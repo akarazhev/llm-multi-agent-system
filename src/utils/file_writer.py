@@ -212,38 +212,95 @@ class FileWriter:
         """
         Extract file structure from text that describes multiple files.
         Looks for patterns like:
+        - File: `path/to/file.py`
         - File: path/to/file.py
         - path/to/file.py:
         - ## path/to/file.py
         """
         files = {}
+        
+        # Pattern 1: File: `filename` followed by ```language code block
+        # This handles the format: File: `analysis/file.md` \n```markdown\n content \n```
+        pattern1 = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n(.*?)```'
+        matches = re.finditer(pattern1, text, re.DOTALL)
+        for match in matches:
+            filename = match.group(1).strip()
+            content = match.group(2).strip()
+            files[filename] = content
+        
+        # If pattern 1 found files, return them
+        if files:
+            return files
+        
+        # Pattern 2: Traditional line-by-line parsing for other formats
         current_file = None
         current_content = []
+        in_code_block = False
         
         lines = text.split('\n')
         
-        for line in lines:
+        for i, line in enumerate(lines):
             # Check for file markers
             file_marker = None
             
-            # Pattern 1: File: path/to/file.py
+            # Pattern: File: `path/to/file.py` or File: path/to/file.py
             if line.strip().startswith('File:'):
-                file_marker = line.split('File:', 1)[1].strip()
-            # Pattern 2: ## path/to/file.py
-            elif line.strip().startswith('##') and ('/' in line or '.' in line):
-                file_marker = line.strip('#').strip()
-            # Pattern 3: path/to/file.py:
-            elif line.strip().endswith(':') and ('/' in line or line.count('.') == 1):
-                file_marker = line.rstrip(':').strip()
-            
-            if file_marker:
+                file_part = line.split('File:', 1)[1].strip()
+                # Remove backticks if present
+                file_marker = file_part.strip('`').strip()
+                
                 # Save previous file
                 if current_file:
                     files[current_file] = '\n'.join(current_content).strip()
                 
                 current_file = file_marker
                 current_content = []
-            elif current_file:
+                in_code_block = False
+                
+                # Skip the next line if it's a code block start
+                if i + 1 < len(lines) and lines[i + 1].strip().startswith('```'):
+                    in_code_block = True
+                continue
+            
+            # Pattern: ## path/to/file.py
+            elif line.strip().startswith('##') and ('/' in line or '.' in line):
+                file_marker = line.strip('#').strip()
+                
+                if current_file:
+                    files[current_file] = '\n'.join(current_content).strip()
+                
+                current_file = file_marker
+                current_content = []
+                in_code_block = False
+                continue
+            
+            # Pattern: path/to/file.py:
+            elif line.strip().endswith(':') and ('/' in line or line.count('.') >= 1):
+                potential_marker = line.rstrip(':').strip()
+                # Check if it looks like a file path
+                if '.' in potential_marker or '/' in potential_marker:
+                    file_marker = potential_marker
+                    
+                    if current_file:
+                        files[current_file] = '\n'.join(current_content).strip()
+                    
+                    current_file = file_marker
+                    current_content = []
+                    in_code_block = False
+                    continue
+            
+            # Handle code block markers
+            if line.strip().startswith('```'):
+                if in_code_block:
+                    # End of code block
+                    in_code_block = False
+                else:
+                    # Start of code block
+                    in_code_block = True
+                continue
+            
+            # Add content to current file
+            if current_file:
                 current_content.append(line)
         
         # Save last file

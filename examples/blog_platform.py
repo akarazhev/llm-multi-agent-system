@@ -5,6 +5,10 @@ Example: Build a Blog Platform with CMS using the multi-agent system
 import asyncio
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(Path(__file__).parent.parent / '.env')
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 

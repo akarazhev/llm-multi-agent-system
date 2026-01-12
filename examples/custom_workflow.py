@@ -3,10 +3,14 @@ import asyncio
 import sys
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Get project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.absolute()
 sys.path.insert(0, str(PROJECT_ROOT))
+
+# Load .env file from project root
+load_dotenv(PROJECT_ROOT / '.env')
 
 from src.orchestrator import AgentOrchestrator
 from src.agents.base_agent import Task

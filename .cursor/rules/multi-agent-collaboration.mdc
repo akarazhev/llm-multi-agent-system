@@ -1,8 +1,8 @@
 ---
 name: Multi-Agent Collaborative Workflow
-description: Rule for collaborative work of multiple agents in a unified space with communication, role coordination, and step-by-step interaction
+description: Comprehensive rule for collaborative work of multiple agents with strict responsibility zones, editing rules, full process workflow, and utility integration
 alwaysApply: false
-tags: [agents, collaboration, communication, workflow]
+tags: [agents, collaboration, communication, workflow, multi-agent]
 ---
 
 # Multi-Agent Collaboration Protocol
@@ -10,6 +10,10 @@ tags: [agents, collaboration, communication, workflow]
 ## 🎯 Purpose
 
 This rule defines how multiple AI agents should collaborate when working on the same task simultaneously. When 2 or more agents are active, they must work together in a coordinated, conversational manner, sharing a unified workspace and reaching consensus before proceeding.
+
+**Version**: 2.0 (Updated based on practical testing session 2026-01-10)
+**Last Updated**: 2026-01-12
+**Based on**: Practical testing session with 4 agents, 15+ consensuses, 7 utilities created
 
 ## When This Rule Applies
 
@@ -25,6 +29,837 @@ This rule is **MANDATORY** when:
 3. **Role Assignment**: Each agent selects and agrees on their role with others
 4. **Sequential Consensus**: Agents wait for responses before proceeding
 5. **Step-by-Step Documentation**: All reasoning and decisions are documented incrementally
+6. **Strict Responsibility Zones**: Each agent can edit ONLY what they wrote themselves
+7. **Mandatory File Checking**: Agents MUST check for new questions and updates on every file access
+
+---
+
+## Editing Rules (Critical - Strict Responsibility Zones)
+
+**CRITICAL**: Each agent can edit ONLY what they wrote themselves. Each agent is responsible ONLY for themselves. This is a strict requirement.
+
+### Rule 1: Agent Status Sections
+- **Can edit**: ONLY the agent who owns the section
+- **Format**: `## Agent X - Current Status`
+- **Restrictions**: 
+  - Agent CANNOT edit other agents' status sections
+  - If you see an error in another agent's section → report in Discussion Log
+  - The agent who made the error must fix it themselves
+
+### Rule 2: Discussion Log
+- **Can edit**: All agents (append-only)
+- **Restrictions**:
+  - ONLY add new messages to the end
+  - CANNOT edit other agents' messages
+  - CANNOT delete messages
+  - If you need to correct your own message → add new message with "Correction/Update" marker
+
+### Rule 3: Decisions & Consensus
+- **Can edit**: ONLY the agent who proposed the decision (after consensus)
+- **Process**:
+  1. Agent proposes decision in Discussion Log
+  2. Consensus is reached (all agents confirm)
+  3. Proposing agent updates "Decisions & Consensus" section
+  4. Other agents CANNOT edit without agreement
+
+### Rule 4: Step-by-Step Execution
+- **Can edit**: ONLY the agent who performed the step
+- **Process**:
+  1. Agent performs step
+  2. Agent adds entry to "Step-by-Step Execution"
+  3. Other agents CANNOT edit other agents' steps
+  4. If you need to supplement another agent's step → add your own step with "Follow-up" marker
+
+### Rule 5: Created Files Registry
+- **Can edit**: ONLY the agent who created the file
+- **Process**:
+  1. Agent creates file
+  2. Agent adds entry to File Registry
+  3. Other agents CANNOT edit other agents' entries
+  4. If you see an error → report in Discussion Log
+
+### Rule 6: Shared Sections (Context Summary, Session Metadata)
+- **Can edit**: All agents (with restrictions)
+- **Process**:
+  1. Agent updates with timestamp and agent_id
+  2. If conflict → re-read, rebase, retry
+  3. Document conflicts in Discussion Log
+
+### Error Correction Protocol
+
+**If you see an error in another agent's section:**
+1. Add message to Discussion Log:
+   - Specify: "Error in Agent X section: [description]"
+   - Specify: "Correction proposal: [what to fix]"
+   - DO NOT edit the other agent's section directly
+
+2. Agent who made the error:
+   - Reads message in Discussion Log
+   - Fixes their own section
+   - Confirms fix in Discussion Log
+
+**If error in shared section:**
+1. Add message to Discussion Log describing the error
+2. Discuss in Discussion Log
+3. Reach consensus on correction
+4. Agent who initiated correction updates the section
+
+---
+
+## Mandatory File Check Protocol
+
+**CRITICAL**: Each agent MUST check the session file on every access.
+
+**Mandatory checks on every file read:**
+
+1. **Check for new questions**:
+   - Search for patterns: `❓ ВОПРОСЫ|Questions|❓|**Вопрос**|Action Required`
+   - Check "Discussion Log" section for new messages with questions
+   - Check "Open Questions" section for new questions
+   - Check "Decisions & Consensus" section for questions requiring answers
+
+2. **Check for new messages**:
+   - Read last N messages in Discussion Log (e.g., last 5)
+   - Check timestamp of last message
+   - If new messages exist → read and respond
+
+3. **Check for status updates**:
+   - Check latest updates in agent sections
+   - Check changes in Context Summary
+   - Check updates in Decisions & Consensus
+
+4. **Check for critical issues**:
+   - Search for markers: `🚨 CRITICAL|🔴 CRITICAL|⚠️ CRITICAL`
+   - Check "Open Questions" section for critical questions
+   - Check "Action Required" lists
+
+**Check process:**
+1. On every file access → read latest updates
+2. Check for new questions (pattern search)
+3. If questions found → respond in Discussion Log
+4. Update your status with check timestamp
+
+**Automation:**
+- Use `check_new_questions.py` utility for automatic checking
+- Use `check_action_required.py` utility for checking required actions
+
+---
+
+## Technical Implementation Details
+
+This section provides concrete technical instructions for implementing the collaboration protocol. While previous sections describe **WHAT** to do, this section explains **HOW** to do it technically.
+
+### Agent Detection Protocol
+
+Since agents cannot directly detect each other, use the following file-based approach:
+
+**Step-by-Step Process:**
+
+1. **Locate Collaboration File**:
+   - Use the path provided by user, or
+   - Search in standard location: `docs/COLLABORATION_SESSION_*.md` or `docs/COLLABORATION/*.md`
+   - Check environment variable `COLLABORATION_SESSIONS_DIR` if available
+   - Look for files matching pattern: `COLLABORATION_SESSION_[YYYY-MM-DD_HH-MM-SS].md`
+
+2. **Read Collaboration File**:
+   - Read the entire file completely
+   - Parse content to find agent introductions
+   - Look for patterns:
+     - `### Agent [Number/Name]` (markdown heading)
+     - `**Agent [Number/Name]**` (bold text)
+     - `Agent ID`: `Agent-[Number]` (in structured format)
+     - `## Agent X - Current Status` (status sections)
+
+3. **Count Active Agents**:
+   - Count unique agent names/IDs found in introductions
+   - Number of unique agent identifiers = number of active agents
+   - If file doesn't exist or has no agent introductions: you are the first agent
+   - Alternative: User provides number of active agents in context (use as authoritative)
+
+4. **Record Detection**:
+   - Document in file: `"Detected [N] active agent(s)"` with timestamp
+   - Example: `**Agent Detection**: Found 3 active agents at 2026-01-10 14:25:00`
+
+**Edge Cases:**
+- If multiple files found: check timestamps, use most recent, or ask user
+- If file exists but empty: treat as first agent, initialize structure
+- If file corrupted/unreadable: create new file, document issue
+
+### Synchronization Protocol
+
+Agents synchronize through the shared collaboration file using a polling approach:
+
+**Before Any Action:**
+
+1. **Read Entire File**:
+   - Always read the complete collaboration file before any action
+   - Don't rely on cached content from previous reads
+   - Ensure you have the latest state
+
+2. **Parse Messages and Timestamps**:
+   - Identify all messages in Discussion Log section
+   - Parse timestamps using format: `[YYYY-MM-DD HH:MM:SS]` or `Timestamp: YYYY-MM-DD HH:MM:SS`
+   - Find the most recent message timestamp
+   - Note which agent last updated the file
+
+3. **Check for New Messages**:
+   - Compare latest timestamp with your last read timestamp
+   - If new messages exist: read and process them before proceeding
+   - If no new messages: proceed with your action
+
+**Writing Messages (Append-Only Approach):**
+
+1. **Always Append**:
+   - Add new content to the END of the Discussion Log section
+   - Never replace or edit previous messages from other agents
+   - Use clear section markers to organize content
+
+2. **Include Timestamp**:
+   - Always include timestamp in your message: `Timestamp: YYYY-MM-DD HH:MM:SS`
+   - Format: `**Timestamp**: 2026-01-10 14:55:00`
+   - This enables other agents to track message order
+
+3. **Use Clear Formatting**:
+   - Use markdown formatting for clarity
+   - Separate your message with `---` before adding new content
+   - Include your Agent ID in message header
+
+**Polling for Updates:**
+- If working in real-time: re-read file after a short delay (simulated wait)
+- If working asynchronously: re-read file at the start of each turn
+- If waiting for specific agent response: check file periodically until response received or timeout
+
+### Consensus Markers
+
+Use explicit markers in messages to indicate agreement, disagreement, or pending status:
+
+**Approval Markers:**
+- `✅ Approved by [Agent Name]` - explicit approval
+- `✅ Confirmed by [Agent Name]` - confirmation of decision
+- `✅ Agreed by [Agent Name]` - agreement with proposal
+
+**Rejection Markers:**
+- `❌ Rejected by [Agent Name] - Reason: [reason]` - explicit rejection with reason
+- `❌ Disagreed by [Agent Name] - Alternative: [alternative]` - disagreement with alternative
+
+**Status Markers:**
+- `💭 Pending response from [Agent Name]` - waiting for response
+- `⏱️ No response from [Agent Name] after [time]` - timeout marker
+- `🔄 Consensus reached` - final consensus achieved
+- `🔄 Consensus in progress` - consensus building ongoing
+
+**Usage Examples:**
+
+```markdown
+#### Agent 2 → Agent 1
+**Type**: Response / Confirmation
+**Topic**: Role Assignment Confirmation
+**Timestamp**: 2026-01-10 14:45:00
+
+**Content**:
+> ✅ Approved by Agent 2
+> 
+> I agree with the role assignment. The roles complement each other well.
+```
+
+### File Conflict Prevention
+
+To prevent conflicts when multiple agents edit the file simultaneously:
+
+**Append-Only Approach (Recommended):**
+
+1. **Discussion Log**: 
+   - Use append-only: new messages always added to end
+   - Never edit previous messages from other agents
+   - If you need to correct your own message: add new message with "Correction/Update" marker
+
+2. **State Updates** (roles, consensus, status):
+   - Update state sections carefully
+   - Always include timestamp and agent_id when updating
+   - Use format: `**Last Updated**: YYYY-MM-DD HH:MM:SS by [Agent Name]`
+   - If conflict detected: re-read file, rebase your update on current state
+
+3. **Conflict Detection and Resolution**:
+   - If file content doesn't match expected state:
+     - Re-read the entire file
+     - Identify what changed since your last read
+     - Rebase your changes on current state
+     - Document the conflict and resolution in the file
+
+**Conflict Resolution Example:**
+
+```markdown
+#### Agent 2 → All Agents
+**Type**: Correction / Conflict Resolution
+**Topic**: State Update Conflict Resolution
+**Timestamp**: 2026-01-10 14:56:00
+
+**Content**:
+> **Conflict Detected**: Found discrepancy in role assignment table
+> **Resolution**: Re-read file, updated state based on Agent 1's latest update
+> **Updated State**: Role table now reflects consensus from Agent 1's message at 14:40:00
+```
+
+### Heartbeat Mechanism
+
+For tracking agent activity, implement heartbeat mechanism:
+
+**Implementation:**
+
+1. **Update Last Activity**:
+   - Each agent maintains `last_activity: YYYY-MM-DD HH:MM:SS` in their status section
+   - Update this timestamp on every action (reading, writing, responding)
+   - Format: `**Last Activity**: 2026-01-10 14:55:00`
+
+2. **Activity Monitoring**:
+   - Agents check `last_activity` timestamps of other agents
+   - If `last_activity` > 15 minutes (configurable): agent considered inactive
+   - Mark inactive agents: `⏱️ Inactive: [Agent Name] - Last seen: [timestamp]`
+
+3. **Timeout Handling**:
+   - If agent inactive > 15 minutes: proceed with majority consensus (if applicable)
+   - Document assumption: "Proceeding with assumption that [Agent] agrees or has no objections"
+   - Allow late feedback incorporation
+
+**Heartbeat Example:**
+
+```markdown
+### Agent 2 - Protocol Evaluator
+**Agent ID**: Agent-002
+**Status**: ✅ Active
+**Last Activity**: 2026-01-10 14:55:00 ✅ (Heartbeat mechanism applied)
+```
+
+**Utilities:**
+- Use `check_agent_heartbeat.py` utility for monitoring agent activity
+- Can be run manually or integrated into workflow automation
+
+---
+
+## Collaboration Modes
+
+The collaboration protocol supports different modes optimized for different task complexities. Choose the appropriate mode based on your task characteristics to balance between thoroughness and efficiency.
+
+### Mode Selection Criteria
+
+Consider the following factors when selecting a collaboration mode:
+
+**Task Complexity:**
+- **Simple**: Clear requirements, straightforward implementation, minimal decisions needed
+- **Moderate**: Some complexity, several decisions required, coordination needed
+- **Complex**: High complexity, architectural decisions, multiple stakeholders, critical impact
+
+**Time Constraints:**
+- **Tight**: Need quick results (< 1 hour)
+- **Normal**: Standard timeline (1-4 hours)
+- **Extended**: Extended timeline (4+ hours, multiple sessions)
+
+**Agent Count:**
+- **Small**: 2 agents
+- **Medium**: 3-4 agents
+- **Large**: 5+ agents
+
+**Decision Criticality:**
+- **Low**: Reversible decisions, minor impact
+- **Medium**: Some impact, some reversibility
+- **High**: Critical decisions, major impact, difficult to reverse
+
+### Mode 1: Lightweight (Quick & Efficient)
+
+**Use when:**
+- Task is simple and straightforward
+- 2 agents working together
+- Time constraints are tight (< 1 hour)
+- Decisions are low to medium criticality
+- Clear, unambiguous requirements
+
+**Characteristics:**
+- **File Structure**: Simplified (essential sections only)
+  - Agent Introductions (brief: name + role only)
+  - Discussion Log (concise messages)
+  - Decisions (key decisions only)
+  - Minimal metadata
+
+- **Introduction Phase**: Quick (5-10 minutes)
+  - Name and role only (no detailed expertise)
+  - No extended role negotiation
+  - Proceed if roles are clearly complementary
+
+- **Decision-Making**: Fast (silence = agreement for trivial)
+  - Trivial decisions: One agent proposes, others remain silent = consensus
+  - Minor decisions: Need explicit agreement from at least one other agent
+  - Major decisions: Still require explicit consensus (use markers)
+
+- **Documentation**: Minimal
+  - Document only key decisions
+  - Brief rationale for major decisions only
+  - Skip detailed step-by-step tracking for routine work
+
+**Example Use Cases:**
+- Adding validation to a form field
+- Fixing a simple bug
+- Adding a helper function
+- Quick refactoring of a small module
+
+**Time Estimate**: 15-30 minutes for simple tasks
+
+### Mode 2: Standard (Balanced - Default)
+
+**Use when:**
+- Task has moderate complexity
+- 3-4 agents working together
+- Normal time constraints (1-4 hours)
+- Decisions are medium criticality
+- Some architectural decisions needed
+
+**Characteristics:**
+- **File Structure**: Full structure as defined in this rule
+  - All standard sections
+  - Complete agent introductions
+  - Full discussion log
+  - Comprehensive decisions section
+  - Step-by-step execution tracking
+
+- **Introduction Phase**: Complete (10-15 minutes)
+  - Full introductions with expertise details
+  - Role negotiation and consensus
+  - Context understanding and questions
+
+- **Decision-Making**: Full consensus process
+  - All decisions require explicit agreement
+  - Use consensus markers (✅ Approved, ❌ Rejected)
+  - Document rationale for all significant decisions
+  - Majority consensus (3/4) for non-critical decisions after timeout
+
+- **Documentation**: Full
+  - Document all significant steps
+  - Rationale for decisions
+  - Impact on other agents
+  - Questions and blockers
+
+**Example Use Cases:**
+- Implementing a new feature with multiple components
+- Refactoring a module with dependencies
+- Adding integration with external service
+- Designing a new API endpoint
+
+**Time Estimate**: 1-4 hours depending on complexity
+
+### Mode 3: Heavyweight (Thorough & Formal)
+
+**Use when:**
+- Task is complex and critical
+- 4+ agents working together
+- Extended timeline (4+ hours, multiple sessions)
+- Decisions are high criticality
+- Major architectural decisions required
+- Project-wide impact
+
+**Characteristics:**
+- **File Structure**: Extended structure
+  - All standard sections with additional subsections
+  - Detailed agent introductions with expertise matrix
+  - Comprehensive discussion log with multiple rounds
+  - Formal decisions section with voting records
+  - Detailed step-by-step execution with checkpoints
+  - Context Summary maintained by all agents
+  - File Registry for all created/modified files
+
+- **Introduction Phase**: Detailed (15-30 minutes)
+  - Extended introductions with full expertise matrix
+  - Detailed role negotiation and consensus documentation
+  - Complete context understanding and alignment
+  - Multiple rounds of questions and clarifications
+
+- **Decision-Making**: Formal consensus process
+  - ALL decisions require explicit agreement (including trivial)
+  - Use formal voting with records
+  - Document detailed rationale for ALL decisions
+  - Multiple rounds of discussion for critical decisions
+  - Expert review for major architectural decisions
+  - Unanimous consensus (100%) for critical decisions
+
+- **Documentation**: Extensive
+  - Document every step in detail
+  - Full rationale for all decisions
+  - Impact analysis for all changes
+  - Risk assessment for major decisions
+  - Regular checkpoint reviews
+  - Final documentation package
+
+**Example Use Cases:**
+- Major architectural refactoring
+- New system design
+- Critical security implementation
+- Large-scale feature development
+- Integration of major third-party systems
+
+**Time Estimate**: 4+ hours, potentially multiple sessions
+
+### Mode Selection Flow
+
+**Step 1: Assess Task Characteristics**
+- Evaluate complexity, time constraints, agent count, decision criticality
+- Use selection criteria above
+
+**Step 2: Select Mode**
+- If 2+ criteria point to Lightweight → Use Lightweight
+- If 2+ criteria point to Heavyweight → Use Heavyweight
+- Otherwise → Use Standard (default)
+
+**Step 3: Declare Mode in Session**
+- State selected mode in session metadata
+- Document rationale for mode selection
+- Ensure all agents understand mode characteristics
+
+**Step 4: Adjust During Session**
+- If task becomes more complex: Upgrade to heavier mode
+- If task becomes simpler: Can simplify (but document why)
+- All agents must agree on mode change
+
+### Mode Comparison Matrix
+
+| Aspect | Lightweight | Standard | Heavyweight |
+|--------|------------|----------|-------------|
+| File Structure | Simplified | Full | Extended |
+| Introduction | Brief (5-10 min) | Complete (10-15 min) | Detailed (15-30 min) |
+| Role Negotiation | Minimal | Full | Extensive |
+| Decision-Making | Fast (silence=agree) | Consensus | Formal voting |
+| Documentation | Minimal | Full | Extensive |
+| Consensus Required | Trivial: silence | All: explicit | All: formal voting |
+| Time Estimate | 15-30 min | 1-4 hours | 4+ hours |
+| Best For | Simple tasks | Moderate tasks | Complex, critical tasks |
+
+---
+
+## Full Process Workflow
+
+### A. Initialization & Discussion
+
+#### 1. Who Initializes the Session?
+
+**Rule**: First agent who starts work initializes the session
+
+**Synchronization Mechanism**: 
+- Check for existing session file
+- If file doesn't exist → create (first-write-wins)
+- If file exists → read and join
+- Use `.session_init.lock` file for atomic initialization (optional)
+
+**Alternative for complex tasks**: If user explicitly specifies coordinator → coordinator initializes
+
+#### 2. Synchronous First Launch - How It Works
+
+**Lock-based mechanism with fallback:**
+
+```markdown
+## Synchronous Initialization Protocol
+
+**Step 1: Check for existing session**
+- Read directory for SESSION_*.md files
+- If found → join existing session
+
+**Step 2: If no session exists - initialize**
+- Create `.session_init.lock` file
+- If lock creation successful → you are first agent
+- Create session file with your initialization
+- Remove lock file
+
+**Step 3: If lock exists (another agent initializing)**
+- Wait 2-5 seconds
+- Re-check for session file
+- If session file exists → join it
+- If still no file → retry lock creation (max 3 attempts)
+
+**Step 4: Conflict resolution**
+- If multiple agents created session files → use most recent timestamp
+- Merge information if needed
+- Document conflict in session file
+```
+
+#### 3. Where Are Temporary Files Stored?
+
+**Primary approach**: Everything in main session file (simpler, fewer conflicts)
+
+**Optional for large sessions**: `SESSION_DIR/agent_X/temp/` for temporary files
+
+**Rules**:
+- Temporary files must be registered in File Registry
+- Temporary files are deleted after session completion
+
+#### 4. Role Assignment Based on Task
+
+**Formal process with consensus:**
+
+```markdown
+## Role Assignment Process
+
+**Step 1: Task Analysis**
+- First agent (or coordinator) analyzes task
+- Determines necessary roles based on task
+- Proposes role distribution in Discussion Log
+
+**Step 2: Role Proposal**
+- Each agent proposes their role
+- Justifies choice
+- Indicates expertise
+
+**Step 3: Role Negotiation**
+- Discussion in Discussion Log
+- Resolve conflicts (if multiple agents want same role)
+- Reach consensus
+
+**Step 4: Role Confirmation**
+- All agents confirm final distribution
+- Update "Role Assignment" section
+- Roles fixed in Context Summary
+
+**Step 5: Role Changes (if needed)**
+- Roles can be changed during work
+- Requires discussion and consensus
+- Update Role Assignment and Context Summary
+```
+
+### B. Planning
+
+#### 1. Who Creates the Plan?
+
+**Rule**: Agent with role "Technical Architect" or "Coordinator" creates draft plan
+
+**Process**:
+1. Architect creates draft plan in Discussion Log
+2. All agents discuss and propose changes
+3. Reach consensus
+4. Architect finalizes plan in "Plan" section or "Step-by-Step Execution"
+
+#### 2. Where Is the Plan Stored?
+
+**Primary**: In main session file (section "Plan" or "Step-by-Step Execution")
+
+**Advantages**: Everything in one place, easy to track, fewer files
+
+**For large plans**: Can create separate file `SESSION_DIR/plan.md` and register in File Registry
+
+#### 3. How Is Consensus Reached on Plan?
+
+**Process**:
+1. Architect proposes plan in Discussion Log
+2. All agents discuss, propose changes
+3. Use consensus markers (✅ Approved, ❌ Rejected)
+4. After consensus, plan is fixed in "Plan" section
+
+### C. Implementation
+
+#### 1. How Are Tasks Distributed?
+
+**Rule**: Tasks distributed according to plan, but considering agent roles
+
+**Process**:
+1. Architect/Coordinator proposes task distribution in Discussion Log
+2. Agents confirm or propose changes
+3. Reach consensus
+4. Each agent takes their tasks
+5. Update "Step-by-Step Execution" section
+
+#### 2. How Is Progress Tracked?
+
+**Combined approach**:
+- **Primary tracking**: In "Step-by-Step Execution" section (each agent adds their steps)
+- **Additional tracking**: In "Agent Status" section (each agent updates their status)
+- **Context Summary**: Updated regularly with current progress
+
+#### 3. How Is Work Coordinated?
+
+**Primary channel**: Discussion Log for discussions and coordination
+
+**Regular updates**: Each agent updates their status with heartbeat
+
+**Context Summary**: Updated for quick understanding of state
+
+### D. Task Completion & Final Report
+
+#### 1. How Is Task Completion Determined?
+
+**Combined approach** (all steps completed + all agents confirm):
+
+```markdown
+## Task Completion Criteria
+
+**Criteria:**
+1. All steps from plan completed (check in "Step-by-Step Execution")
+2. All agents confirm completion in Discussion Log
+3. All open questions resolved
+4. All created files registered in File Registry
+5. Context Summary updated with final status
+
+**Process:**
+1. Coordinator agent checks criteria
+2. Proposes completion in Discussion Log
+3. All agents confirm (✅ Approved)
+4. If disagreement → discussion, resolve problems
+5. After consensus → task considered complete
+```
+
+#### 2. Who Creates the Final Report?
+
+**Rule**: Agent with role "Technical Architect" or "Coordinator" creates final report
+
+**Process**:
+1. Coordinator collects information from all sections
+2. Creates draft report in Discussion Log
+3. All agents review and propose additions
+4. After consensus, finalizes report
+
+#### 3. What Should Be in the Final Report?
+
+**Full report structure:**
+
+```markdown
+## Final Report Structure
+
+1. **Executive Summary**
+   - Brief task description
+   - Main results
+   - Key metrics
+
+2. **Task Description**
+   - Detailed task description
+   - Original requirements
+
+3. **Execution Summary**
+   - Completed steps (from "Step-by-Step Execution")
+   - Timeline
+   - Participating agents and their roles
+
+4. **Decisions Made**
+   - All decisions made (from "Decisions & Consensus")
+   - Rationale
+
+5. **Deliverables**
+   - Created files (from File Registry)
+   - Modified files
+   - Documentation
+
+6. **Issues and Resolutions**
+   - Problems encountered
+   - Problem solutions
+   - Lessons learned
+
+7. **Metrics**
+   - Execution time
+   - Number of agents
+   - Number of consensuses
+   - Number of created files
+
+8. **Open Questions**
+   - Unresolved questions (if any)
+   - Recommendations for future sessions
+```
+
+#### 4. Where Is the Final Report Stored?
+
+**Primary**: In main session file (section "Final Report")
+
+**Optional**: Separate file `SESSION_DIR/final_report.md` for large reports
+
+**File Registry**: Report registered in File Registry
+
+#### 5. What Happens After Completion?
+
+**Rule**: Session files remain in session directory
+
+**Optional**: Archive old sessions (>30 days) in `SESSION_DIR/archive/`
+
+**Cleanup**: Temporary files deleted after completion
+
+**Documentation**: Final report remains accessible
+
+---
+
+## Error Handling & Edge Cases
+
+### Agent Non-Response
+
+**Problem**: Agent doesn't respond to questions or proposals
+
+**Solution**:
+- Use heartbeat mechanism to detect inactivity
+- If agent inactive > 15 minutes: proceed with majority consensus (3/4 for 4 agents)
+- Document assumption: "Proceeding with assumption that [Agent] agrees or has no objections"
+- Allow late feedback incorporation
+
+### Late-Joining Agents
+
+**Problem**: Agent joins session in the middle
+
+**Solution**:
+1. Read entire session file
+2. Read Context Summary for quick understanding
+3. Read File Registry to see created files
+4. Introduce yourself in Discussion Log
+5. Ask questions about current state
+6. Integrate into ongoing work
+
+### File Conflicts
+
+**Problem**: Multiple agents edit file simultaneously causing conflicts
+
+**Solution**:
+- Use append-only approach for Discussion Log
+- Use utilities for all file operations (append_discussion.py, append_status.py, etc.)
+- Utilities implement retry mechanism with exponential backoff
+- If conflict detected: re-read, rebase, retry
+
+### Session Recovery
+
+**Problem**: Session file corrupted or lost
+
+**Solution**:
+- Reconstruct from File Registry (all created files documented)
+- Reconstruct from Context Summary (current state documented)
+- Reconstruct from Discussion Log (all decisions documented)
+- Create backup before major operations (optional)
+
+### Agent Failure
+
+**Problem**: Agent stops working mid-session
+
+**Solution**:
+- Detect via heartbeat mechanism (>30 minutes inactive = offline)
+- Redistribute work to remaining agents
+- Use majority consensus for decisions
+- Document agent failure in session file
+- Resume work when agent returns
+
+### Path/File Errors
+
+**Problem**: File not found, permission errors, etc.
+
+**Solution**:
+- Validate paths before operations
+- Handle "file not found" gracefully (create if needed)
+- Check permissions before write operations
+- Implement retry mechanism for transient errors
+- Document errors in Discussion Log
+
+### Version Compatibility
+
+**Problem**: Protocol version mismatch between agents
+
+**Solution**:
+- Include protocol version in session metadata
+- Document version in session file
+- Handle backward compatibility
+- Document version mismatch if detected
+
+### Error Logging
+
+**CRITICAL**: Document all errors with full details:
+- Error type and message
+- Timestamp
+- Agent who encountered error
+- Context (what was being done)
+- Resolution (if found)
 
 ---
 
@@ -35,12 +870,14 @@ This rule is **MANDATORY** when:
 **Step 1: Detect Other Agents**
 - When you start working, check if other agents are active
 - Count the number of active agents (2, 3, 4, etc.)
-- Create a shared collaboration file: `docs/COLLABORATION_SESSION_[TIMESTAMP].md`
+- Use file-based detection (see Technical Implementation Details)
+- Create a shared collaboration file: `docs/COLLABORATION_SESSION_[TIMESTAMP].md` or use user-provided path
 
 **Step 2: Introduce Yourself**
 - State your current understanding of the task
 - Propose your preferred role/expertise
 - Ask other agents to introduce themselves
+- Update your `last_activity` timestamp
 
 **Example Format:**
 ```markdown
@@ -51,6 +888,7 @@ This rule is **MANDATORY** when:
 **Expertise**: [Your areas of expertise]
 **Initial Understanding**: [Your understanding of the task]
 **Questions for Team**: [Questions you have for other agents]
+**Last Activity**: YYYY-MM-DD HH:MM:SS
 ```
 
 **Step 3: Role Negotiation**
@@ -89,14 +927,32 @@ For each major decision or topic:
 ```markdown
 ## Discussion: [Topic Name]
 
-### [Agent Name] - Initial Proposal
+#### [Agent Name] → All Agents
+**Type**: [Question / Proposal / Response]
+**Topic**: [What you're discussing]
+**Timestamp**: YYYY-MM-DD HH:MM:SS
+
+**Content**:
 > [Your proposal, idea, or question]
 
-### [Agent Name] - Response
+**Action Required**:
+- [ ] Response needed from [Agent Name]
+- [ ] Approval needed before proceeding
+- [ ] Information sharing only
+
+---
+
+#### [Agent Name] → [Target Agent]
+**Type**: Response
+**Topic**: [Topic Name]
+**Timestamp**: YYYY-MM-DD HH:MM:SS
+
+**Content**:
+> ✅ Approved by [Agent Name]
+> 
 > [Your response, feedback, or alternative perspective]
 
-### [Agent Name] - Response
-> [Your response, feedback, or alternative perspective]
+---
 
 ### Consensus / Decision
 - **Agreed Solution**: [What was agreed upon]
@@ -109,6 +965,7 @@ For each major decision or topic:
 - **DO NOT** proceed to the next topic until all agents have responded
 - **DO NOT** make unilateral decisions when other agents are involved
 - **ALWAYS** wait for responses before continuing
+- **ALWAYS** check for new questions before proceeding (Mandatory File Check Protocol)
 
 ---
 
@@ -120,6 +977,7 @@ For each major decision or topic:
 - After each step, update the collaboration file
 - Check with other agents if your work affects them
 - Get approval before major changes
+- Use utilities for safe file operations (append_step.py, append_status.py)
 
 **Step Format:**
 ```markdown
@@ -127,7 +985,10 @@ For each major decision or topic:
 
 ### Performed by: [Agent Name]
 ### Status: [In Progress / Completed / Blocked]
-### Description: [What was done]
+### Timestamp: YYYY-MM-DD HH:MM:SS
+
+### Description: 
+[What was done]
 
 ### Changes Made:
 - [List of changes]
@@ -148,38 +1009,54 @@ For each major decision or topic:
 
 ### Shared Collaboration File
 
-**Location**: `docs/COLLABORATION_SESSION_[YYYY-MM-DD_HH-MM-SS].md`
+**Location**: `docs/COLLABORATION_SESSION_[YYYY-MM-DD_HH-MM-SS].md` or user-provided path
 
 **Structure**:
 ```markdown
 # Collaboration Session: [Task Description]
 
 **Date**: [Date]
-**Participants**: [Number] Agents
+**Time**: [Time]
+**Session ID**: COLLABORATION_SESSION_[TIMESTAMP]
 **Task**: [Brief description]
+**Working Directory**: [Path]
+**Protocol Version**: 2.0
+**Collaboration Mode**: [Lightweight / Standard / Heavyweight]
 
 ---
 
 ## 1. Agent Introductions
-[Phase 1 content]
+[Phase 1 content - each agent introduces themselves]
 
 ## 2. Role Assignment
-[Phase 1 content]
+[Phase 1 content - final role assignments with consensus]
 
 ## 3. Discussion Log
-[Phase 2 content - all conversations]
+[Phase 2 content - all conversations, append-only]
 
 ## 4. Decisions & Consensus
-[Summary of all decisions]
+[Summary of all decisions with consensus markers]
 
 ## 5. Step-by-Step Execution
-[Phase 3 content - all steps]
+[Phase 3 content - all steps performed]
 
-## 6. Final Deliverables
+## 6. Created Files Registry
+[Registry of all created files with metadata]
+
+## 7. Final Deliverables
 [What was created/modified]
 
-## 7. Open Questions
+## 8. Open Questions
 [Any remaining questions]
+
+## 9. Session Metadata
+[Protocol version, session type, communication mode, compliance checklist]
+
+## Context Summary
+[Dynamic section with current phase, active agents, key decisions, next actions]
+
+## Agent X - Current Status
+[Individual status section for each agent - ONLY that agent can edit]
 ```
 
 ### Working Directory
@@ -187,6 +1064,7 @@ For each major decision or topic:
 **All agents MUST work in the same directory:**
 - Use: `docs/COLLABORATION_SESSION_[TIMESTAMP]/` for session-specific files
 - Or: `docs/[TOPIC]_COLLABORATION/` for topic-specific collaboration
+- Or: User-provided directory
 - **DO NOT** create separate directories for each agent
 
 ---
@@ -198,13 +1076,14 @@ For each major decision or topic:
 When communicating with other agents, use this format:
 
 ```markdown
-### [Your Agent Name] → [Target Agent(s) or "All Agents"]
+#### [Your Agent Name] → [Target Agent(s) or "All Agents"]
 
-**Type**: [Question / Proposal / Response / Decision]
+**Type**: [Question / Proposal / Response / Decision / Status Update]
 **Topic**: [What you're discussing]
+**Timestamp**: YYYY-MM-DD HH:MM:SS
 
 **Content**:
-[Your message]
+> [Your message]
 
 **Action Required**:
 - [ ] Response needed from [Agent Name]
@@ -215,10 +1094,11 @@ When communicating with other agents, use this format:
 ### Response Requirements
 
 - **Always respond** to direct questions or requests
-- **Acknowledge** proposals even if you agree (say "I agree" or "Sounds good")
+- **Acknowledge** proposals even if you agree (say "I agree" or "✅ Approved")
 - **Provide reasoning** for disagreements
 - **Suggest alternatives** if you disagree
 - **Wait for consensus** before implementing
+- **Check for new questions** before responding (Mandatory File Check Protocol)
 
 ---
 
@@ -226,40 +1106,60 @@ When communicating with other agents, use this format:
 
 ### Available Roles (Examples)
 
-1. **Frontend Architect / Tech Lead**
+1. **Technical Architect / System Analyst**
+   - System architecture, technical design
+   - Technology stack decisions
+   - Performance optimization
+
+2. **Protocol Evaluator / Process Analyst**
+   - Process analysis, protocol evaluation
+   - Identifying problems, proposing improvements
+   - Workflow optimization
+
+3. **Testing & Validation Specialist**
+   - Testing strategy, validation
+   - Quality metrics, test coverage
+   - Practical testing and feedback
+
+4. **Implementation & Code Quality Specialist**
+   - Practical implementation
+   - Code quality, best practices
+   - Utility creation and testing
+
+5. **Frontend Architect / Tech Lead**
    - Frontend architecture, technology stack decisions
    - Framework selection, state management
    - Performance optimization
 
-2. **UX/UI Designer**
+6. **UX/UI Designer**
    - User experience design
    - Design system, UI components
    - Accessibility, responsive design
 
-3. **Product Manager / Business Analyst**
+7. **Product Manager / Business Analyst**
    - Requirements analysis
    - Feature prioritization
    - MVP scope definition
 
-4. **Full-Stack Developer / Integration Specialist**
+8. **Full-Stack Developer / Integration Specialist**
    - Backend integration
    - API design
    - Implementation details
 
-5. **DevOps / Infrastructure Engineer**
+9. **DevOps / Infrastructure Engineer**
    - Infrastructure, deployment
    - CI/CD, monitoring
    - Performance, scalability
 
-6. **QA / Quality Assurance**
-   - Testing strategy
-   - Quality metrics
-   - Test coverage
+10. **QA / Quality Assurance**
+    - Testing strategy
+    - Quality metrics
+    - Test coverage
 
-7. **Technical Writer / Documentation**
-   - Documentation
-   - API docs, user guides
-   - Technical specifications
+11. **Technical Writer / Documentation**
+    - Documentation
+    - API docs, user guides
+    - Technical specifications
 
 ### Role Assignment Process
 
@@ -305,6 +1205,120 @@ If consensus cannot be reached:
 
 ---
 
+## File Registry & File Verification Protocol
+
+### Created Files Registry
+
+**Purpose**: Track all files created by agents with full metadata to prevent duplication and enable verification.
+
+**Location**: Section 6 in collaboration session file
+
+**Format**:
+```markdown
+## 6. Created Files Registry
+
+**Status**: Active
+
+**Purpose**: Track all files created by agents with full metadata.
+
+**Format**:
+| File Name | Created By | Path (Absolute/Relative) | Created Timestamp | Verified By | Status | Notes |
+|-----------|------------|--------------------------|-------------------|-------------|--------|-------|
+```
+
+**Protocol Rules**:
+1. **Before Creating File**: Agent MUST check this registry and scan directory for existing file
+2. **After Creating File**: Agent MUST register file in this table with full path and timestamp
+3. **Verification**: Other agents can verify file existence by checking path
+4. **No Duplication**: If file exists in registry or directory - use existing, don't create duplicate
+
+### File Verification Protocol
+
+**Purpose**: Verify that files claimed to be created actually exist in filesystem.
+
+**Process**:
+1. **Before Declaring File Creation**: 
+   - Check File Registry for existing entry
+   - Scan directory for file existence
+   - If file exists: use existing, don't create duplicate
+
+2. **After Creating File**:
+   - Register in File Registry immediately
+   - Include absolute path for verification
+   - Include timestamp
+
+3. **When Reading File Claims**:
+   - Verify file exists at claimed path
+   - Check File Registry entry
+   - If mismatch: report in Discussion Log
+
+---
+
+## Utility Integration
+
+### Available Utilities
+
+All utilities are located in `collaboration-utilities/` directory. See `collaboration-utilities/README.md` for full documentation.
+
+**Core Utilities:**
+
+1. **check_agent_heartbeat.py**
+   - Monitors agent activity based on `last_activity` timestamps
+   - Usage: `python check_agent_heartbeat.py <session_file>`
+   - Features: Status determination (Active/Inactive/Offline), formatted report
+
+2. **find_active_sessions.py**
+   - Finds active collaboration sessions
+   - Usage: `python find_active_sessions.py [directory]`
+   - Features: Session discovery, filtering by activity
+
+3. **append_discussion.py**
+   - Safely adds messages to Discussion Log (append-only)
+   - Usage: `python append_discussion.py <session_file> <agent_id> <message>`
+   - Features: Retry with exponential backoff, conflict detection, content hash verification
+
+4. **append_status.py**
+   - Safely updates agent status section
+   - Usage: `python append_status.py <session_file> <agent_id> <status_update>`
+   - Features: Validates agent_id, append-only, retry mechanism
+
+5. **append_step.py**
+   - Safely adds step to Step-by-Step Execution
+   - Usage: `python append_step.py <session_file> <agent_id> <step_description>`
+   - Features: Validates agent_id, append-only, retry mechanism
+
+6. **append_decision.py**
+   - Safely adds decision to Decisions & Consensus
+   - Usage: `python append_decision.py <session_file> <agent_id> <decision>`
+   - Features: Validates agent_id, append-only, retry mechanism
+
+7. **check_new_questions.py**
+   - Checks for new questions and action items (Mandatory File Check Protocol)
+   - Usage: `python check_new_questions.py <session_file> [agent_id]`
+   - Features: Pattern matching, filtering by agent, critical issue detection
+
+### When to Use Utilities
+
+**ALWAYS use utilities for:**
+- Adding messages to Discussion Log (use `append_discussion.py`)
+- Updating your status (use `append_status.py`)
+- Adding steps (use `append_step.py`)
+- Adding decisions (use `append_decision.py`)
+- Checking for new questions (use `check_new_questions.py`)
+
+**Utilities provide:**
+- Conflict prevention (append-only approach)
+- Retry mechanism (exponential backoff)
+- Content verification (hash checking)
+- Agent validation (ensures you edit only your sections)
+
+**Manual editing is acceptable for:**
+- Reading file content
+- Initial file creation (first agent)
+- Emergency corrections (document in Discussion Log)
+
+---
+
 ## Critical Rules
 
 ### DO's ✅
@@ -317,6 +1331,11 @@ If consensus cannot be reached:
 - ✅ **ALWAYS** work in the same directory as other agents
 - ✅ **ALWAYS** ask for input when your work affects others
 - ✅ **ALWAYS** acknowledge other agents' messages
+- ✅ **ALWAYS** check for new questions on every file access (Mandatory File Check Protocol)
+- ✅ **ALWAYS** use utilities for file operations when available
+- ✅ **ALWAYS** register created files in File Registry
+- ✅ **ALWAYS** update your `last_activity` timestamp on every action
+- ✅ **ALWAYS** edit ONLY your own sections (strict responsibility zones)
 
 ### DON'Ts ❌
 
@@ -327,6 +1346,10 @@ If consensus cannot be reached:
 - ❌ **NEVER** skip the role assignment phase
 - ❌ **NEVER** ignore other agents' questions or proposals
 - ❌ **NEVER** work ahead without documenting your steps
+- ❌ **NEVER** edit other agents' sections (strict responsibility zones)
+- ❌ **NEVER** edit messages in Discussion Log (append-only)
+- ❌ **NEVER** create files without checking File Registry first
+- ❌ **NEVER** skip checking for new questions (Mandatory File Check Protocol)
 
 ---
 
@@ -334,27 +1357,34 @@ If consensus cannot be reached:
 
 ### Starting a Session
 
-1. Detect number of active agents
-2. Create collaboration file with timestamp
-3. Initialize with session metadata
-4. Begin Phase 1 (Introduction & Role Assignment)
+1. Detect number of active agents (use file-based detection)
+2. Check for existing session file
+3. If no session exists: initialize with lock mechanism
+4. Create collaboration file with timestamp
+5. Initialize with session metadata
+6. Begin Phase 1 (Introduction & Role Assignment)
 
 ### Ending a Session
 
-1. Document all final decisions
-2. List all deliverables created
-3. Note any open questions
-4. Create summary section
-5. Mark session as complete
+1. Verify all completion criteria are met
+2. All agents confirm completion
+3. Create final report
+4. Document all final decisions
+5. List all deliverables created
+6. Note any open questions
+7. Create summary section
+8. Mark session as complete
 
 ### Resuming a Session
 
 If agents return to a previous session:
-1. Read the existing collaboration file
-2. Understand the current state
-3. Introduce yourself if new
-4. Continue from where it left off
-5. Update the file with your contributions
+1. Read the existing collaboration file completely
+2. Check for new questions (Mandatory File Check Protocol)
+3. Understand the current state (read Context Summary)
+4. Check File Registry for created files
+5. Introduce yourself if new
+6. Continue from where it left off
+7. Update the file with your contributions
 
 ---
 
@@ -370,30 +1400,34 @@ Before considering work complete, verify:
 - [ ] All agents have contributed
 - [ ] Final deliverables are listed
 - [ ] Open questions are documented
+- [ ] All created files registered in File Registry
+- [ ] All agents confirmed completion
+- [ ] Final report created
 
 ---
 
 ## Examples
 
-### Example 1: 2 Agents - Simple Task
+### Example 1: 2 Agents - Simple Task (Lightweight Mode)
 
 ```
 Agent 1: "I'll be Frontend Developer"
 Agent 2: "I'll be UX Designer"
 Agent 1: "I propose using React"
 Agent 2: "I agree, but let's use Tailwind for styling"
-Agent 1: "Sounds good, let's proceed"
-[Both work together in same file]
+Agent 1: "✅ Approved - Sounds good, let's proceed"
+[Both work together in same file, using utilities for safe operations]
 ```
 
-### Example 2: 4 Agents - Complex Task
+### Example 2: 4 Agents - Complex Task (Standard Mode)
 
 ```
-[Full introduction round]
-[Role negotiation]
-[Multiple discussion rounds]
-[Step-by-step execution]
+[Full introduction round with expertise]
+[Role negotiation with consensus]
+[Multiple discussion rounds with consensus markers]
+[Step-by-step execution with utilities]
 [Final consensus document]
+[Final report with all deliverables]
 ```
 
 ---
@@ -404,10 +1438,17 @@ Agent 1: "Sounds good, let's proceed"
 - All agents benefit from each other's perspectives
 - Decisions are more thoughtful and well-reasoned
 - The final output is a true collaboration, not just parallel work
+- Strict responsibility zones prevent conflicts and ensure accountability
+- Utilities make safe operations easier and more reliable
+- Mandatory file checking ensures no questions are missed
 
 ---
 
-**Remember**: When working with other agents, you are part of a team. Act like it. Communicate, collaborate, and reach consensus before proceeding.
+**Remember**: When working with other agents, you are part of a team. Act like it. Communicate, collaborate, and reach consensus before proceeding. Follow strict responsibility zones - edit only what you wrote yourself.
 
 **IMPORTANT**: This rule applies ONLY when 2+ agents are running simultaneously. 
 For single agent work, this rule does not apply.
+
+**Version**: 2.0
+**Last Updated**: 2026-01-12
+**Based on**: Practical testing session with 4 agents, 15+ consensuses, 7 utilities created, 100% synchronous execution readiness achieved

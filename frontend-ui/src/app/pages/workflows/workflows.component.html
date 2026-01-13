@@ -3,15 +3,17 @@
   <div class="workflows-header">
     <div>
       <h1>Workflows</h1>
-      <p class="header-subtitle">Manage and monitor your agent workflows</p>
+      <p class="header-subtitle">Manage and monitor your AI-powered workflows</p>
     </div>
     <div class="header-actions">
-      <button mat-icon-button (click)="refreshWorkflows()">
+      <button mat-icon-button (click)="refreshWorkflows()" matTooltip="Refresh">
         <mat-icon>refresh</mat-icon>
       </button>
       <button mat-raised-button color="primary">
-        <mat-icon>add</mat-icon>
-        New Workflow
+        <span class="button-content">
+          <mat-icon>add</mat-icon>
+          <span>New Workflow</span>
+        </span>
       </button>
     </div>
   </div>
@@ -19,103 +21,255 @@
   <!-- Loading State -->
   @if (loading()) {
     <div class="loading-container">
-      <mat-spinner></mat-spinner>
+      <mat-spinner diameter="50"></mat-spinner>
       <p>Loading workflows...</p>
     </div>
-  } @else if (workflows().length === 0) {
-    <!-- Empty State -->
-    <mat-card class="empty-state">
+  } @else {
+    <!-- Statistics Dashboard -->
+    <div class="stats-dashboard">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-header">
+            <mat-icon>account_tree</mat-icon>
+            <span>Total Workflows</span>
+          </div>
+          <div class="stat-value">{{ totalWorkflows() }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-header">
+            <mat-icon class="icon-running">play_circle_outline</mat-icon>
+            <span>Running</span>
+          </div>
+          <div class="stat-value">{{ runningCount() }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-header">
+            <mat-icon class="icon-completed">check_circle_outline</mat-icon>
+            <span>Completed</span>
+          </div>
+          <div class="stat-value">{{ completedCount() }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-header">
+            <mat-icon class="icon-failed">error_outline</mat-icon>
+            <span>Failed</span>
+          </div>
+          <div class="stat-value">{{ failedCount() }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Filters Section -->
+    <mat-card class="filters-card">
       <mat-card-content>
-        <mat-icon>account_tree</mat-icon>
-        <h2>No workflows yet</h2>
-        <p>Create your first workflow to get started with multi-agent automation</p>
-        <button mat-raised-button color="primary">
-          <mat-icon>add</mat-icon>
-          Create First Workflow
-        </button>
+        <div class="filters-container">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search workflows</mat-label>
+            <input matInput [(ngModel)]="searchTerm" placeholder="Search by name, description, or ID...">
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Type</mat-label>
+            <mat-select [(ngModel)]="selectedType">
+              <mat-option value="all">All Types</mat-option>
+              <mat-option [value]="WorkflowType.FEATURE_DEVELOPMENT">Feature Development</mat-option>
+              <mat-option [value]="WorkflowType.BUG_FIX">Bug Fix</mat-option>
+              <mat-option [value]="WorkflowType.INFRASTRUCTURE">Infrastructure</mat-option>
+              <mat-option [value]="WorkflowType.DOCUMENTATION">Documentation</mat-option>
+              <mat-option [value]="WorkflowType.CODE_REVIEW">Code Review</mat-option>
+              <mat-option [value]="WorkflowType.TESTING">Testing</mat-option>
+              <mat-option [value]="WorkflowType.DEPLOYMENT">Deployment</mat-option>
+              <mat-option [value]="WorkflowType.REFACTORING">Refactoring</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Priority</mat-label>
+            <mat-select [(ngModel)]="selectedPriority">
+              <mat-option value="all">All Priorities</mat-option>
+              <mat-option [value]="WorkflowPriority.CRITICAL">Critical</mat-option>
+              <mat-option [value]="WorkflowPriority.HIGH">High</mat-option>
+              <mat-option [value]="WorkflowPriority.MEDIUM">Medium</mat-option>
+              <mat-option [value]="WorkflowPriority.LOW">Low</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-button (click)="clearFilters()">
+            <span class="button-content">
+              <mat-icon>clear</mat-icon>
+              <span>Clear</span>
+            </span>
+          </button>
+        </div>
       </mat-card-content>
     </mat-card>
-  } @else {
-    <!-- Workflows Table -->
-    <mat-card>
-      <table mat-table [dataSource]="workflows()" class="workflows-table">
-        <!-- Workflow ID Column -->
-        <ng-container matColumnDef="workflow_id">
-          <th mat-header-cell *matHeaderCellDef>ID</th>
-          <td mat-cell *matCellDef="let workflow">
-            <span class="workflow-id">{{ workflow.workflow_id.substring(0, 8) }}...</span>
-          </td>
-        </ng-container>
 
-        <!-- Type Column -->
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef>Type</th>
-          <td mat-cell *matCellDef="let workflow">
-            <div class="workflow-type">
-              <mat-icon>{{ getWorkflowIcon(workflow.workflow_type) }}</mat-icon>
-              <span>{{ workflow.workflow_type.replace('_', ' ') }}</span>
-            </div>
-          </td>
-        </ng-container>
+    <!-- Tabs Section -->
+    <mat-tab-group class="workflows-tabs" (selectedIndexChange)="onTabChange($event)">
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>view_list</mat-icon>
+            <span>All ({{ allWorkflows().length }})</span>
+          </span>
+        </ng-template>
+      </mat-tab>
 
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let workflow">
-            <mat-chip [class]="getStatusClass(workflow.status)">
-              {{ workflow.status }}
-            </mat-chip>
-          </td>
-        </ng-container>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>play_circle_outline</mat-icon>
+            <span>Running ({{ runningCount() }})</span>
+          </span>
+        </ng-template>
+      </mat-tab>
 
-        <!-- Started At Column -->
-        <ng-container matColumnDef="started_at">
-          <th mat-header-cell *matHeaderCellDef>Started</th>
-          <td mat-cell *matCellDef="let workflow">
-            {{ workflow.started_at | date:'short' }}
-          </td>
-        </ng-container>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>check_circle_outline</mat-icon>
+            <span>Completed ({{ completedCount() }})</span>
+          </span>
+        </ng-template>
+      </mat-tab>
 
-        <!-- Steps Column -->
-        <ng-container matColumnDef="steps">
-          <th mat-header-cell *matHeaderCellDef>Progress</th>
-          <td mat-cell *matCellDef="let workflow">
-            <div class="progress-info">
-              <span class="progress-text">
-                {{ workflow.completed_steps.length }} steps
-              </span>
-              @if (workflow.files_created.length > 0) {
-                <span class="files-count">{{ workflow.files_created.length }} files</span>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>error_outline</mat-icon>
+            <span>Failed ({{ failedCount() }})</span>
+          </span>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+
+    <!-- Workflows Grid -->
+    @if (filteredWorkflows().length === 0) {
+      <mat-card class="empty-state">
+        <mat-card-content>
+          <mat-icon>search_off</mat-icon>
+          <h2>No workflows found</h2>
+          <p>Try adjusting your search or filters</p>
+          <button mat-button (click)="clearFilters()">
+            <span class="button-content">
+              <mat-icon>clear</mat-icon>
+              <span>Clear Filters</span>
+            </span>
+          </button>
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <div class="workflows-grid">
+        @for (workflow of filteredWorkflows(); track workflow.workflow_id) {
+          <mat-card class="workflow-card" [routerLink]="['/workflows', workflow.workflow_id]">
+            <mat-card-header>
+              <div class="card-header-content">
+                <div class="workflow-title-row">
+                  <mat-icon class="workflow-type-icon">{{ getTypeIcon(workflow.workflow_type) }}</mat-icon>
+                  <h3 class="workflow-name">{{ workflow.name }}</h3>
+                  <mat-chip [class]="getStatusClass(workflow.status)">
+                    <span class="chip-content">
+                      <mat-icon>{{ getStatusIcon(workflow.status) }}</mat-icon>
+                      <span>{{ workflow.status | uppercase }}</span>
+                    </span>
+                  </mat-chip>
+                </div>
+                <p class="workflow-description">{{ workflow.description || workflow.requirement }}</p>
+              </div>
+            </mat-card-header>
+
+            <mat-card-content>
+              <div class="workflow-meta">
+                <div class="meta-item">
+                  <mat-icon>category</mat-icon>
+                  <span>{{ getTypeDisplayName(workflow.workflow_type) }}</span>
+                </div>
+                <div class="meta-item" [class]="getPriorityClass(workflow.priority)">
+                  <mat-icon>{{ getPriorityIcon(workflow.priority) }}</mat-icon>
+                  <span>{{ workflow.priority | titlecase }}</span>
+                </div>
+                <div class="meta-item">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ getTimeAgo(workflow.started_at) }}</span>
+                </div>
+                @if (workflow.duration) {
+                  <div class="meta-item">
+                    <mat-icon>timer</mat-icon>
+                    <span>{{ getDuration(workflow) }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span class="progress-text">Progress: {{ workflow.progress_percentage }}%</span>
+                  <span class="progress-steps">{{ workflow.completed_steps.length }} / {{ workflow.total_steps }} steps</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="workflow.progress_percentage"></div>
+                </div>
+              </div>
+
+              <!-- Workflow Stats -->
+              <div class="workflow-stats">
+                <div class="stat-item">
+                  <mat-icon>insert_drive_file</mat-icon>
+                  <span>{{ workflow.files_created.length }} files</span>
+                </div>
+                @if (workflow.assigned_agents.length > 0) {
+                  <div class="stat-item">
+                    <mat-icon>smart_toy</mat-icon>
+                    <span>{{ workflow.assigned_agents.length }} agents</span>
+                  </div>
+                }
+                @if (workflow.errors.length > 0) {
+                  <div class="stat-item error">
+                    <mat-icon>warning</mat-icon>
+                    <span>{{ workflow.errors.length }} errors</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Tags -->
+              @if (workflow.tags.length > 0) {
+                <div class="workflow-tags">
+                  @for (tag of workflow.tags; track tag) {
+                    <mat-chip class="tag-chip">{{ tag }}</mat-chip>
+                  }
+                </div>
               }
-            </div>
-          </td>
-        </ng-container>
+            </mat-card-content>
 
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let workflow">
-            <div class="action-buttons">
-              <button mat-icon-button [routerLink]="['/workflows', workflow.workflow_id]">
-                <mat-icon>visibility</mat-icon>
+            <mat-card-actions>
+              <button mat-button (click)="$event.stopPropagation()" [routerLink]="['/workflows', workflow.workflow_id]">
+                <span class="button-content">
+                  <mat-icon>visibility</mat-icon>
+                  <span>View Details</span>
+                </span>
               </button>
-              @if (workflow.status === 'running') {
-                <button mat-icon-button (click)="cancelWorkflow(workflow.workflow_id)">
-                  <mat-icon>stop</mat-icon>
+              @if (workflow.status === WorkflowStatus.RUNNING) {
+                <button mat-button color="warn" (click)="cancelWorkflow(workflow.workflow_id, $event)">
+                  <span class="button-content">
+                    <mat-icon>stop</mat-icon>
+                    <span>Cancel</span>
+                  </span>
                 </button>
               }
-              @if (workflow.status === 'failed') {
-                <button mat-icon-button (click)="resumeWorkflow(workflow.workflow_id)">
-                  <mat-icon>replay</mat-icon>
-                </button>
-              }
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="workflow-row"></tr>
-      </table>
-    </mat-card>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
   }
 </div>

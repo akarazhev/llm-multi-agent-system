@@ -178,21 +178,30 @@ class AgentChatDisplay:
         
         status_color = Fore.GREEN if status == "running" else Fore.YELLOW
         
+        # Count unique completed steps
+        unique_steps = set(completed_steps) if completed_steps else set()
+        steps_count = len(unique_steps)
+        
         print(f"\n{timestamp}{self.ICONS['info']} {Style.BRIGHT}Workflow Status{Style.RESET_ALL}")
         print(f"  ID: {Fore.LIGHTBLACK_EX}{workflow_id}{Style.RESET_ALL}")
         print(f"  Status: {status_color}{status}{Style.RESET_ALL}")
         print(f"  Current Step: {Fore.CYAN}{step}{Style.RESET_ALL}")
-        print(f"  Progress: {len(completed_steps)} steps completed")
+        print(f"  Progress: {steps_count} steps completed")
         
-        # Show progress bar
+        # Show progress bar based on unique steps
         total_steps = 6  # Typical workflow steps
-        progress = min(len(completed_steps), total_steps)
+        progress = min(steps_count, total_steps)
         bar_length = 30
         filled = int((progress / total_steps) * bar_length)
         bar = "█" * filled + "░" * (bar_length - filled)
         percentage = int((progress / total_steps) * 100)
         
         print(f"  {Fore.CYAN}{bar}{Style.RESET_ALL} {percentage}%")
+        
+        # Show which steps are completed
+        if unique_steps:
+            completed_list = ", ".join(sorted(unique_steps))
+            print(f"  {Fore.LIGHTBLACK_EX}Completed: {completed_list}{Style.RESET_ALL}")
     
     def inter_agent_communication(
         self,
@@ -221,6 +230,22 @@ class AgentChatDisplay:
         icon = self.ICONS.get(message_type, self.ICONS["info"])
         
         print(f"\n{timestamp}{icon} {Style.BRIGHT}System:{Style.RESET_ALL} {message}")
+    
+    def parallel_execution_start(self, agents: List[str]):
+        """Display start of parallel execution"""
+        timestamp = self._get_timestamp()
+        agents_str = " & ".join([a.replace("_", " ").title() for a in agents])
+        
+        print(f"\n{timestamp}⚡ {Style.BRIGHT}Parallel Execution:{Style.RESET_ALL} {Fore.YELLOW}{agents_str}{Style.RESET_ALL}")
+        print(f"  {Fore.LIGHTBLACK_EX}These agents will work simultaneously{Style.RESET_ALL}")
+    
+    def parallel_execution_complete(self, agents: List[str]):
+        """Display completion of parallel execution"""
+        timestamp = self._get_timestamp()
+        agents_str = " & ".join([a.replace("_", " ").title() for a in agents])
+        
+        print(f"\n{timestamp}✅ {Style.BRIGHT}Parallel Complete:{Style.RESET_ALL} {Fore.GREEN}{agents_str}{Style.RESET_ALL}")
+        print(f"  {Fore.LIGHTBLACK_EX}All parallel tasks finished{Style.RESET_ALL}")
     
     def file_operation(self, agent_id: str, operation: str, file_path: str, success: bool = True):
         """Display file operations"""
@@ -271,11 +296,52 @@ class ProgressTracker:
         self.total_steps = total_steps
         self.current_step = 0
         self.step_names = []
+        self.completed_unique_steps = set()  # Track unique completed steps
+        
+        # Define the expected workflow steps in order
+        self.workflow_steps = [
+            "business_analyst",
+            "architecture_design", 
+            "implementation",
+            "qa_testing",
+            "infrastructure",
+            "documentation"
+        ]
     
     def update(self, step_name: str):
         """Update progress with new step"""
-        self.current_step += 1
-        self.step_names.append(step_name)
+        # Map node names to workflow steps
+        step_mapping = {
+            "business_analyst": "business_analyst",
+            "architecture_design": "architecture_design",
+            "implementation": "implementation",
+            "qa_testing": "qa_testing",
+            "infrastructure": "infrastructure",
+            "documentation": "documentation"
+        }
+        
+        # Get the workflow step name
+        workflow_step = step_mapping.get(step_name, step_name)
+        
+        # Only increment if this is a new unique step
+        if workflow_step not in self.completed_unique_steps:
+            self.completed_unique_steps.add(workflow_step)
+            self.current_step = len(self.completed_unique_steps)
+            self.step_names.append(workflow_step)
+            self._display_progress()
+    
+    def update_with_count(self, completed_steps_list: list):
+        """Update progress based on completed steps list from state"""
+        # Count unique completed steps
+        unique_steps = set(completed_steps_list)
+        self.current_step = len(unique_steps)
+        self.completed_unique_steps = unique_steps
+        
+        if completed_steps_list:
+            latest_step = completed_steps_list[-1]
+            if latest_step not in self.step_names:
+                self.step_names.append(latest_step)
+        
         self._display_progress()
     
     def _display_progress(self):
@@ -289,6 +355,7 @@ class ProgressTracker:
         
         print(f"\n{Fore.CYAN}Progress:{Style.RESET_ALL} {bar} {percentage}%")
         print(f"{Fore.CYAN}Current:{Style.RESET_ALL} {step_name}")
+        print(f"{Fore.CYAN}Steps completed:{Style.RESET_ALL} {self.current_step}/{self.total_steps}")
 
 
 def demo_chat_display():

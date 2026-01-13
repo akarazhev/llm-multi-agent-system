@@ -374,6 +374,9 @@ class LangGraphOrchestrator:
                     summary,
                     files_created
                 )
+                
+                # Notify about parallel execution starting
+                self.chat_display.parallel_execution_start(["qa_engineer", "devops_engineer"])
             
             return {
                 "implementation": [completed_task.result] if completed_task.result else [],
@@ -968,20 +971,20 @@ class LangGraphOrchestrator:
                 for node_name, node_state in event.items():
                     logger.info(f"[{workflow_id}] Completed node: {node_name}")
                     
-                    if self.progress_tracker:
-                        self.progress_tracker.update(node_name)
+                    # Update progress tracker with actual completed steps from state
+                    if self.progress_tracker and node_state.get("completed_steps"):
+                        self.progress_tracker.update_with_count(node_state.get("completed_steps", []))
                     
                     if self.chat_display and "current_step" in node_state:
                         logger.info(f"[{workflow_id}] Current step: {node_state['current_step']}")
                         
-                        # Show workflow status periodically
-                        if node_state.get("completed_steps"):
-                            self.chat_display.workflow_status(
-                                workflow_id,
-                                node_state.get("status", "running"),
-                                node_state.get("current_step", "unknown"),
-                                node_state.get("completed_steps", [])
-                            )
+                        # Show workflow status for every node completion
+                        self.chat_display.workflow_status(
+                            workflow_id,
+                            node_state.get("status", "running"),
+                            node_state.get("current_step", "unknown"),
+                            node_state.get("completed_steps", [])
+                        )
                 
                 final_state = event
             

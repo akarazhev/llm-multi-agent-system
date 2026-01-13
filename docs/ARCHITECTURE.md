@@ -100,7 +100,7 @@ The LLM Multi-Agent System is a production-ready orchestration platform that coo
 from src.orchestrator import AgentOrchestrator, WorkflowEngine
 
 # Direct Python API for integration
-orchestrator = AgentOrchestrator(cursor_workspace=".")
+orchestrator = AgentOrchestrator(workspace=".")
 workflow_engine = WorkflowEngine(orchestrator)
 result = await workflow_engine.execute_workflow(...)
 ```
@@ -125,7 +125,7 @@ result = await workflow_engine.execute_workflow(...)
 **Key Methods:**
 ```python
 class AgentOrchestrator:
-    def __init__(self, cursor_workspace: str, config: Dict)
+    def __init__(self, workspace: str, config: Dict)
     async def execute_workflow(self, workflow: List[Dict]) -> Dict
     async def execute_task(self, task: Task, agent_id: str) -> Task
     def get_agent_by_role(self, role: AgentRole) -> BaseAgent
@@ -215,14 +215,14 @@ class Task:
 ```python
 class BaseAgent(ABC):
     # Initialization
-    def __init__(self, agent_id, role, cursor_workspace, config)
+    def __init__(self, agent_id, role, workspace, config)
     
     # Abstract methods (must implement)
     async def process_task(self, task: Task) -> Dict[str, Any]
     def get_system_prompt(self) -> str
     
     # LLM Communication
-    async def execute_cursor_command(self, prompt, files, timeout) -> Dict
+    async def execute_llm_task(self, prompt, files, timeout) -> Dict
     async def _call_local_llama_server(self, system_prompt, user_prompt, timeout) -> Dict
     
     # Task Execution
@@ -303,7 +303,7 @@ llama-server \
 
 **Communication Flow:**
 ```
-BaseAgent.execute_cursor_command()
+BaseAgent.execute_llm_task()
     ↓
 AsyncOpenAI(base_url="http://127.0.0.1:8080/v1")
     ↓
@@ -389,7 +389,7 @@ Agent.run_task(task)
     ↓
 Agent.process_task(task)
     ↓
-Agent.execute_cursor_command(prompt, files)
+Agent.execute_llm_task(prompt, files)
     ↓
 Agent._call_local_llama_server(system, user, timeout)
     ↓
@@ -415,9 +415,9 @@ AgentOrchestrator stores result
    OPENAI_API_MODEL=devstral
 
 2. YAML Configuration (config.yaml)
-   cursor_workspace: "."
+   workspace: "."
    log_level: "INFO"
-   cursor_timeout: 300
+   llm_timeout: 300
    agents:
      developer:
        languages: [python, javascript]
@@ -640,15 +640,15 @@ Available via `AgentOrchestrator.get_system_status()`:
 from src.agents.base_agent import BaseAgent, AgentRole
 
 class CustomAgent(BaseAgent):
-    def __init__(self, agent_id, cursor_workspace, config):
-        super().__init__(agent_id, AgentRole.CUSTOM, cursor_workspace, config)
+    def __init__(self, agent_id, workspace, config):
+        super().__init__(agent_id, AgentRole.CUSTOM, workspace, config)
     
     def get_system_prompt(self) -> str:
         return "Your custom system prompt..."
     
     async def process_task(self, task: Task) -> Dict[str, Any]:
         # Your custom logic
-        result = await self.execute_cursor_command(prompt)
+        result = await self.execute_llm_task(prompt)
         return {"status": "completed", ...}
 ```
 

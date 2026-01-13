@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 @dataclass
 class Settings:
-    cursor_workspace: str
+    workspace: str
     log_level: str = "INFO"
     log_file: Optional[str] = None
     
@@ -29,7 +29,7 @@ class Settings:
     @classmethod
     def from_dict(cls, config: Dict[str, Any]) -> 'Settings':
         return cls(
-            cursor_workspace=config.get('cursor_workspace', os.getcwd()),
+            workspace=config.get('workspace', config.get('cursor_workspace', os.getcwd())),
             log_level=config.get('log_level', 'INFO'),
             log_file=config.get('log_file'),
             agents=config.get('agents', {}),
@@ -44,7 +44,7 @@ class Settings:
     
     def to_dict(self) -> Dict[str, Any]:
         return {
-            'cursor_workspace': self.cursor_workspace,
+            'workspace': self.workspace,
             'log_level': self.log_level,
             'log_file': self.log_file,
             'agents': self.agents,
@@ -68,7 +68,7 @@ def load_config(config_path: Optional[str] = None) -> Settings:
     config_file = Path(config_path)
     
     if not config_file.exists():
-        return Settings(cursor_workspace=os.getcwd())
+        return Settings(workspace=os.getcwd())
     
     with open(config_file, 'r') as f:
         if config_file.suffix in ['.yaml', '.yml']:
@@ -78,22 +78,25 @@ def load_config(config_path: Optional[str] = None) -> Settings:
         else:
             raise ValueError(f"Unsupported config file format: {config_file.suffix}")
     
-    # Resolve cursor_workspace path to absolute path
-    if 'cursor_workspace' in config_data:
-        workspace_path = Path(config_data['cursor_workspace'])
+    # Resolve workspace path to absolute path
+    workspace_key = 'workspace' if 'workspace' in config_data else 'cursor_workspace'
+    if workspace_key in config_data:
+        workspace_path = Path(config_data[workspace_key])
         if not workspace_path.is_absolute():
             # Resolve relative to config file location
             config_dir = config_file.parent.absolute()
             workspace_path = (config_dir / workspace_path).resolve()
-        config_data['cursor_workspace'] = str(workspace_path)
+        config_data['workspace'] = str(workspace_path)
+        if 'cursor_workspace' in config_data:
+            del config_data['cursor_workspace']
     
     # Also check environment variable for workspace
-    env_workspace = os.getenv('CURSOR_WORKSPACE')
+    env_workspace = os.getenv('WORKSPACE') or os.getenv('CURSOR_WORKSPACE')
     if env_workspace:
         workspace_path = Path(env_workspace)
         if not workspace_path.is_absolute():
             workspace_path = Path.cwd() / workspace_path
-        config_data['cursor_workspace'] = str(workspace_path.resolve())
+        config_data['workspace'] = str(workspace_path.resolve())
     
     return Settings.from_dict(config_data)
 

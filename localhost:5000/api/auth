@@ -1,0 +1,15 @@
+```
+
+## Endpoints
+
+### Register
+- **URL**: `/register`
+- **Method**: `POST`
+- **Authentication**: None
+- **Request Body**:
+  ```json
+  {
+    "username": "string",
+    "password": "string",
+    "email": "string"
+  }

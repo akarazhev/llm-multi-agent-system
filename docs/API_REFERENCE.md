@@ -32,7 +32,7 @@ from src.orchestrator.workflow_engine import WorkflowType
 
 async def main():
     # Initialize orchestrator
-    orchestrator = AgentOrchestrator(cursor_workspace=".")
+    orchestrator = AgentOrchestrator(workspace=".")
     
     # Create workflow engine
     workflow_engine = WorkflowEngine(orchestrator)
@@ -58,14 +58,14 @@ Main orchestration hub that manages agents and executes workflows using LangGrap
 
 ```python
 LangGraphOrchestrator(
-    cursor_workspace: str,
+    workspace: str,
     config: Optional[Dict[str, Any]] = None,
     checkpoint_db: Optional[str] = None
 )
 ```
 
 **Parameters:**
-- `cursor_workspace` (str): Path to workspace directory
+- `workspace` (str): Path to workspace directory
 - `config` (Dict, optional): Configuration dictionary
 - `checkpoint_db` (str, optional): Path to checkpoint database for state persistence
 
@@ -76,7 +76,7 @@ LangGraphOrchestrator(
 from src.orchestrator import LangGraphOrchestrator
 
 orchestrator = LangGraphOrchestrator(
-    cursor_workspace="/path/to/workspace",
+    workspace="/path/to/workspace",
     config={
         "log_level": "INFO",
         "agents": {
@@ -289,7 +289,7 @@ class BaseAgent(ABC):
         self,
         agent_id: str,
         role: AgentRole,
-        cursor_workspace: str,
+        workspace: str,
         config: Optional[Dict[str, Any]] = None
     )
 ```
@@ -325,12 +325,12 @@ async def run_task(self, task: Task) -> Task
 
 **Returns:** Completed Task with results
 
-##### execute_cursor_command()
+##### execute_llm_task()
 
 Execute LLM command.
 
 ```python
-async def execute_cursor_command(
+async def execute_llm_task(
     prompt: str,
     files: Optional[List[str]] = None,
     timeout: int = 300
@@ -372,7 +372,7 @@ from src.agents import BusinessAnalystAgent
 
 agent = BusinessAnalystAgent(
     agent_id="ba_001",
-    cursor_workspace=".",
+    workspace=".",
     config={"jira_integration": False}
 )
 ```
@@ -389,7 +389,7 @@ from src.agents import DeveloperAgent
 
 agent = DeveloperAgent(
     agent_id="dev_001",
-    cursor_workspace=".",
+    workspace=".",
     config={"languages": ["python", "javascript"]}
 )
 ```
@@ -407,7 +407,7 @@ from src.agents import QAEngineerAgent
 
 agent = QAEngineerAgent(
     agent_id="qa_001",
-    cursor_workspace=".",
+    workspace=".",
     config={"test_frameworks": ["pytest", "jest"]}
 )
 ```
@@ -424,7 +424,7 @@ from src.agents import DevOpsEngineerAgent
 
 agent = DevOpsEngineerAgent(
     agent_id="devops_001",
-    cursor_workspace=".",
+    workspace=".",
     config={"platforms": ["docker", "kubernetes"]}
 )
 ```
@@ -441,7 +441,7 @@ from src.agents import TechnicalWriterAgent
 
 agent = TechnicalWriterAgent(
     agent_id="writer_001",
-    cursor_workspace=".",
+    workspace=".",
     config={"formats": ["markdown", "openapi"]}
 )
 ```
@@ -527,9 +527,9 @@ config = load_config("config.yaml")
 
 # Create manually
 settings = Settings(
-    cursor_workspace="/path/to/workspace",
+    workspace="/path/to/workspace",
     log_level="INFO",
-    cursor_timeout=300,
+    llm_timeout=300,
     agents={
         "developer": {
             "languages": ["python"]
@@ -558,7 +558,7 @@ from src.config import load_config
 
 config = load_config("config.prod.yaml")
 orchestrator = AgentOrchestrator(
-    cursor_workspace=config.cursor_workspace,
+    workspace=config.workspace,
     config=config.to_dict()
 )
 ```
@@ -650,7 +650,7 @@ async def run_simple_workflow():
     
     # Initialize orchestrator
     orchestrator = AgentOrchestrator(
-        cursor_workspace=config.cursor_workspace,
+        workspace=config.workspace,
         config=config.to_dict()
     )
     
@@ -689,7 +689,7 @@ import asyncio
 from src.orchestrator import AgentOrchestrator
 
 async def run_custom_workflow():
-    orchestrator = AgentOrchestrator(cursor_workspace=".")
+    orchestrator = AgentOrchestrator(workspace=".")
     
     # Define custom workflow
     workflow = [
@@ -739,7 +739,7 @@ async def use_agent_directly():
     # Initialize agent
     agent = DeveloperAgent(
         agent_id="dev_direct",
-        cursor_workspace=".",
+        workspace=".",
         config={"languages": ["python"]}
     )
     
@@ -773,7 +773,7 @@ import asyncio
 from src.orchestrator import AgentOrchestrator
 
 async def monitor_system():
-    orchestrator = AgentOrchestrator(cursor_workspace=".")
+    orchestrator = AgentOrchestrator(workspace=".")
     
     # Get system status
     status = orchestrator.get_system_status()
@@ -800,7 +800,7 @@ from src.orchestrator.workflow_engine import WorkflowType
 
 async def handle_errors():
     try:
-        orchestrator = AgentOrchestrator(cursor_workspace=".")
+        orchestrator = AgentOrchestrator(workspace=".")
         workflow_engine = WorkflowEngine(orchestrator)
         
         result = await workflow_engine.execute_workflow(
@@ -851,7 +851,7 @@ except Exception as e:
 # Good
 config = load_config("config.yaml")
 orchestrator = AgentOrchestrator(
-    cursor_workspace=config.cursor_workspace,
+    workspace=config.workspace,
     config=config.to_dict()
 )
 
@@ -875,7 +875,7 @@ for task_id, task in result['result']['results'].items():
 async def main():
     orchestrator = None
     try:
-        orchestrator = AgentOrchestrator(cursor_workspace=".")
+        orchestrator = AgentOrchestrator(workspace=".")
         result = await orchestrator.execute_workflow(workflow)
     finally:
         # Clean up if needed

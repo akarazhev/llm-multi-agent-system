@@ -6,8 +6,8 @@ logger = logging.getLogger(__name__)
 
 
 class BusinessAnalystAgent(BaseAgent):
-    def __init__(self, agent_id: str, cursor_workspace: str, config: Dict[str, Any] = None):
-        super().__init__(agent_id, AgentRole.BUSINESS_ANALYST, cursor_workspace, config)
+    def __init__(self, agent_id: str, workspace: str, config: Dict[str, Any] = None):
+        super().__init__(agent_id, AgentRole.BUSINESS_ANALYST, workspace, config)
     
     def get_system_prompt(self) -> str:
         return """You are an expert Business Analyst agent. Your responsibilities include:

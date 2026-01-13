@@ -55,18 +55,18 @@ class BaseAgent(ABC):
         self,
         agent_id: str,
         role: AgentRole,
-        cursor_workspace: str,
+        workspace: str,
         config: Optional[Dict[str, Any]] = None
     ):
         self.agent_id = agent_id
         self.role = role
-        self.cursor_workspace = cursor_workspace
+        self.workspace = workspace
         self.config = config or {}
         self.status = AgentStatus.IDLE
         self.current_task: Optional[Task] = None
         self.task_history: List[Task] = []
         self.message_queue: asyncio.Queue = asyncio.Queue()
-        self.file_writer = FileWriter(cursor_workspace)
+        self.file_writer = FileWriter(workspace)
         
     @abstractmethod
     async def process_task(self, task: Task) -> Dict[str, Any]:

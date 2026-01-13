@@ -17,7 +17,7 @@ from src.orchestrator import LangGraphOrchestrator
 
 async def run_custom_workflow():
     orchestrator = LangGraphOrchestrator(
-        cursor_workspace=str(PROJECT_ROOT)
+        workspace=str(PROJECT_ROOT)
     )
     
     requirement = """

@@ -35,19 +35,19 @@ async def main():
     # Load configuration
     try:
         config = load_config()
-        workspace = config.cursor_workspace
+        workspace = config.workspace
     except Exception as e:
         logger.warning(f"Could not load config: {e}, using defaults")
         workspace = "."
         config = {
-            "cursor_workspace": workspace,
+            "workspace": workspace,
             "agents": {}
         }
     
     # Create orchestrator
     print("Initializing LangGraph Orchestrator...")
     orchestrator = LangGraphOrchestrator(
-        cursor_workspace=workspace,
+        workspace=workspace,
         config=config.__dict__ if hasattr(config, '__dict__') else config
     )
     print("✓ Orchestrator initialized")

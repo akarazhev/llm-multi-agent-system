@@ -36,19 +36,19 @@ async def visualize_feature_development():
     # Load configuration
     try:
         config = load_config()
-        workspace = config.cursor_workspace
+        workspace = config.workspace
     except Exception as e:
         logger.warning(f"Could not load config: {e}, using defaults")
         workspace = "."
         config = {
-            "cursor_workspace": workspace,
+            "workspace": workspace,
             "agents": {}
         }
     
     # Create orchestrator
     print("Building workflow graph...")
     orchestrator = LangGraphOrchestrator(
-        cursor_workspace=workspace,
+        workspace=workspace,
         config=config.__dict__ if hasattr(config, '__dict__') else config
     )
     

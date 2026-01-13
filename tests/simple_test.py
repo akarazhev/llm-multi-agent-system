@@ -25,7 +25,7 @@ async def simple_test():
     # Create a developer agent
     agent = DeveloperAgent(
         agent_id="dev_simple",
-        cursor_workspace=str(PROJECT_ROOT),
+        workspace=str(PROJECT_ROOT),
         config={}
     )
     

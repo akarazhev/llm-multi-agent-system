@@ -64,7 +64,7 @@ from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
 async def main():
     # Create orchestrator
     orchestrator = LangGraphOrchestrator(
-        cursor_workspace=".",
+        workspace=".",
         config={"agents": {}}
     )
     
@@ -307,7 +307,7 @@ result = await app.ainvoke(None, config={
 ```python
 from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
 
-orchestrator = LangGraphOrchestrator(cursor_workspace=".")
+orchestrator = LangGraphOrchestrator(workspace=".")
 
 result = await orchestrator.execute_feature_development(
     requirement="""
@@ -500,7 +500,7 @@ async def resilient_node(state: MultiAgentState) -> Dict[str, Any]:
 ```python
 from src.orchestrator import AgentOrchestrator, WorkflowEngine
 
-orchestrator = AgentOrchestrator(cursor_workspace=".")
+orchestrator = AgentOrchestrator(workspace=".")
 workflow_engine = WorkflowEngine(orchestrator)
 
 result = await workflow_engine.execute_workflow(
@@ -514,7 +514,7 @@ result = await workflow_engine.execute_workflow(
 ```python
 from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
 
-orchestrator = LangGraphOrchestrator(cursor_workspace=".")
+orchestrator = LangGraphOrchestrator(workspace=".")
 
 result = await orchestrator.execute_feature_development(
     requirement="Build API",
@@ -550,14 +550,14 @@ Your existing agents remain unchanged! LangGraph wraps them with no modification
 class LangGraphOrchestrator:
     def __init__(
         self,
-        cursor_workspace: str,
+        workspace: str,
         config: Optional[Dict[str, Any]] = None,
         checkpoint_db: Optional[str] = None
     )
 ```
 
 **Parameters:**
-- `cursor_workspace`: Path to workspace directory
+- `workspace`: Path to workspace directory
 - `config`: Configuration dictionary (same as before)
 - `checkpoint_db`: Path to SQLite checkpoint database (default: `./checkpoints.db`)
 
@@ -632,7 +632,7 @@ rm checkpoints.db
 
 # Or specify different DB per workflow
 orchestrator = LangGraphOrchestrator(
-    cursor_workspace=".",
+    workspace=".",
     checkpoint_db="./checkpoints_workflow2.db"
 )
 ```

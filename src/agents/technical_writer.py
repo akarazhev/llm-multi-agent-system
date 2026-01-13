@@ -6,8 +6,8 @@ logger = logging.getLogger(__name__)
 
 
 class TechnicalWriterAgent(BaseAgent):
-    def __init__(self, agent_id: str, cursor_workspace: str, config: Dict[str, Any] = None):
-        super().__init__(agent_id, AgentRole.TECHNICAL_WRITER, cursor_workspace, config)
+    def __init__(self, agent_id: str, workspace: str, config: Dict[str, Any] = None):
+        super().__init__(agent_id, AgentRole.TECHNICAL_WRITER, workspace, config)
         self.doc_formats = config.get("formats", ["markdown", "confluence"]) if config else ["markdown"]
     
     def get_system_prompt(self) -> str:

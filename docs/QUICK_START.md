@@ -32,7 +32,7 @@ Before you begin, ensure you have:
 
 - **Git** - For cloning the repository
 - **GPU** - Apple Silicon (M1/M2/M3) or NVIDIA GPU for faster inference
-- **VSCode/Cursor IDE** - For development
+- **VSCode or any IDE** - For development
 
 ## Installation
 
@@ -93,7 +93,7 @@ OPENAI_API_KEY=not-needed
 OPENAI_API_MODEL=devstral
 
 # Optional: Override workspace path
-CURSOR_WORKSPACE=/path/to/your/workspace
+WORKSPACE=/path/to/your/workspace
 
 # Optional: Agent configuration path
 AGENT_CONFIG_PATH=config.yaml
@@ -110,7 +110,7 @@ Edit `config.yaml` to customize the system:
 
 ```yaml
 # Workspace Settings
-cursor_workspace: "."  # Current directory or specify path
+workspace: "."  # Current directory or specify path
 output_directory: "./output"
 
 # Logging
@@ -676,7 +676,7 @@ pip install -r requirements.txt
 **Solution:**
 ```yaml
 # Increase timeout in config.yaml
-cursor_timeout: 600  # 10 minutes
+llm_timeout: 600  # 10 minutes
 task_timeout: 900    # 15 minutes
 ```
 

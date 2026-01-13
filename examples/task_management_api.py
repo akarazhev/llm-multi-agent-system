@@ -35,7 +35,7 @@ async def build_task_management_api():
     config = load_config()
     
     orchestrator = LangGraphOrchestrator(
-        cursor_workspace=config.cursor_workspace,
+        workspace=config.workspace,
         config=config.to_dict()
     )
     

@@ -189,9 +189,9 @@ Tests use the same configuration as the main application but may override certai
 ```python
 # Example test configuration
 TEST_CONFIG = {
-    "cursor_workspace": "/tmp/test_workspace",
+    "workspace": "/tmp/test_workspace",
     "log_level": "DEBUG",
-    "cursor_timeout": 60,
+    "llm_timeout": 60,
 }
 ```
 

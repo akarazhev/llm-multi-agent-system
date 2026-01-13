@@ -6,8 +6,8 @@ logger = logging.getLogger(__name__)
 
 
 class DevOpsEngineerAgent(BaseAgent):
-    def __init__(self, agent_id: str, cursor_workspace: str, config: Dict[str, Any] = None):
-        super().__init__(agent_id, AgentRole.DEVOPS_ENGINEER, cursor_workspace, config)
+    def __init__(self, agent_id: str, workspace: str, config: Dict[str, Any] = None):
+        super().__init__(agent_id, AgentRole.DEVOPS_ENGINEER, workspace, config)
         self.platforms = config.get("platforms", ["docker", "kubernetes", "aws"]) if config else ["docker"]
     
     def get_system_prompt(self) -> str:

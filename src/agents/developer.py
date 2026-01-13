@@ -6,8 +6,8 @@ logger = logging.getLogger(__name__)
 
 
 class DeveloperAgent(BaseAgent):
-    def __init__(self, agent_id: str, cursor_workspace: str, config: Dict[str, Any] = None):
-        super().__init__(agent_id, AgentRole.DEVELOPER, cursor_workspace, config)
+    def __init__(self, agent_id: str, workspace: str, config: Dict[str, Any] = None):
+        super().__init__(agent_id, AgentRole.DEVELOPER, workspace, config)
         self.programming_languages = config.get("languages", ["python", "javascript", "typescript"]) if config else ["python"]
     
     def get_system_prompt(self) -> str:

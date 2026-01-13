@@ -334,7 +334,7 @@ def process_workflow(workflow: List[Dict]) -> Dict[str, Any]:
 ```python
 # Use async/await consistently
 async def process_task(self, task: Task) -> Dict:
-    result = await self.execute_cursor_command(prompt)
+    result = await self.execute_llm_task(prompt)
     return result
 
 # Handle errors properly
@@ -418,7 +418,7 @@ class TestDeveloperAgent:
         """Create agent fixture"""
         return DeveloperAgent(
             agent_id="test_dev",
-            cursor_workspace=".",
+            workspace=".",
             config={"languages": ["python"]}
         )
     

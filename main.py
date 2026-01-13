@@ -32,12 +32,12 @@ async def main():
     logger = logging.getLogger(__name__)
     
     logger.info("Starting Multi-Agent System with LangGraph Orchestration")
-    logger.info(f"Workspace: {config.cursor_workspace}")
+    logger.info(f"Workspace: {config.workspace}")
     
     Path(config.output_directory).mkdir(parents=True, exist_ok=True)
     
     orchestrator = LangGraphOrchestrator(
-        cursor_workspace=config.cursor_workspace,
+        workspace=config.workspace,
         config=config.to_dict()
     )
     

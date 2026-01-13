@@ -71,13 +71,13 @@ class LangGraphOrchestrator:
     
     def __init__(
         self,
-        cursor_workspace: str,
+        workspace: str,
         config: Optional[Dict[str, Any]] = None,
         checkpoint_db: Optional[str] = None
     ):
-        self.cursor_workspace = cursor_workspace
+        self.workspace = workspace
         self.config = config or {}
-        self.checkpoint_db = checkpoint_db or str(Path(cursor_workspace) / "checkpoints.db")
+        self.checkpoint_db = checkpoint_db or str(Path(workspace) / "checkpoints.db")
         self.agents: Dict[str, BaseAgent] = {}
         self._initialize_agents()
         
@@ -92,7 +92,7 @@ class LangGraphOrchestrator:
         ba_config = agent_configs.get("business_analyst", {}).copy()
         self.agents["business_analyst"] = BusinessAnalystAgent(
             agent_id="ba_001",
-            cursor_workspace=self.cursor_workspace,
+            workspace=self.workspace,
             config=ba_config
         )
         
@@ -100,7 +100,7 @@ class LangGraphOrchestrator:
         dev_config = agent_configs.get("developer", {}).copy()
         self.agents["developer"] = DeveloperAgent(
             agent_id="dev_001",
-            cursor_workspace=self.cursor_workspace,
+            workspace=self.workspace,
             config=dev_config
         )
         
@@ -108,7 +108,7 @@ class LangGraphOrchestrator:
         qa_config = agent_configs.get("qa_engineer", {}).copy()
         self.agents["qa_engineer"] = QAEngineerAgent(
             agent_id="qa_001",
-            cursor_workspace=self.cursor_workspace,
+            workspace=self.workspace,
             config=qa_config
         )
         
@@ -116,7 +116,7 @@ class LangGraphOrchestrator:
         devops_config = agent_configs.get("devops_engineer", {}).copy()
         self.agents["devops_engineer"] = DevOpsEngineerAgent(
             agent_id="devops_001",
-            cursor_workspace=self.cursor_workspace,
+            workspace=self.workspace,
             config=devops_config
         )
         
@@ -124,7 +124,7 @@ class LangGraphOrchestrator:
         writer_config = agent_configs.get("technical_writer", {}).copy()
         self.agents["technical_writer"] = TechnicalWriterAgent(
             agent_id="writer_001",
-            cursor_workspace=self.cursor_workspace,
+            workspace=self.workspace,
             config=writer_config
         )
         
@@ -783,7 +783,7 @@ class LangGraphOrchestrator:
         final_state: Dict[str, Any]
     ):
         """Save workflow results to JSON file"""
-        output_dir = Path(self.cursor_workspace) / "output"
+        output_dir = Path(self.workspace) / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         
         # Get the last state from the event stream

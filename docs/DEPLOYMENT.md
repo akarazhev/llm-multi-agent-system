@@ -203,7 +203,7 @@ OPENAI_API_KEY=production-key-not-needed
 OPENAI_API_MODEL=devstral
 
 # Workspace
-CURSOR_WORKSPACE=/opt/agent-system/app
+WORKSPACE=/opt/agent-system/app
 
 # Configuration
 AGENT_CONFIG_PATH=/opt/agent-system/app/config.prod.yaml
@@ -211,13 +211,13 @@ AGENT_CONFIG_PATH=/opt/agent-system/app/config.prod.yaml
 
 Production `config.prod.yaml`:
 ```yaml
-cursor_workspace: "/opt/agent-system/app"
+workspace: "/opt/agent-system/app"
 output_directory: "/opt/agent-system/app/output"
 
 log_level: "INFO"
 log_file: "/opt/agent-system/app/logs/agent_system.log"
 
-cursor_timeout: 600
+llm_timeout: 600
 task_timeout: 1200
 max_concurrent_agents: 5
 task_retry_attempts: 3
@@ -755,7 +755,7 @@ export LLAMA_GPU_LAYERS=99
 
 ```yaml
 # config.prod.yaml
-cursor_timeout: 600
+llm_timeout: 600
 task_timeout: 1200
 max_concurrent_agents: 3  # Reduce for lower memory usage
 ```

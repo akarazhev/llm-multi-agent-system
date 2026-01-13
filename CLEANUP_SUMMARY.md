@@ -36,8 +36,9 @@ Performed a comprehensive review of the project to remove unused code, redundant
 - `PYTHON_VERSION_COMPATIBILITY.md` - Info covered in other docs
 - `PATH_CONFIGURATION.md` - Consolidated into TROUBLESHOOTING.md
 - `LLAMA_CPP_SETUP.md` - Info consolidated into setup guides
-- `CURSOR_AGENT_SDK.md` - Outdated/unused SDK documentation
-- `CURSOR_CLI_ORCHESTRATION.md` - Outdated (now using LangGraph)
+- `CURSOR_AGENT_SDK.md` - Outdated/unused SDK documentation (removed)
+- `CURSOR_CLI_ORCHESTRATION.md` - Outdated (now using LangGraph, removed)
+- `CURSOR_CLI_CLEANUP.md` - Cleanup report (removed after complete cleanup)
 
 ### Script Files (8 files removed from `scripts/`)
 

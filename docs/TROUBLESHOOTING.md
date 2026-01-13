@@ -150,9 +150,9 @@ ls -l config.yaml
 
 # If missing, create from example or default
 cat > config.yaml << EOF
-cursor_workspace: "."
+workspace: "."
 log_level: "INFO"
-cursor_timeout: 300
+llm_timeout: 300
 max_concurrent_agents: 5
 
 agents:
@@ -312,11 +312,11 @@ ERROR: Task timed out after 300 seconds
 **Solution:**
 ```yaml
 # Increase timeout in config.yaml
-cursor_timeout: 600  # 10 minutes
+llm_timeout: 600  # 10 minutes
 task_timeout: 900    # 15 minutes
 
 # Or set environment variable
-export CURSOR_TIMEOUT=600
+export LLM_TIMEOUT=600
 ```
 
 ### Issue: Agent Task Fails
@@ -881,7 +881,7 @@ curl http://127.0.0.1:8080/health
 python -c "from src.orchestrator import AgentOrchestrator; print('OK')"
 
 # Check configuration
-python -c "from src.config import load_config; c=load_config(); print(c.cursor_workspace)"
+python -c "from src.config import load_config; c=load_config(); print(c.workspace)"
 
 # Check disk space
 df -h

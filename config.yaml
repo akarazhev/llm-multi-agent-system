@@ -1,4 +1,4 @@
-cursor_workspace: "."  # Current directory (project root)
+workspace: "."  # Current directory (project root)
 
 log_level: "INFO"
 log_file: "logs/agent_system.log"

@@ -6,8 +6,8 @@ logger = logging.getLogger(__name__)
 
 
 class QAEngineerAgent(BaseAgent):
-    def __init__(self, agent_id: str, cursor_workspace: str, config: Dict[str, Any] = None):
-        super().__init__(agent_id, AgentRole.QA_ENGINEER, cursor_workspace, config)
+    def __init__(self, agent_id: str, workspace: str, config: Dict[str, Any] = None):
+        super().__init__(agent_id, AgentRole.QA_ENGINEER, workspace, config)
         self.test_frameworks = config.get("test_frameworks", ["pytest", "unittest"]) if config else ["pytest"]
     
     def get_system_prompt(self) -> str:

@@ -109,9 +109,9 @@ python main.py
 Edit `config.yaml`:
 
 ```yaml
-cursor_workspace: "."  # Your workspace path
+workspace: "."  # Your workspace path
 log_level: "INFO"
-cursor_timeout: 300
+llm_timeout: 300
 max_concurrent_agents: 5
 
 # Agent configurations
@@ -154,7 +154,7 @@ from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
 
 async def main():
     # Initialize orchestrator with state persistence
-    orchestrator = LangGraphOrchestrator(cursor_workspace=".")
+    orchestrator = LangGraphOrchestrator(workspace=".")
     
     # Execute with parallel QA + DevOps (30-40% faster)
     result = await orchestrator.execute_feature_development(
@@ -195,7 +195,7 @@ import asyncio
 from src.orchestrator import LangGraphOrchestrator
 
 async def main():
-    orchestrator = LangGraphOrchestrator(cursor_workspace=".")
+    orchestrator = LangGraphOrchestrator(workspace=".")
     
     final_state = await orchestrator.execute_feature_development(
         requirement="Create REST API for user authentication with JWT",
@@ -418,14 +418,14 @@ OPENAI_API_KEY=not-needed
 OPENAI_API_MODEL=devstral
 
 # Optional: Workspace override
-CURSOR_WORKSPACE=/path/to/workspace
+WORKSPACE=/path/to/workspace
 ```
 
 ### YAML Configuration (config.yaml)
 
 ```yaml
 # Workspace settings
-cursor_workspace: "."
+workspace: "."
 output_directory: "./output"
 log_level: "INFO"
 log_file: "logs/agent_system.log"

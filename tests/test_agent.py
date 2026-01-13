@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick test script to verify cursor-agent-tools integration
+Quick test script to verify agent integration
 """
 import asyncio
 import sys
@@ -19,13 +19,13 @@ async def test_agent():
     """Test a single agent with a simple task"""
     
     print("="*80)
-    print("Testing Cursor Agent Tools Integration")
+    print("Testing Agent Integration")
     print("="*80)
     
     # Create a Business Analyst agent
     agent = BusinessAnalystAgent(
         agent_id="test_ba",
-        cursor_workspace=str(PROJECT_ROOT),
+        workspace=str(PROJECT_ROOT),
         config={}
     )
     

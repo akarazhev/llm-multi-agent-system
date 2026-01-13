@@ -40,18 +40,18 @@ async def main():
     # Load configuration
     try:
         config = load_config()
-        workspace = config.cursor_workspace
+        workspace = config.workspace
     except Exception as e:
         logger.warning(f"Could not load config: {e}, using defaults")
         workspace = "."
         config = {
-            "cursor_workspace": workspace,
+            "workspace": workspace,
             "agents": {}
         }
     
     # Create orchestrator
     orchestrator = LangGraphOrchestrator(
-        cursor_workspace=workspace,
+        workspace=workspace,
         config=config.__dict__ if hasattr(config, '__dict__') else config
     )
     
@@ -141,7 +141,7 @@ async def main():
         print(f"""
 from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
 
-orchestrator = LangGraphOrchestrator(cursor_workspace=".")
+orchestrator = LangGraphOrchestrator(workspace=".")
 final_state = await orchestrator.execute_feature_development(
     requirement="Resuming...",
     thread_id="{thread_id}"

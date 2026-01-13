@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Setup script for LLM Multi-Agent System with Cursor CLI Orchestration
+Setup script for LLM Multi-Agent System
 """
 import os
 import sys
@@ -88,7 +88,7 @@ def setup_config():
         
         workspace = os.getcwd()
         print(f"\n   Current workspace: {workspace}")
-        print("   Update cursor_workspace in config.yaml if needed")
+        print("   Update workspace in config.yaml if needed")
     else:
         print("⚠️  config.yaml not found")
 

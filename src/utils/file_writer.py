@@ -374,12 +374,33 @@ class FileWriter:
                 
                 # Find the closing ``` before the next file marker
                 remaining_text = text[start_pos:end_search]
-                # Look for closing ``` - try multiple patterns, take the FIRST match
+                # Look for closing ``` - need to handle nested code blocks
+                # Count opening ``` markers and find the matching closing one
                 close_match = None
-                # Pattern 1: ``` on its own line (with optional whitespace)
-                for m in re.finditer(r'\n\s*```\s*(?:\n|$)', remaining_text):
-                    close_match = m
-                    break  # Take the first match
+                backtick_depth = 1  # We already passed one opening ```
+                
+                # Find all ``` markers (both opening and closing)
+                all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
+                
+                for m in all_backtick_matches:
+                    # Check what comes after the ``` to determine if it's opening or closing
+                    match_end = m.end()
+                    # Look at the rest of the line after ```
+                    line_end = remaining_text.find('\n', match_end)
+                    if line_end == -1:
+                        line_end = len(remaining_text)
+                    rest_of_line = remaining_text[match_end:line_end].strip()
+                    
+                    if rest_of_line and not rest_of_line.isspace():
+                        # Has content after ``` (like ```python or ```markdown) - it's an opening
+                        backtick_depth += 1
+                    else:
+                        # No content or just whitespace after ``` - it's a closing
+                        backtick_depth -= 1
+                        if backtick_depth == 0:
+                            # Found the matching closing ```
+                            close_match = m
+                            break
                 # Pattern 2: ``` at start of remaining_text or after newline
                 if not close_match:
                     for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
@@ -422,9 +443,25 @@ class FileWriter:
                     end_search = len(text)
                 
                 remaining_text = text[start_pos:end_search]
+                # Use depth tracking for nested code blocks
                 close_match = None
-                for m in re.finditer(r'\n```(?:\s|$)', remaining_text):
-                    close_match = m
+                backtick_depth = 1
+                all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
+                
+                for m in all_backtick_matches:
+                    match_end = m.end()
+                    line_end = remaining_text.find('\n', match_end)
+                    if line_end == -1:
+                        line_end = len(remaining_text)
+                    rest_of_line = remaining_text[match_end:line_end].strip()
+                    
+                    if rest_of_line and not rest_of_line.isspace():
+                        backtick_depth += 1
+                    else:
+                        backtick_depth -= 1
+                        if backtick_depth == 0:
+                            close_match = m
+                            break
                 
                 if close_match:
                     content = remaining_text[:close_match.start()].strip()
@@ -449,22 +486,25 @@ class FileWriter:
                         end_search = len(text)
                     
                     remaining_text = text[start_pos:end_search]
-                    # Look for closing ``` - try multiple patterns, take the FIRST match
+                    # Use depth tracking for nested code blocks
                     close_match = None
-                    # Pattern 1: ``` on its own line (with optional whitespace)
-                    for m in re.finditer(r'\n\s*```\s*(?:\n|$)', remaining_text):
-                        close_match = m
-                        break  # Take the first match
-                    # Pattern 2: ``` at start of remaining_text or after newline
-                    if not close_match:
-                        for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
-                            close_match = m
-                            break
-                    # Pattern 3: Any ``` followed by whitespace or end (most permissive)
-                    if not close_match:
-                        for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
-                            close_match = m
-                            break
+                    backtick_depth = 1
+                    all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
+                    
+                    for m in all_backtick_matches:
+                        match_end = m.end()
+                        line_end = remaining_text.find('\n', match_end)
+                        if line_end == -1:
+                            line_end = len(remaining_text)
+                        rest_of_line = remaining_text[match_end:line_end].strip()
+                        
+                        if rest_of_line and not rest_of_line.isspace():
+                            backtick_depth += 1
+                        else:
+                            backtick_depth -= 1
+                            if backtick_depth == 0:
+                                close_match = m
+                                break
                     
                     if close_match:
                         content = remaining_text[:close_match.start()].strip()
@@ -492,24 +532,25 @@ class FileWriter:
                     remaining_text = text[start_pos:end_search]
                     logger.debug(f"extract_file_structure: Pattern 3 - Processing file '{filename}', remaining text length: {len(remaining_text)}, preview: {remaining_text[:100]}")
                     
-                    # Look for closing ``` - try multiple patterns
-                    # Pattern 1: ``` on its own line (with optional whitespace before and after)
+                    # Use depth tracking for nested code blocks
                     close_match = None
-                    for m in re.finditer(r'\n\s*```\s*(?:\n|$)', remaining_text):
-                        close_match = m
-                        break  # Take the first match
+                    backtick_depth = 1
+                    all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
                     
-                    # Pattern 2: ``` at start of line (beginning of remaining_text or after newline)
-                    if not close_match:
-                        for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
-                            close_match = m
-                            break
-                    
-                    # Pattern 3: Any ``` followed by whitespace or end (most permissive)
-                    if not close_match:
-                        for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
-                            close_match = m
-                            break
+                    for m in all_backtick_matches:
+                        match_end = m.end()
+                        line_end = remaining_text.find('\n', match_end)
+                        if line_end == -1:
+                            line_end = len(remaining_text)
+                        rest_of_line = remaining_text[match_end:line_end].strip()
+                        
+                        if rest_of_line and not rest_of_line.isspace():
+                            backtick_depth += 1
+                        else:
+                            backtick_depth -= 1
+                            if backtick_depth == 0:
+                                close_match = m
+                                break
                     
                     if close_match:
                         content = remaining_text[:close_match.start()].strip()

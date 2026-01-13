@@ -70,11 +70,13 @@
 
           <div class="step-actions">
             <button mat-button (click)="cancel()">
-              <span>Cancel</span>
+              <span class="button-content">Cancel</span>
             </button>
             <button mat-raised-button color="primary" matStepperNext>
-              <span>Next</span>
-              <mat-icon>arrow_forward</mat-icon>
+              <span class="button-content">
+                <span>Next</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </span>
             </button>
           </div>
         </div>
@@ -146,12 +148,16 @@
 
           <div class="step-actions">
             <button mat-button matStepperPrevious>
-              <mat-icon>arrow_back</mat-icon>
-              <span>Back</span>
+              <span class="button-content">
+                <mat-icon>arrow_back</mat-icon>
+                <span>Back</span>
+              </span>
             </button>
             <button mat-raised-button color="primary" matStepperNext>
-              <span>Next</span>
-              <mat-icon>arrow_forward</mat-icon>
+              <span class="button-content">
+                <span>Next</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </span>
             </button>
           </div>
         </div>
@@ -254,17 +260,21 @@
 
           <div class="step-actions">
             <button mat-button matStepperPrevious [disabled]="creating()">
-              <mat-icon>arrow_back</mat-icon>
-              <span>Back</span>
+              <span class="button-content">
+                <mat-icon>arrow_back</mat-icon>
+                <span>Back</span>
+              </span>
             </button>
             <button mat-raised-button color="primary" (click)="createProject()" [disabled]="creating()">
-              @if (creating()) {
-                <mat-icon>hourglass_empty</mat-icon>
-                <span>Creating...</span>
-              } @else {
-                <mat-icon>check</mat-icon>
-                <span>Create Project</span>
-              }
+              <span class="button-content">
+                @if (creating()) {
+                  <mat-icon>hourglass_empty</mat-icon>
+                  <span>Creating...</span>
+                } @else {
+                  <mat-icon>check</mat-icon>
+                  <span>Create Project</span>
+                }
+              </span>
             </button>
           </div>
       </div>

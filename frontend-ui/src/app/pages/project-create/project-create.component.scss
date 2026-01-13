@@ -94,14 +94,14 @@
   border-top: 1px solid var(--mat-sys-surface-container-highest);
 
   button {
-    ::ng-deep .mdc-button__label {
-      display: flex !important;
-      align-items: center !important;
-      gap: 8px !important;
+    .button-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     mat-icon {
-      margin: 0 !important;
+      margin: 0;
       font-size: 20px;
       width: 20px;
       height: 20px;

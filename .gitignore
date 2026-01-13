@@ -35,6 +35,10 @@ logs/
 output/
 generated/
 *.json
+!package.json
+!package-lock.json
+!tsconfig*.json
+!angular.json
 
 .DS_Store
 .idea/

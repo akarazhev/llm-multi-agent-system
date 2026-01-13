@@ -273,7 +273,7 @@ chat = AgentChatDisplay(show_timestamps=False)
 ## Links
 
 - **Full Guide**: [docs/INTERACTIVE_CHAT.md](INTERACTIVE_CHAT.md)
-- **Update Summary**: [INTERACTIVE_CHAT_UPDATE.md](../INTERACTIVE_CHAT_UPDATE.md)
+- **Update Summary**: [INTERACTIVE_CHAT_UPDATE.md](INTERACTIVE_CHAT_UPDATE.md)
 - **Examples**: [examples/interactive_chat_workflow.py](../examples/interactive_chat_workflow.py)
 - **Main README**: [README.md](../README.md)
 

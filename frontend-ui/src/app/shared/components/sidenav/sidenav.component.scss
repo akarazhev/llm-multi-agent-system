@@ -1,0 +1,77 @@
+@use '../../../../style/material-variables' as vars;
+
+.sidenav-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 0;
+}
+
+.sidenav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+
+  .logo-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: vars.$primary;
+  }
+
+  .logo-text {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: vars.$text-primary;
+  }
+}
+
+.nav-list {
+  flex: 1;
+  padding: 0 8px;
+
+  .nav-item {
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: vars.$surface-container;
+    }
+
+    &.active {
+      background-color: vars.$primary-container;
+      color: vars.$on-primary-container;
+
+      mat-icon {
+        color: vars.$on-primary-container;
+      }
+    }
+
+    mat-icon {
+      color: vars.$text-secondary;
+    }
+  }
+}
+
+.sidenav-footer {
+  padding: 16px 24px;
+  border-top: vars.$border-secondary;
+
+  .footer-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: vars.$text-secondary;
+    font-size: 12px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}

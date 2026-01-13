@@ -1,0 +1,41 @@
+@use '../style/material-variables' as vars;
+
+.app-container {
+  height: 100vh;
+  display: flex;
+}
+
+.app-sidenav {
+  width: 260px;
+  background-color: vars.$surface-container-low;
+  border-right: vars.$border-secondary;
+}
+
+.app-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .toolbar-title {
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+}
+
+.app-main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background-color: vars.$bg-surface;
+}

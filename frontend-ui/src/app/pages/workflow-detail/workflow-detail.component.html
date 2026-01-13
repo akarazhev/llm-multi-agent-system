@@ -1,0 +1,176 @@
+<div class="workflow-detail-container">
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading workflow details...</p>
+    </div>
+  } @else if (workflow()) {
+    <!-- Header -->
+    <div class="workflow-header">
+      <button mat-icon-button routerLink="/workflows">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-content">
+        <h1>Workflow Details</h1>
+        <mat-chip [class]="getStatusClass(workflow()!.status)">
+          {{ workflow()!.status }}
+        </mat-chip>
+      </div>
+      <button mat-icon-button (click)="refreshWorkflow()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+
+    <!-- Progress Bar -->
+    <mat-card class="progress-card">
+      <mat-card-content>
+        <div class="progress-header">
+          <h3>Overall Progress</h3>
+          <span>{{ workflow()!.completed_steps.length }} / 6 steps completed</span>
+        </div>
+        <mat-progress-bar 
+          mode="determinate" 
+          [value]="getProgressPercentage()">
+        </mat-progress-bar>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Workflow Info -->
+    <div class="content-grid">
+      <!-- Main Info -->
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title>Workflow Information</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="info-item">
+            <mat-icon>fingerprint</mat-icon>
+            <div>
+              <label>Workflow ID</label>
+              <span class="workflow-id">{{ workflow()!.workflow_id }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>category</mat-icon>
+            <div>
+              <label>Type</label>
+              <span class="workflow-type">{{ workflow()!.workflow_type.replace('_', ' ') }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>schedule</mat-icon>
+            <div>
+              <label>Started At</label>
+              <span>{{ workflow()!.started_at | date:'medium' }}</span>
+            </div>
+          </div>
+
+          @if (workflow()!.completed_at) {
+            <div class="info-item">
+              <mat-icon>done_all</mat-icon>
+              <div>
+                <label>Completed At</label>
+                <span>{{ workflow()!.completed_at | date:'medium' }}</span>
+              </div>
+            </div>
+          }
+
+          <div class="info-item">
+            <mat-icon>task_alt</mat-icon>
+            <div>
+              <label>Current Step</label>
+              <span>{{ workflow()!.current_step || 'N/A' }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Requirement -->
+      <mat-card class="requirement-card">
+        <mat-card-header>
+          <mat-card-title>Requirement</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="requirement-text">{{ workflow()!.requirement }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Completed Steps -->
+    <mat-card class="steps-card">
+      <mat-card-header>
+        <mat-card-title>Completed Steps</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (workflow()!.completed_steps.length === 0) {
+          <p class="no-data">No steps completed yet</p>
+        } @else {
+          <div class="steps-list">
+            @for (step of workflow()!.completed_steps; track step) {
+              <div class="step-item">
+                <mat-icon class="step-icon">check_circle</mat-icon>
+                <span class="step-name">{{ step }}</span>
+              </div>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Files Created -->
+    @if (workflow()!.files_created.length > 0) {
+      <mat-card class="files-card">
+        <mat-card-header>
+          <mat-card-title>Files Created ({{ workflow()!.files_created.length }})</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="files-list">
+            @for (file of workflow()!.files_created; track file) {
+              <div class="file-item">
+                <mat-icon>insert_drive_file</mat-icon>
+                <span class="file-path">{{ file }}</span>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Errors -->
+    @if (workflow()!.errors.length > 0) {
+      <mat-card class="errors-card">
+        <mat-card-header>
+          <mat-card-title>Errors ({{ workflow()!.errors.length }})</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="errors-list">
+            @for (error of workflow()!.errors; track error.timestamp) {
+              <div class="error-item">
+                <mat-icon class="error-icon">error</mat-icon>
+                <div class="error-details">
+                  <div class="error-step">Step: {{ error.step }}</div>
+                  <div class="error-message">{{ error.error }}</div>
+                  <div class="error-timestamp">{{ error.timestamp | date:'medium' }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  } @else {
+    <!-- Not Found -->
+    <mat-card class="not-found">
+      <mat-card-content>
+        <mat-icon>error_outline</mat-icon>
+        <h2>Workflow Not Found</h2>
+        <p>The requested workflow could not be found.</p>
+        <button mat-raised-button color="primary" routerLink="/workflows">
+          Back to Workflows
+        </button>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

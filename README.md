@@ -589,15 +589,43 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: [docs/](docs/)
 - **Examples**: [examples/](examples/)
 
+## 🎨 Frontend UI (NEW!)
+
+### Angular 20 UI with Material Design
+
+```bash
+# Quick start with mock data (no backend required!)
+cd frontend-ui
+./start-mock.sh
+```
+
+**Features:**
+- 📊 **Dashboard** - System overview with stats
+- 🤖 **Agents** - Monitor all 5 AI agents
+- 📋 **Workflows** - Create and track workflows
+- 🎭 **Mock Mode** - Test without backend
+- 🎨 **Material Design 3** - Modern, beautiful UI
+- 📱 **Responsive** - Works on all devices
+
+**Tech Stack:**
+- Angular 20 (standalone components)
+- TypeScript 5.9
+- Angular Material 20
+- RxJS 7.8
+- SCSS with SPP theme
+
+See [Frontend Documentation](frontend-ui/README.md) for details.
+
 ## 🗺️ Roadmap
 
-- [ ] Web UI for workflow management
+- [x] Web UI for workflow management ✅ **COMPLETED!**
+- [x] Workflow visualization ✅ **COMPLETED!**
 - [ ] Additional agent types (Security, Data Engineer)
-- [ ] Workflow visualization
 - [ ] Integration with popular tools (Jira, Confluence)
 - [ ] Multi-language support for prompts
 - [ ] Workflow templates marketplace
 - [ ] Real-time collaboration features
+- [ ] WebSocket live updates
 
 ## 📈 Version History
 

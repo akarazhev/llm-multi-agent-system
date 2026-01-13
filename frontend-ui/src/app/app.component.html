@@ -1,0 +1,26 @@
+<mat-sidenav-container class="app-container">
+  <!-- Sidenav -->
+  <mat-sidenav mode="side" opened class="app-sidenav">
+    <app-sidenav></app-sidenav>
+  </mat-sidenav>
+
+  <!-- Main Content -->
+  <mat-sidenav-content class="app-content">
+    <!-- Header -->
+    <mat-toolbar color="primary" class="app-toolbar">
+      <span class="toolbar-title">{{ title }}</span>
+      <span class="spacer"></span>
+      <button mat-icon-button>
+        <mat-icon>notifications</mat-icon>
+      </button>
+      <button mat-icon-button>
+        <mat-icon>settings</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <!-- Router Outlet -->
+    <div class="app-main-content">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

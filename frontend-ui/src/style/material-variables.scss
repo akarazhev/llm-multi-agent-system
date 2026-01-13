@@ -1,0 +1,60 @@
+// Material Design CSS Variables
+
+// Surface colors
+$surface-primary: var(--mat-sys-surface);
+$surface-container: var(--mat-sys-surface-container);
+$surface-container-low: var(--mat-sys-surface-container-low);
+$surface-container-lowest: var(--mat-sys-surface-container-lowest);
+$surface-container-high: var(--mat-sys-surface-container-high);
+$surface-container-highest: var(--mat-sys-surface-container-highest);
+
+// Text colors
+$text-primary: var(--mat-sys-on-surface);
+$text-secondary: var(--mat-sys-on-surface-variant);
+$text-disabled: var(--mat-sys-on-surface-disabled);
+
+// Primary colors
+$primary: var(--mat-sys-primary);
+$primary-container: var(--mat-sys-primary-container);
+$on-primary: var(--mat-sys-on-primary);
+$on-primary-container: var(--mat-sys-on-primary-container);
+
+// Secondary colors
+$secondary: var(--mat-sys-secondary);
+$secondary-container: var(--mat-sys-secondary-container);
+$on-secondary: var(--mat-sys-on-secondary);
+$on-secondary-container: var(--mat-sys-on-secondary-container);
+
+// Tertiary colors
+$tertiary: var(--mat-sys-tertiary);
+$tertiary-container: var(--mat-sys-tertiary-container);
+$on-tertiary: var(--mat-sys-on-tertiary);
+$on-tertiary-container: var(--mat-sys-on-tertiary-container);
+
+// Error colors
+$error: var(--mat-sys-error);
+$error-container: var(--mat-sys-error-container);
+$on-error: var(--mat-sys-on-error);
+$on-error-container: var(--mat-sys-on-error-container);
+
+// Outline colors
+$outline: var(--mat-sys-outline);
+$outline-variant: var(--mat-sys-outline-variant);
+
+// Shadow and scrim
+$shadow: var(--mat-sys-shadow);
+$scrim: var(--mat-sys-scrim);
+
+// Common border styles
+$border-primary: 1px solid $outline;
+$border-secondary: 1px solid $outline-variant;
+$border-container: 2px solid $surface-container-highest;
+
+// Common background styles
+$bg-surface: $surface-primary;
+$bg-container: $surface-container;
+$bg-container-high: $surface-container-high;
+
+// Common text styles
+$text-body: $text-primary;
+$text-caption: $text-secondary;

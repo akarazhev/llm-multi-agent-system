@@ -1,0 +1,147 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <button mat-raised-button color="primary" (click)="refreshDashboard()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading dashboard data...</p>
+    </div>
+  } @else {
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-icon">
+            <mat-icon>smart_toy</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>{{ stats().totalAgents }}</h3>
+            <p>Total Agents</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-icon active">
+            <mat-icon>autorenew</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>{{ stats().activeWorkflows }}</h3>
+            <p>Active Workflows</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-icon completed">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>{{ stats().completedToday }}</h3>
+            <p>Completed Today</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-icon">
+            <mat-icon>account_tree</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>{{ stats().totalWorkflows }}</h3>
+            <p>Total Workflows</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Agents Status -->
+      <mat-card class="agents-card">
+        <mat-card-header>
+          <mat-card-title>Agents Status</mat-card-title>
+          <button mat-icon-button routerLink="/agents">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </mat-card-header>
+        <mat-card-content>
+          @if (agents().length === 0) {
+            <p class="no-data">No agents available</p>
+          } @else {
+            <div class="agents-list">
+              @for (agent of agents(); track agent.agent_id) {
+                <div class="agent-item">
+                  <div class="agent-info">
+                    <mat-icon class="agent-icon">smart_toy</mat-icon>
+                    <div>
+                      <h4>{{ agent.role }}</h4>
+                      <p class="agent-meta">{{ agent.completed_tasks }} tasks completed</p>
+                    </div>
+                  </div>
+                  <mat-chip [class]="getAgentStatusClass(agent.status)">
+                    {{ agent.status }}
+                  </mat-chip>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Recent Workflows -->
+      <mat-card class="workflows-card">
+        <mat-card-header>
+          <mat-card-title>Recent Workflows</mat-card-title>
+          <button mat-icon-button routerLink="/workflows">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </mat-card-header>
+        <mat-card-content>
+          @if (recentWorkflows().length === 0) {
+            <div class="no-data-container">
+              <mat-icon>account_tree</mat-icon>
+              <p>No workflows yet</p>
+              <button mat-raised-button color="primary" routerLink="/workflows">
+                Create First Workflow
+              </button>
+            </div>
+          } @else {
+            <div class="workflows-list">
+              @for (workflow of recentWorkflows(); track workflow.workflow_id) {
+                <div class="workflow-item" [routerLink]="['/workflows', workflow.workflow_id]">
+                  <div class="workflow-info">
+                    <h4>{{ workflow.workflow_type.replace('_', ' ') }}</h4>
+                    <p class="workflow-requirement">{{ workflow.requirement }}</p>
+                    <p class="workflow-meta">
+                      Started: {{ workflow.started_at | date:'short' }}
+                    </p>
+                  </div>
+                  <div class="workflow-status-container">
+                    <mat-chip [class]="getWorkflowStatusClass(workflow.status)">
+                      {{ workflow.status }}
+                    </mat-chip>
+                    <div class="workflow-progress">
+                      {{ workflow.completed_steps.length }} steps completed
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>

@@ -1,0 +1,73 @@
+<div class="agents-container">
+  <!-- Header -->
+  <div class="agents-header">
+    <div>
+      <h1>AI Agents</h1>
+      <p class="header-subtitle">Monitor and manage your specialized AI agents</p>
+    </div>
+    <button mat-icon-button (click)="refreshAgents()">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading agents...</p>
+    </div>
+  } @else {
+    <!-- Agents Grid -->
+    <div class="agents-grid">
+      @for (agent of agents(); track agent.agent_id) {
+        <mat-card class="agent-card">
+          <mat-card-content>
+            <!-- Agent Header -->
+            <div class="agent-header">
+              <div class="agent-icon-container">
+                <mat-icon class="agent-icon">{{ getAgentIcon(agent.role) }}</mat-icon>
+              </div>
+              <mat-chip [class]="getStatusClass(agent.status)">
+                {{ agent.status }}
+              </mat-chip>
+            </div>
+
+            <!-- Agent Info -->
+            <div class="agent-info">
+              <h3 class="agent-title">{{ agent.role.replace('_', ' ') }}</h3>
+              <p class="agent-description">
+                {{ agentRoleDescriptions[agent.role] }}
+              </p>
+            </div>
+
+            <!-- Agent Stats -->
+            <div class="agent-stats">
+              <div class="stat-item">
+                <mat-icon>assignment_turned_in</mat-icon>
+                <div class="stat-details">
+                  <span class="stat-value">{{ agent.completed_tasks }}</span>
+                  <span class="stat-label">Tasks Completed</span>
+                </div>
+              </div>
+
+              @if (agent.current_task) {
+                <div class="stat-item">
+                  <mat-icon>hourglass_empty</mat-icon>
+                  <div class="stat-details">
+                    <span class="stat-value">In Progress</span>
+                    <span class="stat-label">Current Task</span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Agent ID -->
+            <div class="agent-footer">
+              <span class="agent-id">ID: {{ agent.agent_id }}</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,173 @@
+// Custom Theming for Angular Material
+// All @use rules must be at the top
+@use '@angular/material' as mat;
+@use './style/spp_theme-colors' as theme-colors;
+@use './style/material-variables' as vars;
+
+// Include the common styles for Angular Material
+@include mat.core();
+
+// Define the theme
+$llm-agent-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: theme-colors.$primary-palette,
+    tertiary: theme-colors.$tertiary-palette,
+  ),
+  typography: (
+    brand-family: 'Roboto, sans-serif',
+    plain-family: 'Roboto, sans-serif',
+  ),
+  density: (
+    scale: 0,
+  )
+));
+
+// Include theme styles for core and each component
+@include mat.all-component-themes($llm-agent-theme);
+
+/* Global Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  background-color: vars.$surface-primary;
+  color: vars.$text-primary;
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: vars.$surface-container-low;
+}
+
+::-webkit-scrollbar-thumb {
+  background: vars.$outline;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: vars.$primary;
+}
+
+/* Utility Classes */
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gap-8 {
+  gap: 8px;
+}
+
+.gap-16 {
+  gap: 16px;
+}
+
+.gap-24 {
+  gap: 24px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.mb-16 {
+  margin-bottom: 16px;
+}
+
+.p-16 {
+  padding: 16px;
+}
+
+.p-24 {
+  padding: 24px;
+}
+
+/* Card Styles */
+.card {
+  background-color: vars.$surface-container;
+  border-radius: 12px;
+  padding: 16px;
+  border: vars.$border-secondary;
+}
+
+.card-elevated {
+  background-color: vars.$surface-container-high;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Text Styles */
+.text-secondary {
+  color: vars.$text-secondary;
+}
+
+.text-error {
+  color: vars.$error;
+}
+
+.text-primary {
+  color: vars.$primary;
+}
+
+/* Agent Status Colors */
+.status-idle {
+  color: vars.$text-secondary;
+}
+
+.status-working {
+  color: vars.$primary;
+}
+
+.status-completed {
+  color: #4caf50;
+}
+
+.status-error {
+  color: vars.$error;
+}
+
+/* Full Height Container */
+.full-height {
+  height: 100%;
+  min-height: 100vh;
+}
+
+/* Loading Spinner */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}

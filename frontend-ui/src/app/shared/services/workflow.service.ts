@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, effect, OnDestroy } from '@angular/core';
 import {
   Workflow,
   WorkflowTemplate,
@@ -12,10 +12,12 @@ import { MOCK_WORKFLOWS, WORKFLOW_TEMPLATES } from '../../mocks/mock-workflows';
 @Injectable({
   providedIn: 'root'
 })
-export class WorkflowService {
+export class WorkflowService implements OnDestroy {
   private workflows = signal<Workflow[]>([...MOCK_WORKFLOWS]);
   private templates = signal<WorkflowTemplate[]>([...WORKFLOW_TEMPLATES]);
   private loading = signal<boolean>(false);
+  private autoRefreshInterval: any = null;
+  private autoRefreshEnabled = signal<boolean>(false);
 
   // Public read-only signals
   readonly workflowsSignal = this.workflows.asReadonly();
@@ -219,5 +221,75 @@ export class WorkflowService {
       default:
         return 'primary';
     }
+  }
+
+  /**
+   * Enable auto-refresh for running workflows
+   */
+  enableAutoRefresh(intervalMs: number = 5000): void {
+    if (this.autoRefreshInterval) {
+      return; // Already enabled
+    }
+    this.autoRefreshEnabled.set(true);
+    this.autoRefreshInterval = setInterval(() => {
+      const runningWorkflows = this.workflows().filter(
+        w => w.status === WorkflowStatus.RUNNING
+      );
+      if (runningWorkflows.length > 0) {
+        this.simulateWorkflowProgress();
+      }
+    }, intervalMs);
+  }
+
+  /**
+   * Disable auto-refresh
+   */
+  disableAutoRefresh(): void {
+    if (this.autoRefreshInterval) {
+      clearInterval(this.autoRefreshInterval);
+      this.autoRefreshInterval = null;
+      this.autoRefreshEnabled.set(false);
+    }
+  }
+
+  /**
+   * Simulate workflow progress (for mock data)
+   * In production, this would poll the backend API
+   */
+  private simulateWorkflowProgress(): void {
+    this.workflows.update(workflows =>
+      workflows.map(workflow => {
+        if (workflow.status === WorkflowStatus.RUNNING) {
+          // Simulate progress increment
+          const newProgress = Math.min(workflow.progress_percentage + Math.random() * 5, 100);
+          const completedSteps = Math.floor((newProgress / 100) * workflow.total_steps);
+          
+          return {
+            ...workflow,
+            progress_percentage: Math.round(newProgress),
+            completed_steps: workflow.completed_steps.slice(0, completedSteps),
+            duration: (workflow.duration || 0) + 5, // +5 seconds
+            // Complete workflow if 100%
+            ...(newProgress >= 100 && {
+              status: WorkflowStatus.COMPLETED,
+              completed_at: new Date().toISOString(),
+              current_step: undefined
+            })
+          };
+        }
+        return workflow;
+      })
+    );
+  }
+
+  /**
+   * Check if auto-refresh is enabled
+   */
+  isAutoRefreshEnabled(): boolean {
+    return this.autoRefreshEnabled();
+  }
+
+  ngOnDestroy(): void {
+    this.disableAutoRefresh();
   }
 }

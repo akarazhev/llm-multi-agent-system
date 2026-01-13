@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -45,7 +45,7 @@ import { WorkflowCreateDialogComponent } from './workflow-create-dialog/workflow
   templateUrl: './workflows.component.html',
   styleUrl: './workflows.component.scss'
 })
-export class WorkflowsComponent implements OnInit {
+export class WorkflowsComponent implements OnInit, OnDestroy {
   private readonly workflowService = inject(WorkflowService);
   private readonly dialog = inject(MatDialog);
 
@@ -116,6 +116,12 @@ export class WorkflowsComponent implements OnInit {
 
   ngOnInit(): void {
     this.workflowService.loadWorkflows();
+    // Enable auto-refresh for running workflows (every 5 seconds)
+    this.workflowService.enableAutoRefresh(5000);
+  }
+
+  ngOnDestroy(): void {
+    this.workflowService.disableAutoRefresh();
   }
 
   onTabChange(index: number): void {

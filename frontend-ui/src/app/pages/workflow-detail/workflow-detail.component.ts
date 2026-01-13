@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -44,7 +44,7 @@ import {
   templateUrl: './workflow-detail.component.html',
   styleUrl: './workflow-detail.component.scss'
 })
-export class WorkflowDetailComponent implements OnInit {
+export class WorkflowDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly workflowService = inject(WorkflowService);
@@ -79,6 +79,12 @@ export class WorkflowDetailComponent implements OnInit {
         this.loadWorkflow(workflowId);
       }
     });
+    // Enable auto-refresh for this workflow if it's running
+    this.workflowService.enableAutoRefresh(5000);
+  }
+
+  ngOnDestroy(): void {
+    this.workflowService.disableAutoRefresh();
   }
 
   private loadWorkflow(id: string): void {

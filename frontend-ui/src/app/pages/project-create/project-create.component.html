@@ -69,9 +69,11 @@
           </div>
 
           <div class="step-actions">
-            <button mat-button (click)="cancel()">Cancel</button>
+            <button mat-button (click)="cancel()">
+              <span>Cancel</span>
+            </button>
             <button mat-raised-button color="primary" matStepperNext>
-              Next
+              <span>Next</span>
               <mat-icon>arrow_forward</mat-icon>
             </button>
           </div>
@@ -145,10 +147,10 @@
           <div class="step-actions">
             <button mat-button matStepperPrevious>
               <mat-icon>arrow_back</mat-icon>
-              Back
+              <span>Back</span>
             </button>
             <button mat-raised-button color="primary" matStepperNext>
-              Next
+              <span>Next</span>
               <mat-icon>arrow_forward</mat-icon>
             </button>
           </div>
@@ -250,21 +252,21 @@
           </mat-card-content>
         </mat-card>
 
-        <div class="step-actions">
-          <button mat-button matStepperPrevious [disabled]="creating()">
-            <mat-icon>arrow_back</mat-icon>
-            Back
-          </button>
-          <button mat-raised-button color="primary" (click)="createProject()" [disabled]="creating()">
-            @if (creating()) {
-              <mat-icon>hourglass_empty</mat-icon>
-              Creating...
-            } @else {
-              <mat-icon>check</mat-icon>
-              Create Project
-            }
-          </button>
-        </div>
+          <div class="step-actions">
+            <button mat-button matStepperPrevious [disabled]="creating()">
+              <mat-icon>arrow_back</mat-icon>
+              <span>Back</span>
+            </button>
+            <button mat-raised-button color="primary" (click)="createProject()" [disabled]="creating()">
+              @if (creating()) {
+                <mat-icon>hourglass_empty</mat-icon>
+                <span>Creating...</span>
+              } @else {
+                <mat-icon>check</mat-icon>
+                <span>Create Project</span>
+              }
+            </button>
+          </div>
       </div>
     </mat-step>
   </mat-stepper>

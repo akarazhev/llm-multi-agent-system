@@ -1,0 +1,43 @@
+<div class="project-detail-container">
+  @if (project()) {
+    <div class="project-header">
+      <button mat-icon-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-content">
+        <h1>{{ project()!.icon }} {{ project()!.name }}</h1>
+        <p>{{ project()!.description }}</p>
+      </div>
+    </div>
+
+    <mat-tab-group>
+      <mat-tab label="Overview">
+        <div class="tab-content">
+          <h2>Project Overview</h2>
+          <p>Project details will be displayed here.</p>
+        </div>
+      </mat-tab>
+      <mat-tab label="Workflows">
+        <div class="tab-content">
+          <h2>Workflows</h2>
+          <p>Project workflows will be displayed here.</p>
+        </div>
+      </mat-tab>
+      <mat-tab label="Team">
+        <div class="tab-content">
+          <h2>Team Members</h2>
+          <p>Team members will be displayed here.</p>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  } @else if (loading()) {
+    <div class="loading-container">
+      <p>Loading project...</p>
+    </div>
+  } @else {
+    <div class="error-container">
+      <h2>Project not found</h2>
+      <button mat-raised-button color="primary" (click)="goBack()">Back to Projects</button>
+    </div>
+  }
+</div>

@@ -1,0 +1,160 @@
+<div class="projects-container">
+  <!-- Header -->
+  <div class="projects-header">
+    <div class="header-content">
+      <h1>Projects</h1>
+      <p class="subtitle">Manage your development projects and teams</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="createNewProject()" class="create-button">
+      <mat-icon>add</mat-icon>
+      New Project
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="projects-filters">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search projects</mat-label>
+      <input matInput placeholder="Search by name or description..." (input)="onSearchChange($event)">
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Status</mat-label>
+      <mat-select [(value)]="statusFilter" (selectionChange)="onStatusFilterChange($event.value)">
+        <mat-option value="all">All Projects</mat-option>
+        <mat-option value="active">Active</mat-option>
+        <mat-option value="planning">Planning</mat-option>
+        <mat-option value="on_hold">On Hold</mat-option>
+        <mat-option value="archived">Archived</mat-option>
+        <mat-option value="completed">Completed</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading projects...</p>
+    </div>
+  }
+
+  <!-- Projects Grid -->
+  @if (!loading() && filteredProjects().length > 0) {
+    <div class="projects-grid">
+      @for (project of filteredProjects(); track trackByProjectId($index, project)) {
+        <mat-card class="project-card" [class.archived]="project.status === 'archived'" (click)="openProject(project.id)">
+          <mat-card-header>
+            <div class="project-icon" mat-card-avatar>{{ project.icon || '📁' }}</div>
+            <mat-card-title>{{ project.name }}</mat-card-title>
+            <mat-card-subtitle>
+              <mat-chip [color]="getStatusColor(project.status)" class="status-chip">
+                <mat-icon>{{ getStatusIcon(project.status) }}</mat-icon>
+                {{ project.status | uppercase }}
+              </mat-chip>
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <p class="project-description">{{ project.description }}</p>
+
+            <div class="project-meta">
+              <div class="meta-item">
+                <mat-icon>category</mat-icon>
+                <span>{{ getProjectTypeLabel(project.type) }}</span>
+              </div>
+              <div class="meta-item">
+                <mat-icon>groups</mat-icon>
+                <span>{{ project.stats.teamSize }} members</span>
+              </div>
+              <div class="meta-item">
+                <mat-icon>smart_toy</mat-icon>
+                <span>{{ project.stats.aiAgentsCount }} AI agents</span>
+              </div>
+            </div>
+
+            <div class="project-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ project.stats.totalWorkflows }}</span>
+                <span class="stat-label">Workflows</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ project.stats.activeWorkflows }}</span>
+                <span class="stat-label">Active</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ project.stats.completedWorkflows }}</span>
+                <span class="stat-label">Completed</span>
+              </div>
+            </div>
+
+            @if (getTechStackDisplay(project).length > 0) {
+              <div class="tech-stack">
+                @for (tech of getTechStackDisplay(project); track tech) {
+                  <mat-chip class="tech-chip">{{ tech }}</mat-chip>
+                }
+                @if (project.techStack.languages.length + project.techStack.frameworks.length > 3) {
+                  <mat-chip class="tech-chip more">+{{ (project.techStack.languages.length + project.techStack.frameworks.length) - 3 }} more</mat-chip>
+                }
+              </div>
+            }
+
+            <div class="project-integrations">
+              @if (project.integrations.git?.connected) {
+                <mat-icon [matTooltip]="'Git: ' + project.integrations.git.platform" class="integration-icon connected">
+                  code
+                </mat-icon>
+              }
+              @if (project.integrations.jira?.connected) {
+                <mat-icon matTooltip="Jira connected" class="integration-icon connected">
+                  task_alt
+                </mat-icon>
+              }
+              @if (project.integrations.confluence?.connected) {
+                <mat-icon matTooltip="Confluence connected" class="integration-icon connected">
+                  description
+                </mat-icon>
+              }
+              @if (project.integrations.slack?.connected) {
+                <mat-icon matTooltip="Slack connected" class="integration-icon connected">
+                  chat
+                </mat-icon>
+              }
+            </div>
+          </mat-card-content>
+
+          <mat-card-footer>
+            <div class="footer-content">
+              <span class="last-activity">
+                <mat-icon>schedule</mat-icon>
+                {{ getTimeAgo(project.lastActivity) }}
+              </span>
+              <button mat-icon-button (click)="$event.stopPropagation(); openProject(project.id)">
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </mat-card-footer>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && filteredProjects().length === 0) {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">folder_open</mat-icon>
+      @if (searchQuery || statusFilter !== 'all') {
+        <h2>No projects found</h2>
+        <p>Try adjusting your filters or search criteria</p>
+      } @else {
+        <h2>No projects yet</h2>
+        <p>Create your first project to get started with AI-powered development</p>
+        <button mat-raised-button color="primary" (click)="createNewProject()">
+          <mat-icon>add</mat-icon>
+          Create First Project
+        </button>
+      }
+    </div>
+  }
+</div>

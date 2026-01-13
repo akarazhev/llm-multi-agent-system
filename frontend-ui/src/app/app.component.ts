@@ -49,6 +49,7 @@ export class AppComponent {
 
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
+    { label: 'Projects', icon: 'folder', route: '/projects' },
     { label: 'Workflows', icon: 'account_tree', route: '/workflows' },
     { label: 'Agents', icon: 'smart_toy', route: '/agents' },
   ];

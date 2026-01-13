@@ -321,14 +321,12 @@ class LangGraphOrchestrator:
                         "error": completed_task.error,
                         "timestamp": datetime.now().isoformat()
                     }],
-                    "current_step": "qa_testing",
                     "completed_steps": ["qa_testing"],
                 }
             
             return {
                 "tests": [completed_task.result] if completed_task.result else [],
                 "files_created": completed_task.result.get("files_created", []) if completed_task.result else [],
-                "current_step": "qa_testing",
                 "completed_steps": ["qa_testing"],
             }
             
@@ -340,7 +338,6 @@ class LangGraphOrchestrator:
                     "error": str(e),
                     "timestamp": datetime.now().isoformat()
                 }],
-                "current_step": "qa_testing",
                 "completed_steps": ["qa_testing"],
             }
     
@@ -373,14 +370,12 @@ class LangGraphOrchestrator:
                         "error": completed_task.error,
                         "timestamp": datetime.now().isoformat()
                     }],
-                    "current_step": "infrastructure",
                     "completed_steps": ["infrastructure"],
                 }
             
             return {
                 "infrastructure": [completed_task.result] if completed_task.result else [],
                 "files_created": completed_task.result.get("files_created", []) if completed_task.result else [],
-                "current_step": "infrastructure",
                 "completed_steps": ["infrastructure"],
             }
             
@@ -392,7 +387,6 @@ class LangGraphOrchestrator:
                     "error": str(e),
                     "timestamp": datetime.now().isoformat()
                 }],
-                "current_step": "infrastructure",
                 "completed_steps": ["infrastructure"],
             }
     

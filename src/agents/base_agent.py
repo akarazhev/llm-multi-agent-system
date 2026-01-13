@@ -105,8 +105,13 @@ class BaseAgent(ABC):
             
             if file_contents:
                 full_prompt += "\n\nRelevant Files:\n"
+                # Reduce per-file limit to accommodate smaller context windows
+                per_file_limit = 1000 if len(file_contents) > 1 else 1500
                 for path, content in file_contents.items():
-                    full_prompt += f"\n--- {path} ---\n{content[:2000]}\n"  # Limit file content
+                    truncated_content = content[:per_file_limit]
+                    if len(content) > per_file_limit:
+                        truncated_content += f"\n... [truncated {len(content) - per_file_limit} chars]"
+                    full_prompt += f"\n--- {path} ---\n{truncated_content}\n"
             
             # Enforce local llama-server usage only
             api_base = os.getenv('OPENAI_API_BASE')
@@ -141,10 +146,62 @@ class BaseAgent(ABC):
                 "error": str(e)
             }
     
-    async def _call_local_llama_server(self, system_prompt: str, user_prompt: str, timeout: int) -> Dict[str, Any]:
-        """Call local llama-server using OpenAI-compatible API"""
+    def _truncate_prompt_to_fit(self, system_prompt: str, user_prompt: str, max_context_tokens: int, max_completion_tokens: int = 1024) -> tuple[str, str, bool]:
+        """
+        Truncate prompts to fit within context size limits.
+        
+        Args:
+            system_prompt: The system prompt
+            user_prompt: The user prompt
+            max_context_tokens: Maximum context size in tokens (e.g., 4096)
+            max_completion_tokens: Tokens reserved for completion (default 1024)
+            
+        Returns:
+            Tuple of (truncated_system_prompt, truncated_user_prompt, was_truncated)
+        """
+        # Rough estimation: 1 token ≈ 4 characters
+        CHARS_PER_TOKEN = 4
+        
+        # Calculate available tokens for prompt (reserve space for completion)
+        available_prompt_tokens = max_context_tokens - max_completion_tokens
+        available_chars = available_prompt_tokens * CHARS_PER_TOKEN
+        
+        system_chars = len(system_prompt)
+        user_chars = len(user_prompt)
+        total_chars = system_chars + user_chars
+        
+        # If it fits, return as-is
+        if total_chars <= available_chars:
+            return system_prompt, user_prompt, False
+        
+        # Truncation needed - prioritize user prompt over system prompt
+        # Keep system prompt mostly intact (use 30% of available space)
+        # Use remaining 70% for user prompt
+        system_budget = int(available_chars * 0.3)
+        user_budget = available_chars - system_budget
+        
+        truncated_system = system_prompt
+        truncated_user = user_prompt
+        
+        # Truncate system prompt if needed
+        if system_chars > system_budget:
+            truncated_system = system_prompt[:system_budget] + "\n\n[System prompt truncated to fit context...]"
+            logger.warning(f"[{self.agent_id}] System prompt truncated from {system_chars} to {len(truncated_system)} chars")
+        
+        # Truncate user prompt if needed
+        if user_chars > user_budget:
+            truncated_user = user_prompt[:user_budget] + "\n\n[User prompt truncated to fit context...]"
+            logger.warning(f"[{self.agent_id}] User prompt truncated from {user_chars} to {len(truncated_user)} chars")
+        
+        logger.info(f"[{self.agent_id}] Prompt truncation: {total_chars} -> {len(truncated_system) + len(truncated_user)} chars (est {(len(truncated_system) + len(truncated_user))//CHARS_PER_TOKEN} tokens)")
+        
+        return truncated_system, truncated_user, True
+    
+    async def _call_local_llama_server(self, system_prompt: str, user_prompt: str, timeout: int, retry_count: int = 0) -> Dict[str, Any]:
+        """Call local llama-server using OpenAI-compatible API with automatic retry on context size errors"""
         try:
             import os
+            import re
             from openai import AsyncOpenAI
             
             api_base = os.getenv('OPENAI_API_BASE', 'http://127.0.0.1:8080/v1')
@@ -156,7 +213,7 @@ class BaseAgent(ABC):
                 api_key="not-needed"  # Local server doesn't need real API key
             )
             
-            logger.info(f"[{self.agent_id}] Calling local llama-server with model: {model}")
+            logger.info(f"[{self.agent_id}] Calling local llama-server with model: {model} (attempt {retry_count + 1})")
             
             # Make the API call
             response = await asyncio.wait_for(
@@ -167,7 +224,7 @@ class BaseAgent(ABC):
                         {"role": "user", "content": user_prompt}
                     ],
                     temperature=0.7,
-                    max_tokens=4096
+                    max_tokens=1024  # Reduced to leave more room for prompt
                 ),
                 timeout=timeout
             )
@@ -187,6 +244,43 @@ class BaseAgent(ABC):
                 "error": f"Local llama-server request timed out after {timeout} seconds"
             }
         except Exception as e:
+            error_str = str(e)
+            
+            # Check if this is a context size error
+            if "exceed_context_size" in error_str or "exceeds the available context size" in error_str:
+                logger.warning(f"[{self.agent_id}] Context size exceeded, attempting to truncate and retry...")
+                
+                # Extract context size from error message if possible
+                # Error format: "request (4476 tokens) exceeds the available context size (4096 tokens)"
+                match = re.search(r'available context size \((\d+) tokens\)', error_str)
+                max_context_tokens = int(match.group(1)) if match else 4096
+                
+                # Extract actual prompt tokens from error
+                match_prompt = re.search(r'request \((\d+) tokens\)', error_str)
+                actual_prompt_tokens = int(match_prompt.group(1)) if match_prompt else None
+                
+                logger.info(f"[{self.agent_id}] Detected context limit: {max_context_tokens} tokens, prompt was: {actual_prompt_tokens} tokens")
+                
+                # Only retry once to avoid infinite loops
+                if retry_count == 0:
+                    # Truncate prompts to fit
+                    truncated_system, truncated_user, was_truncated = self._truncate_prompt_to_fit(
+                        system_prompt, user_prompt, max_context_tokens, max_completion_tokens=1024
+                    )
+                    
+                    if was_truncated:
+                        logger.info(f"[{self.agent_id}] Retrying with truncated prompts...")
+                        # Retry with truncated prompts
+                        return await self._call_local_llama_server(
+                            truncated_system, truncated_user, timeout, retry_count=1
+                        )
+                else:
+                    logger.error(f"[{self.agent_id}] Context size error persisted after truncation")
+                    return {
+                        "success": False,
+                        "error": f"Context size error persisted after truncation. Server limit: {max_context_tokens} tokens. Consider increasing LLAMA_CTX_SIZE or reducing prompt complexity."
+                    }
+            
             logger.error(f"[{self.agent_id}] Error calling local llama-server: {e}")
             return {
                 "success": False,

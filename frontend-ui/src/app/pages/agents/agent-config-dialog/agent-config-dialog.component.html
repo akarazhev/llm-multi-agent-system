@@ -1,0 +1,178 @@
+<div class="dialog-container">
+  <h2 mat-dialog-title>
+    @if (data.template) {
+      <span class="template-icon">{{ data.template.icon }}</span>
+    }
+    {{ data.mode === 'create' ? 'Create New Agent' : 'Edit Agent' }}
+  </h2>
+
+  <mat-dialog-content>
+    <mat-stepper #stepper [linear]="true">
+      <!-- Step 1: Basic Information -->
+      <mat-step [stepControl]="basicInfoForm">
+        <form [formGroup]="basicInfoForm">
+          <ng-template matStepLabel>Basic Information</ng-template>
+          
+          <div class="form-content">
+            <p class="step-description">
+              @if (data.template) {
+                Configure your {{ data.template.name }} agent
+              } @else {
+                Set up basic information for your new agent
+              }
+            </p>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Agent Name</mat-label>
+              <input matInput formControlName="name" placeholder="e.g., Alice - Senior Developer" required>
+              @if (basicInfoForm.get('name')?.hasError('required') && basicInfoForm.get('name')?.touched) {
+                <mat-error>Agent name is required</mat-error>
+              }
+              @if (basicInfoForm.get('name')?.hasError('minlength') && basicInfoForm.get('name')?.touched) {
+                <mat-error>Name must be at least 3 characters</mat-error>
+              }
+              <mat-hint>Choose a friendly name for your agent</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Role</mat-label>
+              <mat-select formControlName="role" required [disabled]="!!data.template">
+                @for (role of availableRoles; track role.value) {
+                  <mat-option [value]="role.value">{{ role.label }}</mat-option>
+                }
+              </mat-select>
+              @if (basicInfoForm.get('role')?.hasError('required') && basicInfoForm.get('role')?.touched) {
+                <mat-error>Role is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="3" 
+                        placeholder="Describe what this agent will do..."></textarea>
+              <mat-hint>Optional: Add a description of the agent's purpose</mat-hint>
+            </mat-form-field>
+
+            @if (data.template) {
+              <div class="template-info">
+                <h4>Template Capabilities:</h4>
+                <mat-chip-set>
+                  @for (cap of data.template.capabilities; track cap) {
+                    <mat-chip>{{ cap }}</mat-chip>
+                  }
+                </mat-chip-set>
+              </div>
+            }
+          </div>
+
+          <div class="step-actions">
+            <button mat-button (click)="cancel()">
+              <span class="button-content">
+                <mat-icon>close</mat-icon>
+                <span>Cancel</span>
+              </span>
+            </button>
+            <button mat-raised-button color="primary" matStepperNext [disabled]="basicInfoForm.invalid">
+              <span class="button-content">
+                <span>Next</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </span>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Step 2: Configuration -->
+      <mat-step [stepControl]="configForm">
+        <form [formGroup]="configForm">
+          <ng-template matStepLabel>Configuration</ng-template>
+          
+          <div class="form-content">
+            <p class="step-description">
+              Configure the AI model and behavior settings
+            </p>
+
+            <mat-form-field appearance="outline">
+              <mat-label>AI Model</mat-label>
+              <mat-select formControlName="model" required>
+                @for (model of availableModels; track model.value) {
+                  <mat-option [value]="model.value">{{ model.label }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>Choose the AI model to power this agent</mat-hint>
+            </mat-form-field>
+
+            <div class="slider-field">
+              <label>
+                <strong>Temperature:</strong> {{ formatTemperature(configForm.value.temperature) }}
+                <mat-icon matTooltip="Controls randomness: 0 = focused, 1 = creative">info</mat-icon>
+              </label>
+              <mat-slider min="0" max="1" step="0.05" showTickMarks discrete>
+                <input matSliderThumb formControlName="temperature">
+              </mat-slider>
+              <div class="slider-labels">
+                <span>Focused (0.0)</span>
+                <span>Creative (1.0)</span>
+              </div>
+            </div>
+
+            <div class="slider-field">
+              <label>
+                <strong>Max Tokens:</strong> {{ formatTokens(configForm.value.max_tokens) }}
+                <mat-icon matTooltip="Maximum length of generated responses">info</mat-icon>
+              </label>
+              <mat-slider min="100" max="16000" step="100" showTickMarks discrete>
+                <input matSliderThumb formControlName="max_tokens">
+              </mat-slider>
+              <div class="slider-labels">
+                <span>Short (100)</span>
+                <span>Long (16K)</span>
+              </div>
+            </div>
+
+            <div class="slider-field">
+              <label>
+                <strong>Max Retries:</strong> {{ configForm.value.max_retries }}
+                <mat-icon matTooltip="How many times to retry on failure">info</mat-icon>
+              </label>
+              <mat-slider min="1" max="5" step="1" showTickMarks discrete>
+                <input matSliderThumb formControlName="max_retries">
+              </mat-slider>
+              <div class="slider-labels">
+                <span>1</span>
+                <span>5</span>
+              </div>
+            </div>
+
+            <div class="toggle-field">
+              <mat-slide-toggle formControlName="auto_approve">
+                <strong>Auto-approve actions</strong>
+                <p>Allow agent to execute actions without manual approval</p>
+              </mat-slide-toggle>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <span class="button-content">
+                <mat-icon>arrow_back</mat-icon>
+                <span>Back</span>
+              </span>
+            </button>
+            <button mat-raised-button color="accent" (click)="create()" [disabled]="creating()">
+              <span class="button-content">
+                @if (creating()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                  <span>Creating...</span>
+                } @else {
+                  <mat-icon>check</mat-icon>
+                  <span>Create Agent</span>
+                }
+              </span>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+    </mat-stepper>
+  </mat-dialog-content>
+</div>

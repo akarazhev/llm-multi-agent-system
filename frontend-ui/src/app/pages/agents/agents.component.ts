@@ -9,9 +9,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AgentService } from '../../shared/services/agent.service';
-import { Agent, AgentTemplate, AgentRole, AgentStatus } from '../../core/interfaces/agent.interface';
+import { Agent, AgentTemplate, AgentRole, AgentStatus, CreateAgentRequest } from '../../core/interfaces/agent.interface';
+import { AgentConfigDialogComponent } from './agent-config-dialog/agent-config-dialog.component';
 
 @Component({
   selector: 'app-agents',
@@ -27,13 +29,16 @@ import { Agent, AgentTemplate, AgentRole, AgentStatus } from '../../core/interfa
     MatTabsModule,
     MatBadgeModule,
     MatTooltipModule,
-    MatDialogModule
+    MatDialogModule,
+    MatSnackBarModule
   ],
   templateUrl: './agents.component.html',
   styleUrl: './agents.component.scss'
 })
 export class AgentsComponent {
   readonly agentService = inject(AgentService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
 
   // Signals from service
   readonly agents = this.agentService.agentsSignal;
@@ -84,8 +89,28 @@ export class AgentsComponent {
   }
 
   createAgentFromTemplate(template: AgentTemplate): void {
-    // TODO: Open dialog for agent creation
-    console.log('Creating agent from template:', template);
+    const dialogRef = this.dialog.open(AgentConfigDialogComponent, {
+      width: '700px',
+      maxWidth: '90vw',
+      data: {
+        template,
+        mode: 'create'
+      },
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe((request: CreateAgentRequest) => {
+      if (request) {
+        const newAgent = this.agentService.createAgent(request);
+        this.snackBar.open(`Agent "${newAgent.name}" created successfully!`, 'Close', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+        // Switch to Active Agents tab
+        this.selectedTab.set(0);
+      }
+    });
   }
 
   viewAgentDetails(agent: Agent): void {

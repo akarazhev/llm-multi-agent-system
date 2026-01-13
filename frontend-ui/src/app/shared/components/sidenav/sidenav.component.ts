@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
+import packageJson from '../../../../package.json';
 
 interface NavItem {
   label: string;
@@ -18,6 +19,8 @@ interface NavItem {
   styleUrl: './sidenav.component.scss'
 })
 export class SidenavComponent {
+  readonly version = packageJson.version;
+
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
     { label: 'Workflows', icon: 'account_tree', route: '/workflows' },

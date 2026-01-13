@@ -12,8 +12,7 @@ load_dotenv(Path(__file__).parent.parent / '.env')
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.orchestrator import AgentOrchestrator, WorkflowEngine
-from src.orchestrator.workflow_engine import WorkflowType
+from src.orchestrator import LangGraphOrchestrator
 from src.config import load_config
 
 
@@ -36,12 +35,10 @@ async def build_ecommerce_catalog():
     
     config = load_config()
     
-    orchestrator = AgentOrchestrator(
+    orchestrator = LangGraphOrchestrator(
         cursor_workspace=config.cursor_workspace,
         config=config.to_dict()
     )
-    
-    workflow_engine = WorkflowEngine(orchestrator)
     
     requirement = """
     Create an E-commerce Product Catalog with the following features:
@@ -174,8 +171,7 @@ async def build_ecommerce_catalog():
     print("This will take several minutes as each agent completes their work.\n")
     
     try:
-        result = await workflow_engine.execute_workflow(
-            workflow_type=WorkflowType.FEATURE_DEVELOPMENT,
+        final_state = await orchestrator.execute_feature_development(
             requirement=requirement,
             context=context
         )
@@ -184,21 +180,36 @@ async def build_ecommerce_catalog():
         print("✓ WORKFLOW COMPLETED SUCCESSFULLY")
         print("="*80)
         
-        print(f"\nWorkflow Type: {result['workflow_type']}")
-        print(f"Total Tasks: {result['result']['total_tasks']}")
-        print(f"Completed At: {result['result']['completed_at']}")
+        # Extract the actual state from the event dict
+        actual_state = list(final_state.values())[0] if final_state else {}
+        
+        print(f"\nWorkflow ID: {actual_state.get('workflow_id', 'N/A')}")
+        print(f"Status: {actual_state.get('status', 'N/A')}")
+        print(f"Completed Steps: {len(actual_state.get('completed_steps', []))}")
+        print(f"Files Created: {len(actual_state.get('files_created', []))}")
+        print(f"Completed At: {actual_state.get('completed_at', 'N/A')}")
         
         print("\n" + "-"*80)
-        print("Task Results Summary:")
+        print("Workflow Summary:")
         print("-"*80)
         
-        for task_id, task in result['result']['results'].items():
-            status_icon = "✓" if task.result and not task.error else "✗"
-            print(f"\n{status_icon} {task_id}")
-            print(f"   Description: {task.description}")
-            print(f"   Status: {'Completed' if task.result else 'Failed'}")
-            if task.error:
-                print(f"   Error: {task.error}")
+        if actual_state.get('business_analysis'):
+            print("  ✓ Business Analysis completed")
+        if actual_state.get('architecture'):
+            print("  ✓ Architecture Design completed")
+        if actual_state.get('implementation'):
+            print("  ✓ Implementation completed")
+        if actual_state.get('tests'):
+            print("  ✓ Test Suite completed")
+        if actual_state.get('infrastructure'):
+            print("  ✓ Infrastructure completed")
+        if actual_state.get('documentation'):
+            print("  ✓ Documentation completed")
+        
+        if actual_state.get('errors'):
+            print(f"\nErrors: {len(actual_state.get('errors', []))}")
+            for error in actual_state.get('errors', []):
+                print(f"  ✗ {error.get('step', 'unknown')}: {error.get('error', 'N/A')}")
         
         print("\n" + "="*80)
         print("Next Steps:")

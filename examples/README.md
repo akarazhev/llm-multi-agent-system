@@ -251,11 +251,14 @@ context = {
     # ... other context
 }
 
-result = await workflow_engine.execute_workflow(
-    workflow_type=WorkflowType.FEATURE_DEVELOPMENT,
+final_state = await orchestrator.execute_feature_development(
     requirement=requirement,
     context=context
 )
+
+# Extract the actual state from the event dict
+actual_state = list(final_state.values())[0] if final_state else {}
+print(f"Status: {actual_state.get('status')}")
 ```
 
 ---

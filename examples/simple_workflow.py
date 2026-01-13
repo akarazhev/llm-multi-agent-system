@@ -8,27 +8,23 @@ load_dotenv(Path(__file__).parent.parent / '.env')
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.orchestrator import AgentOrchestrator, WorkflowEngine
-from src.orchestrator.workflow_engine import WorkflowType
+from src.orchestrator import LangGraphOrchestrator
 from src.config import load_config
 
 
 async def run_simple_workflow():
     config = load_config()
     
-    orchestrator = AgentOrchestrator(
+    orchestrator = LangGraphOrchestrator(
         cursor_workspace=config.cursor_workspace,
         config=config.to_dict()
     )
-    
-    workflow_engine = WorkflowEngine(orchestrator)
     
     requirement = "Create a REST API endpoint for user authentication with JWT tokens"
     
     print(f"Processing requirement: {requirement}\n")
     
-    result = await workflow_engine.execute_workflow(
-        workflow_type=WorkflowType.FEATURE_DEVELOPMENT,
+    final_state = await orchestrator.execute_feature_development(
         requirement=requirement,
         context={
             "language": "python",
@@ -38,13 +34,19 @@ async def run_simple_workflow():
     )
     
     print("\nWorkflow completed!")
-    print(f"Total tasks: {result['result']['total_tasks']}")
-    print(f"Completed at: {result['result']['completed_at']}")
     
-    for task_id, task in result['result']['results'].items():
-        print(f"\nTask {task_id}:")
-        print(f"  Description: {task.description}")
-        print(f"  Status: {'Completed' if task.result else 'Failed'}")
+    # Extract the actual state from the event dict
+    actual_state = list(final_state.values())[0] if final_state else {}
+    
+    print(f"Workflow ID: {actual_state.get('workflow_id', 'N/A')}")
+    print(f"Status: {actual_state.get('status', 'N/A')}")
+    print(f"Completed Steps: {len(actual_state.get('completed_steps', []))}")
+    print(f"Files Created: {len(actual_state.get('files_created', []))}")
+    
+    if actual_state.get('errors'):
+        print(f"\nErrors: {len(actual_state.get('errors', []))}")
+        for error in actual_state.get('errors', []):
+            print(f"  - {error.get('step', 'unknown')}: {error.get('error', 'N/A')}")
 
 
 if __name__ == "__main__":

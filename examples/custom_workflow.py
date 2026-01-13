@@ -12,98 +12,62 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Load .env file from project root
 load_dotenv(PROJECT_ROOT / '.env')
 
-from src.orchestrator import AgentOrchestrator
-from src.agents.base_agent import Task
-from src.agents import AgentRole
+from src.orchestrator import LangGraphOrchestrator
 
 
 async def run_custom_workflow():
-    orchestrator = AgentOrchestrator(
+    orchestrator = LangGraphOrchestrator(
         cursor_workspace=str(PROJECT_ROOT)
     )
     
-    custom_workflow = [
-        {
-            "task_id": "analyze_001",
-            "agent_role": "business_analyst",
-            "description": "Analyze the e-commerce platform requirements",
-            "context": {
-                "requirement": "Build an e-commerce platform with product catalog, shopping cart, and payment integration",
-                "target_users": "B2C customers",
-                "scale": "10,000 daily active users"
-            }
-        },
-        {
-            "task_id": "design_001",
-            "agent_role": "developer",
-            "description": "Design the microservices architecture",
-            "context": {
-                "requirement": "Microservices architecture for e-commerce",
-                "services": ["product-service", "cart-service", "payment-service", "user-service"]
-            },
-            "dependencies": ["analyze_001"]
-        },
-        {
-            "task_id": "implement_001",
-            "agent_role": "developer",
-            "description": "Implement the product service",
-            "context": {
-                "service": "product-service",
-                "language": "python",
-                "framework": "fastapi"
-            },
-            "dependencies": ["design_001"]
-        },
-        {
-            "task_id": "test_001",
-            "agent_role": "qa_engineer",
-            "description": "Create test suite for product service",
-            "context": {
-                "service": "product-service",
-                "test_types": ["unit", "integration", "e2e"]
-            },
-            "dependencies": ["implement_001"]
-        },
-        {
-            "task_id": "deploy_001",
-            "agent_role": "devops_engineer",
-            "description": "Set up Kubernetes deployment for product service",
-            "context": {
-                "service": "product-service",
-                "platform": "kubernetes",
-                "cloud": "aws"
-            },
-            "dependencies": ["test_001"]
-        },
-        {
-            "task_id": "document_001",
-            "agent_role": "technical_writer",
-            "description": "Create API documentation for product service",
-            "context": {
-                "service": "product-service",
-                "doc_type": "api",
-                "format": "openapi"
-            },
-            "dependencies": ["implement_001"]
-        }
-    ]
+    requirement = """
+    Build an e-commerce platform with product catalog, shopping cart, and payment integration.
+    
+    Requirements:
+    - Target users: B2C customers
+    - Scale: 10,000 daily active users
+    - Microservices architecture with services: product-service, cart-service, payment-service, user-service
+    - Implement product service first with Python/FastAPI
+    - Create comprehensive test suite (unit, integration, e2e)
+    - Set up Kubernetes deployment on AWS
+    - Create API documentation (OpenAPI format)
+    """
     
     print("Executing custom e-commerce workflow...\n")
     
-    result = await orchestrator.execute_workflow(custom_workflow)
+    final_state = await orchestrator.execute_feature_development(
+        requirement=requirement,
+        context={
+            "target_users": "B2C customers",
+            "scale": "10,000 daily active users",
+            "architecture": "microservices",
+            "services": ["product-service", "cart-service", "payment-service", "user-service"],
+            "language": "python",
+            "framework": "fastapi",
+            "deployment": "kubernetes",
+            "cloud": "aws"
+        }
+    )
     
     print("\n" + "="*80)
     print("Custom Workflow Results")
     print("="*80)
     
-    for task_id, task in result['results'].items():
-        status = "✓" if task.result and not task.error else "✗"
-        print(f"\n{status} {task_id}: {task.description}")
-        if task.error:
-            print(f"  Error: {task.error}")
+    # Extract the actual state from the event dict
+    actual_state = list(final_state.values())[0] if final_state else {}
     
-    print(f"\nTotal tasks: {result['total_tasks']}")
-    print(f"Completed at: {result['completed_at']}")
+    print(f"\nWorkflow ID: {actual_state.get('workflow_id', 'N/A')}")
+    print(f"Status: {actual_state.get('status', 'N/A')}")
+    print(f"Completed Steps: {', '.join(actual_state.get('completed_steps', []))}")
+    print(f"Files Created: {len(actual_state.get('files_created', []))}")
+    
+    if actual_state.get('errors'):
+        print(f"\nErrors: {len(actual_state.get('errors', []))}")
+        for error in actual_state.get('errors', []):
+            status = "✗" if error else "✓"
+            print(f"{status} {error.get('step', 'unknown')}: {error.get('error', 'N/A')}")
+    
+    print(f"\nCompleted at: {actual_state.get('completed_at', 'N/A')}")
 
 
 if __name__ == "__main__":

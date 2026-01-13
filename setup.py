@@ -97,7 +97,7 @@ def run_verification():
     print("\nRunning verification...")
     try:
         result = subprocess.run(
-            [sys.executable, "-c", "from src.orchestrator import AgentOrchestrator; print('✓ Import successful')"],
+            [sys.executable, "-c", "from src.orchestrator import LangGraphOrchestrator; print('✓ Import successful')"],
             capture_output=True,
             text=True,
             timeout=10

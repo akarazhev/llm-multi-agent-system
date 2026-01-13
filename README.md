@@ -188,19 +188,16 @@ python3 examples/langgraph_feature_development.py
 
 See [LangGraph Integration Guide](docs/LANGGRAPH_INTEGRATION.md) for details.
 
-### Classic Orchestration
+### LangGraph Orchestration
 
 ```python
 import asyncio
-from src.orchestrator import AgentOrchestrator, WorkflowEngine
-from src.orchestrator.workflow_engine import WorkflowType
+from src.orchestrator import LangGraphOrchestrator
 
 async def main():
-    orchestrator = AgentOrchestrator(cursor_workspace=".")
-    workflow_engine = WorkflowEngine(orchestrator)
+    orchestrator = LangGraphOrchestrator(cursor_workspace=".")
     
-    result = await workflow_engine.execute_workflow(
-        workflow_type=WorkflowType.FEATURE_DEVELOPMENT,
+    final_state = await orchestrator.execute_feature_development(
         requirement="Create REST API for user authentication with JWT",
         context={
             "language": "python",
@@ -208,7 +205,10 @@ async def main():
         }
     )
     
-    print(f"Workflow completed: {result['result']['total_tasks']} tasks")
+    # Extract the actual state from the event dict
+    actual_state = list(final_state.values())[0] if final_state else {}
+    print(f"Workflow completed: {len(actual_state.get('completed_steps', []))} steps")
+    print(f"Status: {actual_state.get('status', 'N/A')}")
 
 asyncio.run(main())
 ```

@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from src.config import load_config
-from src.orchestrator import AgentOrchestrator, WorkflowEngine
-from src.orchestrator.workflow_engine import WorkflowType
+from src.orchestrator import LangGraphOrchestrator
 
 
 def setup_logging(log_level: str, log_file: Optional[str] = None):
@@ -32,27 +31,25 @@ async def main():
     setup_logging(config.log_level, config.log_file)
     logger = logging.getLogger(__name__)
     
-    logger.info("Starting Multi-Agent System with Cursor CLI Orchestration")
+    logger.info("Starting Multi-Agent System with LangGraph Orchestration")
     logger.info(f"Workspace: {config.cursor_workspace}")
     
     Path(config.output_directory).mkdir(parents=True, exist_ok=True)
     
-    orchestrator = AgentOrchestrator(
+    orchestrator = LangGraphOrchestrator(
         cursor_workspace=config.cursor_workspace,
         config=config.to_dict()
     )
-    
-    workflow_engine = WorkflowEngine(orchestrator)
     
     logger.info("System initialized successfully")
     logger.info(f"Available agents: {len(orchestrator.agents)}")
     
     print("\n" + "="*80)
-    print("LLM Multi-Agent System - Cursor CLI Orchestration")
+    print("LLM Multi-Agent System - LangGraph Orchestration")
     print("="*80)
     print("\nAvailable Workflow Types:")
-    for i, wf_type in enumerate(workflow_engine.list_workflow_types(), 1):
-        print(f"  {i}. {wf_type}")
+    print("  1. Feature Development")
+    print("  2. Bug Fix")
     print("\n" + "="*80 + "\n")
     
     requirement = input("Enter your requirement (or 'quit' to exit): ").strip()
@@ -66,65 +63,64 @@ async def main():
         return
     
     print("\nSelect workflow type:")
-    for i, wf_type in enumerate(workflow_engine.list_workflow_types(), 1):
-        print(f"  {i}. {wf_type}")
+    print("  1. Feature Development")
+    print("  2. Bug Fix")
     
     try:
-        choice = int(input("\nEnter choice (1-5): ").strip())
-        workflow_types = list(WorkflowType)
+        choice = int(input("\nEnter choice (1-2): ").strip())
         
-        if 1 <= choice <= len(workflow_types):
-            selected_workflow = workflow_types[choice - 1]
+        if choice == 1:
+            workflow_type = "feature_development"
+        elif choice == 2:
+            workflow_type = "bug_fix"
+            bug_description = input("Enter bug description: ").strip()
+            if not bug_description:
+                logger.error("Bug description required for bug fix workflow")
+                return
         else:
-            logger.error("Invalid choice, using default: FEATURE_DEVELOPMENT")
-            selected_workflow = WorkflowType.FEATURE_DEVELOPMENT
+            logger.error("Invalid choice, using default: feature_development")
+            workflow_type = "feature_development"
     except ValueError:
-        logger.error("Invalid input, using default: FEATURE_DEVELOPMENT")
-        selected_workflow = WorkflowType.FEATURE_DEVELOPMENT
+        logger.error("Invalid input, using default: feature_development")
+        workflow_type = "feature_development"
     
-    logger.info(f"Processing requirement with workflow: {selected_workflow.value}")
-    print(f"\nExecuting {selected_workflow.value} workflow...")
+    logger.info(f"Processing requirement with workflow: {workflow_type}")
+    print(f"\nExecuting {workflow_type} workflow...")
     print("This may take several minutes depending on the complexity...\n")
     
     try:
-        result = await workflow_engine.execute_workflow(
-            workflow_type=selected_workflow,
-            requirement=requirement
-        )
+        if workflow_type == "bug_fix":
+            final_state = await orchestrator.execute_bug_fix(
+                requirement=requirement,
+                bug_description=bug_description
+            )
+        else:
+            final_state = await orchestrator.execute_feature_development(
+                requirement=requirement
+            )
         
         print("\n" + "="*80)
         print("WORKFLOW COMPLETED SUCCESSFULLY")
         print("="*80)
-        print(f"\nWorkflow Type: {result['workflow_type']}")
-        print(f"Total Tasks: {result['result']['total_tasks']}")
-        print(f"Completed At: {result['result']['completed_at']}")
         
-        print("\nTask Results:")
-        for task_id, task in result['result']['results'].items():
-            print(f"\n  Task: {task_id}")
-            print(f"  Status: {'✓ Completed' if task.result else '✗ Failed'}")
-            if task.error:
-                print(f"  Error: {task.error}")
+        # Extract the actual state from the event dict
+        actual_state = list(final_state.values())[0] if final_state else {}
         
-        output_file = Path(config.output_directory) / f"workflow_{selected_workflow.value}_{result['result']['completed_at'].replace(':', '-')}.json"
+        print(f"\nWorkflow ID: {actual_state.get('workflow_id', 'N/A')}")
+        print(f"Status: {actual_state.get('status', 'N/A')}")
+        print(f"Completed Steps: {len(actual_state.get('completed_steps', []))}")
+        print(f"Files Created: {len(actual_state.get('files_created', []))}")
+        
+        if actual_state.get('errors'):
+            print(f"\nErrors: {len(actual_state.get('errors', []))}")
+            for error in actual_state.get('errors', []):
+                print(f"  - {error.get('step', 'unknown')}: {error.get('error', 'N/A')}")
+        
+        output_file = Path(config.output_directory) / f"langgraph_{actual_state.get('workflow_id', 'workflow')}.json"
         
         import json
         with open(output_file, 'w') as f:
-            json.dump({
-                'workflow_type': result['workflow_type'],
-                'requirement': requirement,
-                'completed_at': result['result']['completed_at'],
-                'total_tasks': result['result']['total_tasks'],
-                'tasks': {
-                    task_id: {
-                        'task_id': task.task_id,
-                        'description': task.description,
-                        'completed': task.completed_at is not None,
-                        'error': task.error
-                    }
-                    for task_id, task in result['result']['results'].items()
-                }
-            }, f, indent=2)
+            json.dump(actual_state, f, indent=2, default=str)
         
         print(f"\nResults saved to: {output_file}")
         

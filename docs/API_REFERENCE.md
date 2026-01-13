@@ -50,52 +50,90 @@ asyncio.run(main())
 
 ## Core Classes
 
-### AgentOrchestrator
+### LangGraphOrchestrator
 
-Main orchestration hub that manages agents and executes workflows.
+Main orchestration hub that manages agents and executes workflows using LangGraph with state persistence, parallel execution, and conditional routing.
 
 #### Constructor
 
 ```python
-AgentOrchestrator(
+LangGraphOrchestrator(
     cursor_workspace: str,
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[Dict[str, Any]] = None,
+    checkpoint_db: Optional[str] = None
 )
 ```
 
 **Parameters:**
 - `cursor_workspace` (str): Path to workspace directory
 - `config` (Dict, optional): Configuration dictionary
+- `checkpoint_db` (str, optional): Path to checkpoint database for state persistence
 
-**Returns:** AgentOrchestrator instance
+**Returns:** LangGraphOrchestrator instance
 
 **Example:**
 ```python
-from src.orchestrator import AgentOrchestrator
+from src.orchestrator import LangGraphOrchestrator
 
-orchestrator = AgentOrchestrator(
+orchestrator = LangGraphOrchestrator(
     cursor_workspace="/path/to/workspace",
     config={
         "log_level": "INFO",
-        "cursor_timeout": 300,
         "agents": {
             "developer": {
                 "languages": ["python", "javascript"]
             }
         }
-    }
+    },
+    checkpoint_db="checkpoints.db"
 )
 ```
 
 #### Methods
 
-##### execute_workflow()
+##### execute_feature_development()
 
-Execute a complete workflow.
+Execute a feature development workflow.
 
 ```python
-async def execute_workflow(
-    workflow: List[Dict[str, Any]]
+async def execute_feature_development(
+    requirement: str,
+    context: Optional[Dict[str, Any]] = None,
+    thread_id: Optional[str] = None
+) -> Dict[str, Any]
+```
+
+**Parameters:**
+- `requirement` (str): Requirement description
+- `context` (Dict, optional): Additional context
+- `thread_id` (str, optional): Thread ID for resuming workflows
+
+**Returns:** Final workflow state dictionary
+
+**Example:**
+```python
+final_state = await orchestrator.execute_feature_development(
+    requirement="Create a REST API for user authentication",
+    context={
+        "language": "python",
+        "framework": "fastapi"
+    }
+)
+
+# Extract the actual state from the event dict
+actual_state = list(final_state.values())[0] if final_state else {}
+print(f"Status: {actual_state.get('status')}")
+```
+
+##### execute_bug_fix()
+
+Execute a bug fix workflow.
+
+```python
+async def execute_bug_fix(
+    requirement: str,
+    bug_description: str,
+    thread_id: Optional[str] = None
 ) -> Dict[str, Any]
 ```
 
@@ -203,170 +241,32 @@ def get_agent_by_id(
 agent = orchestrator.get_agent_by_id("dev_001")
 ```
 
-##### get_system_status()
+##### Accessing Agents
 
-Get current system status.
+Access individual agents directly:
 
 ```python
-def get_system_status() -> Dict[str, Any]
-```
+# Get all agents
+agents = orchestrator.agents  # Dict[str, BaseAgent]
 
-**Returns:** Dict containing:
-- `total_agents` (int): Number of agents
-- `agents` (Dict): Status of each agent
-- `total_tasks_completed` (int): Completed task count
-- `timestamp` (str): Current timestamp
+# Access specific agent
+developer = orchestrator.agents["developer"]
+status = developer.get_status() if hasattr(developer, 'get_status') else {}
+```
 
 **Example:**
 ```python
-status = orchestrator.get_system_status()
-print(f"Total agents: {status['total_agents']}")
-print(f"Tasks completed: {status['total_tasks_completed']}")
+# Get agent information
+for agent_name, agent in orchestrator.agents.items():
+    print(f"Agent: {agent_name}, ID: {agent.agent_id}, Role: {agent.role}")
 ```
 
-### WorkflowEngine
+**Note:** The `WorkflowEngine` class has been removed. Use `LangGraphOrchestrator` methods directly:
 
-Manages workflow templates and execution.
+- `execute_feature_development()` - For feature development workflows
+- `execute_bug_fix()` - For bug fix workflows
 
-#### Constructor
-
-```python
-WorkflowEngine(orchestrator: AgentOrchestrator)
-```
-
-**Parameters:**
-- `orchestrator` (AgentOrchestrator): Orchestrator instance
-
-**Example:**
-```python
-from src.orchestrator import WorkflowEngine
-
-workflow_engine = WorkflowEngine(orchestrator)
-```
-
-#### Methods
-
-##### execute_workflow()
-
-Execute a predefined workflow.
-
-```python
-async def execute_workflow(
-    workflow_type: WorkflowType,
-    requirement: str,
-    context: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]
-```
-
-**Parameters:**
-- `workflow_type` (WorkflowType): Type of workflow
-- `requirement` (str): Requirement description
-- `context` (Dict, optional): Additional context
-
-**Returns:** Dict containing:
-- `workflow_type` (str): Workflow type executed
-- `requirement` (str): Original requirement
-- `result` (Dict): Execution results
-
-**Example:**
-```python
-from src.orchestrator.workflow_engine import WorkflowType
-
-result = await workflow_engine.execute_workflow(
-    workflow_type=WorkflowType.FEATURE_DEVELOPMENT,
-    requirement="Create user authentication API",
-    context={
-        "language": "python",
-        "framework": "fastapi",
-        "database": "postgresql"
-    }
-)
-```
-
-##### create_workflow()
-
-Create a workflow from template.
-
-```python
-def create_workflow(
-    workflow_type: WorkflowType,
-    requirement: str,
-    context: Optional[Dict[str, Any]] = None
-) -> List[Dict[str, Any]]
-```
-
-**Parameters:**
-- `workflow_type` (WorkflowType): Type of workflow
-- `requirement` (str): Requirement description
-- `context` (Dict, optional): Additional context
-
-**Returns:** List of workflow step dictionaries
-
-**Example:**
-```python
-workflow = workflow_engine.create_workflow(
-    workflow_type=WorkflowType.BUG_FIX,
-    requirement="Fix memory leak in data processor",
-    context={"priority": "high"}
-)
-```
-
-##### get_workflow_template()
-
-Get workflow template definition.
-
-```python
-def get_workflow_template(
-    workflow_type: WorkflowType
-) -> List[Dict[str, Any]]
-```
-
-**Parameters:**
-- `workflow_type` (WorkflowType): Type of workflow
-
-**Returns:** List of template step dictionaries
-
-**Example:**
-```python
-template = workflow_engine.get_workflow_template(
-    WorkflowType.INFRASTRUCTURE
-)
-```
-
-##### list_workflow_types()
-
-List available workflow types.
-
-```python
-def list_workflow_types() -> List[str]
-```
-
-**Returns:** List of workflow type names
-
-**Example:**
-```python
-types = workflow_engine.list_workflow_types()
-# ['feature_development', 'bug_fix', 'infrastructure', ...]
-```
-
-### WorkflowType Enum
-
-Available workflow types.
-
-```python
-from enum import Enum
-
-class WorkflowType(Enum):
-    FEATURE_DEVELOPMENT = "feature_development"
-    BUG_FIX = "bug_fix"
-    INFRASTRUCTURE = "infrastructure"
-    DOCUMENTATION = "documentation"
-    ANALYSIS = "analysis"
-```
-
-**Usage:**
-```python
-from src.orchestrator.workflow_engine import WorkflowType
+These methods provide parallel execution, state persistence, and conditional routing capabilities.
 
 # Use in workflow execution
 result = await workflow_engine.execute_workflow(

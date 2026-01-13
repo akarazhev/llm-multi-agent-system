@@ -64,6 +64,13 @@
           color: white;
         }
       }
+
+      &.projects {
+        background-color: #9c27b0;
+        mat-icon {
+          color: white;
+        }
+      }
     }
 
     .stat-details {
@@ -88,8 +95,16 @@
   grid-template-columns: 1fr 1fr;
   gap: 24px;
 
+  .projects-card {
+    grid-column: 1 / -1; // Full width
+  }
+
   @media (max-width: 1200px) {
     grid-template-columns: 1fr;
+    
+    .projects-card {
+      grid-column: 1;
+    }
   }
 }
 
@@ -114,7 +129,8 @@ mat-card {
 }
 
 .agents-list,
-.workflows-list {
+.workflows-list,
+.projects-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -278,5 +294,115 @@ mat-card {
 
 .workflow-status-pending {
   background-color: #ff9800 !important;
+  color: white !important;
+}
+
+// Project items
+.project-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: vars.$surface-container-low;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: vars.$surface-container;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .project-icon {
+    font-size: 32px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: vars.$surface-container-high;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .project-info {
+    flex: 1;
+    min-width: 0;
+
+    h4 {
+      margin: 0 0 6px 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: vars.$text-primary;
+    }
+
+    .project-description {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      color: vars.$text-secondary;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: vars.$text-secondary;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  mat-chip {
+    font-size: 11px;
+    height: 28px;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+  }
+}
+
+// Project status chips
+.project-status-active {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.project-status-planning {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+.project-status-on_hold {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+.project-status-archived {
+  background-color: vars.$surface-container-high !important;
+  color: vars.$text-secondary !important;
+}
+
+.project-status-completed {
+  background-color: #2196f3 !important;
   color: white !important;
 }

@@ -19,12 +19,24 @@
     <div class="stats-grid">
       <mat-card class="stat-card">
         <mat-card-content>
-          <div class="stat-icon">
-            <mat-icon>smart_toy</mat-icon>
+          <div class="stat-icon projects">
+            <mat-icon>folder</mat-icon>
           </div>
           <div class="stat-details">
-            <h3>{{ stats().totalAgents }}</h3>
-            <p>Total Agents</p>
+            <h3>{{ stats().totalProjects }}</h3>
+            <p>Total Projects</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-icon active">
+            <mat-icon>play_circle</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>{{ stats().activeProjects }}</h3>
+            <p>Active Projects</p>
           </div>
         </mat-card-content>
       </mat-card>
@@ -52,22 +64,61 @@
           </div>
         </mat-card-content>
       </mat-card>
-
-      <mat-card class="stat-card">
-        <mat-card-content>
-          <div class="stat-icon">
-            <mat-icon>account_tree</mat-icon>
-          </div>
-          <div class="stat-details">
-            <h3>{{ stats().totalWorkflows }}</h3>
-            <p>Total Workflows</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
     </div>
 
     <!-- Content Grid -->
     <div class="content-grid">
+      <!-- Active Projects -->
+      <mat-card class="projects-card">
+        <mat-card-header>
+          <mat-card-title>Active Projects</mat-card-title>
+          <button mat-icon-button routerLink="/projects">
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </mat-card-header>
+        <mat-card-content>
+          @if (activeProjects().length === 0) {
+            <div class="no-data-container">
+              <mat-icon>folder_open</mat-icon>
+              <p>No active projects</p>
+              <button mat-raised-button color="primary" routerLink="/projects">
+                Create First Project
+              </button>
+            </div>
+          } @else {
+            <div class="projects-list">
+              @for (project of activeProjects(); track project.id) {
+                <div class="project-item" [routerLink]="['/projects', project.id]">
+                  <div class="project-icon">{{ project.icon || '📁' }}</div>
+                  <div class="project-info">
+                    <h4>{{ project.name }}</h4>
+                    <p class="project-description">{{ project.description }}</p>
+                    <div class="project-meta">
+                      <span class="meta-item">
+                        <mat-icon>groups</mat-icon>
+                        {{ project.stats.teamSize }} members
+                      </span>
+                      <span class="meta-item">
+                        <mat-icon>smart_toy</mat-icon>
+                        {{ project.stats.aiAgentsCount }} AI agents
+                      </span>
+                      <span class="meta-item">
+                        <mat-icon>account_tree</mat-icon>
+                        {{ project.stats.activeWorkflows }} active workflows
+                      </span>
+                    </div>
+                  </div>
+                  <mat-chip [class]="getProjectStatusClass(project.status)">
+                    <mat-icon>{{ getProjectStatusIcon(project.status) }}</mat-icon>
+                    {{ project.status }}
+                  </mat-chip>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
       <!-- Agents Status -->
       <mat-card class="agents-card">
         <mat-card-header>

@@ -8,8 +8,10 @@ import { MatChipsModule } from '@angular/material/chips';
 import { RouterModule } from '@angular/router';
 import { AgentService } from '../../shared/services/agent.service';
 import { WorkflowService } from '../../shared/services/workflow.service';
+import { ProjectService } from '../../shared/services/project.service';
 import { Agent } from '../../core/interfaces/agent.interface';
 import { Workflow } from '../../core/interfaces/workflow.interface';
+import { Project, ProjectStatus } from '../../core/interfaces/project.interface';
 
 @Component({
   selector: 'app-dashboard',
@@ -29,12 +31,16 @@ import { Workflow } from '../../core/interfaces/workflow.interface';
 export class DashboardComponent implements OnInit {
   private readonly agentService = inject(AgentService);
   private readonly workflowService = inject(WorkflowService);
+  private readonly projectService = inject(ProjectService);
 
   agents = signal<Agent[]>([]);
   recentWorkflows = signal<Workflow[]>([]);
+  activeProjects = signal<Project[]>([]);
   loading = signal(true);
 
   stats = signal({
+    totalProjects: 0,
+    activeProjects: 0,
     totalAgents: 5,
     activeWorkflows: 0,
     completedToday: 0,
@@ -47,6 +53,14 @@ export class DashboardComponent implements OnInit {
 
   private loadDashboardData(): void {
     this.loading.set(true);
+
+    // Load projects
+    const projects = this.projectService.projects();
+    const activeProjectsList = projects
+      .filter(p => p.status === 'active')
+      .slice(0, 4); // Show top 4 active projects
+    
+    this.activeProjects.set(activeProjectsList);
 
     // Load agents
     this.agentService.getAgents().subscribe({
@@ -71,6 +85,8 @@ export class DashboardComponent implements OnInit {
         ).length;
 
         this.stats.set({
+          totalProjects: projects.length,
+          activeProjects: activeProjectsList.length,
           totalAgents: 5,
           activeWorkflows,
           completedToday,
@@ -96,5 +112,20 @@ export class DashboardComponent implements OnInit {
 
   refreshDashboard(): void {
     this.loadDashboardData();
+  }
+
+  getProjectStatusIcon(status: ProjectStatus): string {
+    const icons: Record<ProjectStatus, string> = {
+      active: 'play_circle',
+      planning: 'schedule',
+      on_hold: 'pause_circle',
+      archived: 'archive',
+      completed: 'check_circle'
+    };
+    return icons[status];
+  }
+
+  getProjectStatusClass(status: ProjectStatus): string {
+    return `project-status-${status}`;
   }
 }

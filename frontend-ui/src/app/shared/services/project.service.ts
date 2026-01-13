@@ -7,13 +7,12 @@ import { mockProjects } from '../../mocks/mock-projects';
   providedIn: 'root'
 })
 export class ProjectService {
-  // Signal for reactive projects list
-  projects = signal<Project[]>([]);
+  // Signal for reactive projects list - initialize with mock data
+  projects = signal<Project[]>(mockProjects);
   loading = signal<boolean>(false);
 
   constructor() {
-    // Load initial projects
-    this.loadProjects();
+    // Projects are already loaded from mock data
   }
 
   /**

@@ -1,43 +1,372 @@
 <div class="project-detail-container">
-  @if (project()) {
-    <div class="project-header">
-      <button mat-icon-button (click)="goBack()">
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading project...</p>
+    </div>
+  }
+
+  <!-- Project Not Found -->
+  @if (!loading() && !projectExists()) {
+    <div class="error-container">
+      <mat-icon class="error-icon">folder_off</mat-icon>
+      <h2>Project not found</h2>
+      <p>The project you're looking for doesn't exist or has been deleted.</p>
+      <button mat-raised-button color="primary" (click)="goBack()">
         <mat-icon>arrow_back</mat-icon>
+        Back to Projects
       </button>
-      <div class="header-content">
-        <h1>{{ project()!.icon }} {{ project()!.name }}</h1>
-        <p>{{ project()!.description }}</p>
+    </div>
+  }
+
+  <!-- Project Content -->
+  @if (!loading() && projectExists()) {
+    <!-- Header -->
+    <div class="project-header">
+      <div class="header-left">
+        <button mat-icon-button (click)="goBack()" matTooltip="Back to Projects">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="project-title-section">
+          <div class="title-row">
+            <span class="project-icon">{{ project()!.icon || '📁' }}</span>
+            <h1>{{ project()!.name }}</h1>
+            <mat-chip [color]="getStatusColor(project()!.status)" class="status-chip">
+              <mat-icon>{{ getStatusIcon(project()!.status) }}</mat-icon>
+              {{ project()!.status | uppercase }}
+            </mat-chip>
+          </div>
+          <p class="project-description">{{ project()!.description }}</p>
+          <div class="project-meta">
+            <span class="meta-item">
+              <mat-icon>category</mat-icon>
+              {{ getProjectTypeLabel(project()!.type) }}
+            </span>
+            <span class="meta-item">
+              <mat-icon>schedule</mat-icon>
+              Created {{ getTimeAgo(project()!.createdAt) }}
+            </span>
+            <span class="meta-item">
+              <mat-icon>update</mat-icon>
+              Updated {{ getTimeAgo(project()!.updatedAt) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button mat-button (click)="editProject()">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-button (click)="archiveProject()">
+          <mat-icon>archive</mat-icon>
+          Archive
+        </button>
+        <button mat-raised-button color="primary" routerLink="/workflows">
+          <mat-icon>add</mat-icon>
+          New Workflow
+        </button>
       </div>
     </div>
 
-    <mat-tab-group>
-      <mat-tab label="Overview">
+    <!-- Tabs -->
+    <mat-tab-group class="project-tabs" animationDuration="300ms">
+      <!-- Overview Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>overview</mat-icon>
+          Overview
+        </ng-template>
         <div class="tab-content">
-          <h2>Project Overview</h2>
-          <p>Project details will be displayed here.</p>
+          <!-- Statistics Cards -->
+          <div class="stats-grid">
+            <mat-card class="stat-card">
+              <mat-card-content>
+                <div class="stat-header">
+                  <mat-icon>account_tree</mat-icon>
+                  <span>Total Workflows</span>
+                </div>
+                <div class="stat-value">{{ project()!.stats.totalWorkflows }}</div>
+                <div class="stat-details">
+                  <span class="detail-item success">
+                    {{ project()!.stats.completedWorkflows }} completed
+                  </span>
+                  <span class="detail-item primary">
+                    {{ project()!.stats.activeWorkflows }} active
+                  </span>
+                  @if (project()!.stats.failedWorkflows > 0) {
+                    <span class="detail-item error">
+                      {{ project()!.stats.failedWorkflows }} failed
+                    </span>
+                  }
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+              <mat-card-content>
+                <div class="stat-header">
+                  <mat-icon>groups</mat-icon>
+                  <span>Team Size</span>
+                </div>
+                <div class="stat-value">{{ project()!.stats.teamSize }}</div>
+                <div class="stat-details">
+                  <span class="detail-item">
+                    {{ project()!.teamMembers.length }} human members
+                  </span>
+                  <span class="detail-item">
+                    {{ project()!.stats.aiAgentsCount }} AI agents
+                  </span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+              <mat-card-content>
+                <div class="stat-header">
+                  <mat-icon>code</mat-icon>
+                  <span>Code Generated</span>
+                </div>
+                <div class="stat-value">{{ project()!.stats.linesOfCode.toLocaleString() }}</div>
+                <div class="stat-details">
+                  <span class="detail-item">
+                    {{ project()!.stats.filesGenerated }} files
+                  </span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Tech Stack & Integrations Row -->
+          <div class="info-row">
+            <!-- Tech Stack -->
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>layers</mat-icon>
+                <mat-card-title>Technology Stack</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                @if (project()!.techStack.languages.length > 0) {
+                  <div class="tech-section">
+                    <h4>Languages</h4>
+                    <div class="tech-chips">
+                      @for (lang of project()!.techStack.languages; track lang) {
+                        <mat-chip>{{ lang }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+                @if (project()!.techStack.frameworks.length > 0) {
+                  <div class="tech-section">
+                    <h4>Frameworks</h4>
+                    <div class="tech-chips">
+                      @for (fw of project()!.techStack.frameworks; track fw) {
+                        <mat-chip>{{ fw }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+                @if (project()!.techStack.databases.length > 0) {
+                  <div class="tech-section">
+                    <h4>Databases</h4>
+                    <div class="tech-chips">
+                      @for (db of project()!.techStack.databases; track db) {
+                        <mat-chip>{{ db }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+                @if (project()!.techStack.tools.length > 0) {
+                  <div class="tech-section">
+                    <h4>Tools</h4>
+                    <div class="tech-chips">
+                      @for (tool of project()!.techStack.tools; track tool) {
+                        <mat-chip>{{ tool }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Integrations -->
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>hub</mat-icon>
+                <mat-card-title>Integrations</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-list>
+                  @if (project()!.integrations.git) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon [class.connected]="project()!.integrations.git!.connected">code</mat-icon>
+                      <div matListItemTitle>Git Repository</div>
+                      <div matListItemLine>
+                        {{ project()!.integrations.git!.platform }} - {{ project()!.integrations.git!.branch }}
+                      </div>
+                      <span matListItemMeta [class.connected]="project()!.integrations.git!.connected">
+                        {{ project()!.integrations.git!.connected ? 'Connected' : 'Disconnected' }}
+                      </span>
+                    </mat-list-item>
+                  }
+                  @if (project()!.integrations.jira) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon [class.connected]="project()!.integrations.jira!.connected">task_alt</mat-icon>
+                      <div matListItemTitle>Jira</div>
+                      <div matListItemLine>Project: {{ project()!.integrations.jira!.projectKey }}</div>
+                      <span matListItemMeta [class.connected]="project()!.integrations.jira!.connected">
+                        {{ project()!.integrations.jira!.connected ? 'Connected' : 'Disconnected' }}
+                      </span>
+                    </mat-list-item>
+                  }
+                  @if (project()!.integrations.confluence) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon [class.connected]="project()!.integrations.confluence!.connected">description</mat-icon>
+                      <div matListItemTitle>Confluence</div>
+                      <div matListItemLine>Space: {{ project()!.integrations.confluence!.spaceKey }}</div>
+                      <span matListItemMeta [class.connected]="project()!.integrations.confluence!.connected">
+                        {{ project()!.integrations.confluence!.connected ? 'Connected' : 'Disconnected' }}
+                      </span>
+                    </mat-list-item>
+                  }
+                  @if (project()!.integrations.slack) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon [class.connected]="project()!.integrations.slack!.connected">chat</mat-icon>
+                      <div matListItemTitle>Slack</div>
+                      <div matListItemLine>{{ project()!.integrations.slack!.channel }}</div>
+                      <span matListItemMeta [class.connected]="project()!.integrations.slack!.connected">
+                        {{ project()!.integrations.slack!.connected ? 'Connected' : 'Disconnected' }}
+                      </span>
+                    </mat-list-item>
+                  }
+                  @if (!project()!.integrations.git && !project()!.integrations.jira && 
+                      !project()!.integrations.confluence && !project()!.integrations.slack) {
+                    <div class="empty-integrations">
+                      <p>No integrations configured</p>
+                      <button mat-button color="primary">
+                        <mat-icon>add</mat-icon>
+                        Add Integration
+                      </button>
+                    </div>
+                  }
+                </mat-list>
+              </mat-card-content>
+            </mat-card>
+          </div>
         </div>
       </mat-tab>
-      <mat-tab label="Workflows">
+
+      <!-- Team Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>groups</mat-icon>
+          Team ({{ project()!.teamMembers.length }})
+        </ng-template>
         <div class="tab-content">
-          <h2>Workflows</h2>
-          <p>Project workflows will be displayed here.</p>
+          <div class="team-section">
+            <div class="section-header">
+              <h3>Human Team Members</h3>
+              <button mat-raised-button color="primary">
+                <mat-icon>person_add</mat-icon>
+                Add Member
+              </button>
+            </div>
+            <div class="team-grid">
+              @for (member of project()!.teamMembers; track member.userId) {
+                <mat-card class="team-card">
+                  <mat-card-header>
+                    <div class="member-avatar" mat-card-avatar>
+                      {{ member.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <mat-card-title>{{ member.name }}</mat-card-title>
+                    <mat-card-subtitle>{{ member.role }}</mat-card-subtitle>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <div class="member-info">
+                      <span class="info-item">
+                        <mat-icon>email</mat-icon>
+                        {{ member.email }}
+                      </span>
+                      <span class="info-item">
+                        <mat-icon>security</mat-icon>
+                        {{ member.accessLevel }}
+                      </span>
+                      <span class="info-item">
+                        <mat-icon>event</mat-icon>
+                        Joined {{ getTimeAgo(member.joinedAt) }}
+                      </span>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              }
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="team-section">
+            <div class="section-header">
+              <h3>AI Agents ({{ project()!.aiAgents.length }})</h3>
+              <button mat-raised-button color="primary">
+                <mat-icon>smart_toy</mat-icon>
+                Configure Agents
+              </button>
+            </div>
+            <div class="agents-list">
+              @for (agentId of project()!.aiAgents; track agentId) {
+                <mat-chip class="agent-chip">
+                  <mat-icon>smart_toy</mat-icon>
+                  {{ agentId.replace('_', ' ') | titlecase }}
+                </mat-chip>
+              }
+            </div>
+          </div>
         </div>
       </mat-tab>
-      <mat-tab label="Team">
+
+      <!-- Activity Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>history</mat-icon>
+          Activity
+        </ng-template>
         <div class="tab-content">
-          <h2>Team Members</h2>
-          <p>Team members will be displayed here.</p>
+          <mat-card>
+            <mat-card-content>
+              <div class="activity-placeholder">
+                <mat-icon>timeline</mat-icon>
+                <h3>Activity Timeline</h3>
+                <p>Project activity history will be displayed here</p>
+                <p class="last-activity">Last activity: {{ getTimeAgo(project()!.lastActivity) }}</p>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Workflows Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>account_tree</mat-icon>
+          Workflows
+        </ng-template>
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-content>
+              <div class="workflows-placeholder">
+                <mat-icon>account_tree</mat-icon>
+                <h3>Project Workflows</h3>
+                <p>Workflows for this project will be displayed here</p>
+                <button mat-raised-button color="primary" routerLink="/workflows">
+                  <mat-icon>add</mat-icon>
+                  Create Workflow
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
         </div>
       </mat-tab>
     </mat-tab-group>
-  } @else if (loading()) {
-    <div class="loading-container">
-      <p>Loading project...</p>
-    </div>
-  } @else {
-    <div class="error-container">
-      <h2>Project not found</h2>
-      <button mat-raised-button color="primary" (click)="goBack()">Back to Projects</button>
-    </div>
   }
 </div>

@@ -1,36 +1,13 @@
+@use '../../../style/material-variables' as vars;
+
 .project-detail-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
 }
 
-.project-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 24px;
-
-  .header-content {
-    flex: 1;
-
-    h1 {
-      margin: 0 0 8px 0;
-      font-size: 32px;
-      font-weight: 500;
-    }
-
-    p {
-      margin: 0;
-      color: var(--mat-sys-on-surface-variant);
-    }
-  }
-}
-
-.tab-content {
-  padding: 24px;
-}
-
+// Loading & Error States
 .loading-container,
 .error-container {
   display: flex;
@@ -39,4 +16,469 @@
   justify-content: center;
   padding: 64px 16px;
   text-align: center;
+  gap: 16px;
+
+  p {
+    margin: 0;
+    font-size: 16px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .error-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--mat-sys-on-surface-variant);
+    opacity: 0.5;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 400;
+  }
+
+  button {
+    margin-top: 16px;
+    
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+// Project Header
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 24px;
+  padding: 24px;
+  background: var(--mat-sys-surface-container);
+  border-radius: 12px;
+
+  .header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .project-title-section {
+    flex: 1;
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+
+      .project-icon {
+        font-size: 32px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface);
+      }
+
+      .status-chip {
+        height: 28px;
+        font-size: 12px;
+        font-weight: 500;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          margin-right: 4px;
+        }
+      }
+    }
+
+    .project-description {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: var(--mat-sys-on-surface-variant);
+      line-height: 1.5;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        color: var(--mat-sys-on-surface-variant);
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+
+    button {
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+}
+
+// Tabs
+.project-tabs {
+  ::ng-deep {
+    .mat-mdc-tab-labels {
+      background: var(--mat-sys-surface-container);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .mat-mdc-tab-label {
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+.tab-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// Statistics Cards
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.stat-card {
+  mat-card-content {
+    padding: 24px;
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      color: var(--mat-sys-on-surface-variant);
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      span {
+        font-size: 14px;
+        font-weight: 500;
+      }
+    }
+
+    .stat-value {
+      font-size: 48px;
+      font-weight: 500;
+      color: var(--mat-sys-on-surface);
+      margin-bottom: 12px;
+    }
+
+    .stat-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .detail-item {
+        font-size: 13px;
+        color: var(--mat-sys-on-surface-variant);
+
+        &.success {
+          color: #4caf50;
+        }
+
+        &.primary {
+          color: var(--mat-sys-primary);
+        }
+
+        &.error {
+          color: var(--mat-sys-error);
+        }
+      }
+    }
+  }
+}
+
+// Info Row (Tech Stack & Integrations)
+.info-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.info-card {
+  mat-card-header {
+    margin-bottom: 16px;
+
+    mat-icon[mat-card-avatar] {
+      font-size: 32px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+    }
+
+    mat-card-title {
+      font-size: 20px;
+      font-weight: 500;
+    }
+  }
+
+  mat-card-content {
+    .tech-section {
+      margin-bottom: 20px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      h4 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface-variant);
+      }
+
+      .tech-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        mat-chip {
+          font-size: 13px;
+        }
+      }
+    }
+
+    mat-list {
+      mat-list-item {
+        height: auto;
+        padding: 12px 0;
+
+        mat-icon[matListItemIcon] {
+          color: var(--mat-sys-on-surface-variant);
+
+          &.connected {
+            color: var(--mat-sys-primary);
+          }
+        }
+
+        [matListItemMeta] {
+          font-size: 13px;
+          color: var(--mat-sys-on-surface-variant);
+
+          &.connected {
+            color: var(--mat-sys-primary);
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    .empty-integrations {
+      padding: 40px 16px;
+      text-align: center;
+
+      p {
+        margin: 0 0 16px 0;
+        color: var(--mat-sys-on-surface-variant);
+      }
+
+      button {
+        mat-icon {
+          margin-right: 4px;
+        }
+      }
+    }
+  }
+}
+
+// Team Section
+.team-section {
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    button {
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.team-card {
+  mat-card-header {
+    .member-avatar {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--mat-sys-primary-container);
+      color: var(--mat-sys-on-primary-container);
+      font-size: 20px;
+      font-weight: 500;
+      border-radius: 50%;
+    }
+
+    mat-card-title {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    mat-card-subtitle {
+      font-size: 14px;
+    }
+  }
+
+  mat-card-content {
+    .member-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--mat-sys-on-surface-variant);
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+}
+
+.agents-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .agent-chip {
+    height: 36px;
+    font-size: 14px;
+
+    mat-icon {
+      margin-right: 4px;
+    }
+  }
+}
+
+// Placeholder States
+.activity-placeholder,
+.workflows-placeholder {
+  padding: 64px 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--mat-sys-on-surface-variant);
+    opacity: 0.5;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 400;
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+
+    &.last-activity {
+      font-size: 14px;
+      margin-top: 8px;
+    }
+  }
+
+  button {
+    margin-top: 8px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      margin-right: 4px;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .project-header {
+    flex-direction: column;
+
+    .header-actions {
+      width: 100%;
+      justify-content: stretch;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+
+  .info-row,
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
 }

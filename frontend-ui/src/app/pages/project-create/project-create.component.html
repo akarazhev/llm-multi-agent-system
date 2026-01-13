@@ -1,0 +1,271 @@
+<div class="project-create-container">
+  <!-- Header -->
+  <div class="create-header">
+    <button mat-icon-button (click)="cancel()" matTooltip="Cancel">
+      <mat-icon>close</mat-icon>
+    </button>
+    <h1>Create New Project</h1>
+  </div>
+
+  <!-- Stepper -->
+  <mat-stepper [linear]="true" #stepper class="project-stepper">
+    <!-- Step 1: Basic Information -->
+    <mat-step [stepControl]="basicInfoForm" label="Basic Information">
+      <form [formGroup]="basicInfoForm">
+        <div class="step-content">
+          <h2>Project Details</h2>
+          <p class="step-description">Let's start with the basics about your project</p>
+
+          <div class="form-grid">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Project Name</mat-label>
+              <input matInput formControlName="name" placeholder="e.g., My Awesome Project" required>
+              @if (basicInfoForm.get('name')?.hasError('required')) {
+                <mat-error>Project name is required</mat-error>
+              }
+              @if (basicInfoForm.get('name')?.hasError('minlength')) {
+                <mat-error>Name must be at least 3 characters</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="4" 
+                        placeholder="Describe what this project is about..." required></textarea>
+              @if (basicInfoForm.get('description')?.hasError('required')) {
+                <mat-error>Description is required</mat-error>
+              }
+              @if (basicInfoForm.get('description')?.hasError('minlength')) {
+                <mat-error>Description must be at least 10 characters</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Project Icon</mat-label>
+              <input matInput formControlName="icon" placeholder="📁">
+              <mat-hint>Choose an emoji to represent your project</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Project Type</mat-label>
+              <mat-select formControlName="type" required>
+                @for (type of projectTypes; track type.value) {
+                  <mat-option [value]="type.value">
+                    {{ type.icon }} {{ type.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Initial Status</mat-label>
+              <mat-select formControlName="status" required>
+                @for (status of projectStatuses; track status.value) {
+                  <mat-option [value]="status.value">{{ status.label }}</mat-option>
+                }
+              </mat-select>
+              <mat-hint>You can change this later</mat-hint>
+            </mat-form-field>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button (click)="cancel()">Cancel</button>
+            <button mat-raised-button color="primary" matStepperNext>
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 2: Technology Stack -->
+    <mat-step [stepControl]="techStackForm" label="Technology Stack">
+      <form [formGroup]="techStackForm">
+        <div class="step-content">
+          <h2>Technology Stack</h2>
+          <p class="step-description">Select the technologies you'll be using (optional)</p>
+
+          <!-- Languages -->
+          <div class="tech-section">
+            <h3>Programming Languages</h3>
+            <div class="tech-chips">
+              @for (lang of languageOptions; track lang) {
+                <mat-chip-option 
+                  [selected]="isSelected(lang, selectedLanguages())"
+                  (click)="toggleLanguage(lang)">
+                  {{ lang }}
+                </mat-chip-option>
+              }
+            </div>
+          </div>
+
+          <!-- Frameworks -->
+          <div class="tech-section">
+            <h3>Frameworks & Libraries</h3>
+            <div class="tech-chips">
+              @for (fw of frameworkOptions; track fw) {
+                <mat-chip-option 
+                  [selected]="isSelected(fw, selectedFrameworks())"
+                  (click)="toggleFramework(fw)">
+                  {{ fw }}
+                </mat-chip-option>
+              }
+            </div>
+          </div>
+
+          <!-- Databases -->
+          <div class="tech-section">
+            <h3>Databases</h3>
+            <div class="tech-chips">
+              @for (db of databaseOptions; track db) {
+                <mat-chip-option 
+                  [selected]="isSelected(db, selectedDatabases())"
+                  (click)="toggleDatabase(db)">
+                  {{ db }}
+                </mat-chip-option>
+              }
+            </div>
+          </div>
+
+          <!-- Tools -->
+          <div class="tech-section">
+            <h3>Tools & DevOps</h3>
+            <div class="tech-chips">
+              @for (tool of toolOptions; track tool) {
+                <mat-chip-option 
+                  [selected]="isSelected(tool, selectedTools())"
+                  (click)="toggleTool(tool)">
+                  {{ tool }}
+                </mat-chip-option>
+              }
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="primary" matStepperNext>
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 3: Review & Create -->
+    <mat-step label="Review & Create">
+      <div class="step-content">
+        <h2>Review Your Project</h2>
+        <p class="step-description">Everything looks good? Let's create your project!</p>
+
+        <mat-card class="review-card">
+          <mat-card-content>
+            <div class="review-section">
+              <h3>Basic Information</h3>
+              <div class="review-item">
+                <span class="review-label">Icon:</span>
+                <span class="review-value">{{ basicInfoForm.get('icon')?.value }}</span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Name:</span>
+                <span class="review-value">{{ basicInfoForm.get('name')?.value }}</span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Description:</span>
+                <span class="review-value">{{ basicInfoForm.get('description')?.value }}</span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Type:</span>
+                <span class="review-value">
+                  @if (basicInfoForm.get('type')?.value; as typeValue) {
+                    {{ getProjectTypeIcon(typeValue) }}
+                    @for (type of projectTypes; track type.value) {
+                      @if (type.value === typeValue) {
+                        {{ type.label }}
+                      }
+                    }
+                  }
+                </span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Status:</span>
+                <span class="review-value">{{ basicInfoForm.get('status')?.value | titlecase }}</span>
+              </div>
+            </div>
+
+            @if (selectedLanguages().length > 0 || selectedFrameworks().length > 0 || 
+                 selectedDatabases().length > 0 || selectedTools().length > 0) {
+              <div class="review-section">
+                <h3>Technology Stack</h3>
+                
+                @if (selectedLanguages().length > 0) {
+                  <div class="review-item">
+                    <span class="review-label">Languages:</span>
+                    <div class="review-chips">
+                      @for (lang of selectedLanguages(); track lang) {
+                        <mat-chip>{{ lang }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+                
+                @if (selectedFrameworks().length > 0) {
+                  <div class="review-item">
+                    <span class="review-label">Frameworks:</span>
+                    <div class="review-chips">
+                      @for (fw of selectedFrameworks(); track fw) {
+                        <mat-chip>{{ fw }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+                
+                @if (selectedDatabases().length > 0) {
+                  <div class="review-item">
+                    <span class="review-label">Databases:</span>
+                    <div class="review-chips">
+                      @for (db of selectedDatabases(); track db) {
+                        <mat-chip>{{ db }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+                
+                @if (selectedTools().length > 0) {
+                  <div class="review-item">
+                    <span class="review-label">Tools:</span>
+                    <div class="review-chips">
+                      @for (tool of selectedTools(); track tool) {
+                        <mat-chip>{{ tool }}</mat-chip>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <div class="step-actions">
+          <button mat-button matStepperPrevious [disabled]="creating()">
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+          <button mat-raised-button color="primary" (click)="createProject()" [disabled]="creating()">
+            @if (creating()) {
+              <mat-icon>hourglass_empty</mat-icon>
+              Creating...
+            } @else {
+              <mat-icon>check</mat-icon>
+              Create Project
+            }
+          </button>
+        </div>
+      </div>
+    </mat-step>
+  </mat-stepper>
+</div>

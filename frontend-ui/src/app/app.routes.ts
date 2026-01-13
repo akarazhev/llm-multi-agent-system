@@ -12,11 +12,20 @@ export const routes: Routes = [
   },
   {
     path: 'projects',
-    loadComponent: () => import('./pages/projects/projects.component').then(m => m.ProjectsComponent)
-  },
-  {
-    path: 'projects/:id',
-    loadComponent: () => import('./pages/project-detail/project-detail.component').then(m => m.ProjectDetailComponent)
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/projects/projects.component').then(m => m.ProjectsComponent)
+      },
+      {
+        path: 'new',
+        loadComponent: () => import('./pages/project-create/project-create.component').then(m => m.ProjectCreateComponent)
+      },
+      {
+        path: ':id',
+        loadComponent: () => import('./pages/project-detail/project-detail.component').then(m => m.ProjectDetailComponent)
+      }
+    ]
   },
   {
     path: 'workflows',

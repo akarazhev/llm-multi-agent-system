@@ -5,6 +5,11 @@ aiohttp>=3.9.0
 pydantic>=2.5.0
 openai>=1.0.0
 
+# LangGraph for multi-agent orchestration
+langgraph>=0.2.0
+langchain-core>=0.3.0
+aiosqlite>=0.19.0
+
 # Testing dependencies
 pytest>=7.4.0
 pytest-cov>=4.1.0

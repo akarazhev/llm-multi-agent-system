@@ -118,8 +118,7 @@ log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
 log_file: "logs/agent_system.log"
 
 # LLM Server
-cursor_cli_path: "cursor"  # or full path
-cursor_timeout: 300  # seconds
+llm_timeout: 300  # seconds
 
 # Execution Settings
 max_concurrent_agents: 5
@@ -217,7 +216,7 @@ python main.py
 You'll see:
 ```
 ================================================================================
-LLM Multi-Agent System - Cursor CLI Orchestration
+LLM Multi-Agent System - Local LLM Orchestration
 ================================================================================
 
 Available Workflow Types:

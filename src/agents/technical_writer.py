@@ -66,7 +66,7 @@ File: docs/API.md
 # Your documentation here
 """
         
-        result = await self.execute_cursor_command(
+        result = await self.execute_llm_task(
             prompt,
             files=source_files if source_files else None
         )
@@ -95,7 +95,7 @@ File: docs/API.md
                 "agent_role": self.role.value
             }
         else:
-            raise Exception(f"Cursor command failed: {result.get('error', result.get('stderr'))}")
+            raise Exception(f"LLM task failed: {result.get('error', result.get('stderr'))}")
     
     def _format_context(self, context: Dict[str, Any]) -> str:
         lines = []

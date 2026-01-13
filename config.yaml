@@ -3,8 +3,7 @@ cursor_workspace: "."  # Current directory (project root)
 log_level: "INFO"
 log_file: "logs/agent_system.log"
 
-cursor_cli_path: "/Applications/Cursor.app/Contents/Resources/app/bin/cursor"
-cursor_timeout: 300
+llm_timeout: 300
 
 max_concurrent_agents: 5
 task_retry_attempts: 3

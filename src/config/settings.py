@@ -15,8 +15,7 @@ class Settings:
     
     agents: Dict[str, Any] = field(default_factory=dict)
     
-    cursor_cli_path: str = "cursor"
-    cursor_timeout: int = 300
+    llm_timeout: int = 300
     
     max_concurrent_agents: int = 5
     task_retry_attempts: int = 3
@@ -34,8 +33,7 @@ class Settings:
             log_level=config.get('log_level', 'INFO'),
             log_file=config.get('log_file'),
             agents=config.get('agents', {}),
-            cursor_cli_path=config.get('cursor_cli_path', 'cursor'),
-            cursor_timeout=config.get('cursor_timeout', 300),
+            llm_timeout=config.get('llm_timeout', config.get('cursor_timeout', 300)),
             max_concurrent_agents=config.get('max_concurrent_agents', 5),
             task_retry_attempts=config.get('task_retry_attempts', 3),
             task_timeout=config.get('task_timeout', 600),
@@ -50,8 +48,7 @@ class Settings:
             'log_level': self.log_level,
             'log_file': self.log_file,
             'agents': self.agents,
-            'cursor_cli_path': self.cursor_cli_path,
-            'cursor_timeout': self.cursor_timeout,
+            'llm_timeout': self.llm_timeout,
             'max_concurrent_agents': self.max_concurrent_agents,
             'task_retry_attempts': self.task_retry_attempts,
             'task_timeout': self.task_timeout,

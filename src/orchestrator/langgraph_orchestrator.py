@@ -90,7 +90,6 @@ class LangGraphOrchestrator:
         
         # Business Analyst
         ba_config = agent_configs.get("business_analyst", {}).copy()
-        ba_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["business_analyst"] = BusinessAnalystAgent(
             agent_id="ba_001",
             cursor_workspace=self.cursor_workspace,
@@ -99,7 +98,6 @@ class LangGraphOrchestrator:
         
         # Developer
         dev_config = agent_configs.get("developer", {}).copy()
-        dev_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["developer"] = DeveloperAgent(
             agent_id="dev_001",
             cursor_workspace=self.cursor_workspace,
@@ -108,7 +106,6 @@ class LangGraphOrchestrator:
         
         # QA Engineer
         qa_config = agent_configs.get("qa_engineer", {}).copy()
-        qa_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["qa_engineer"] = QAEngineerAgent(
             agent_id="qa_001",
             cursor_workspace=self.cursor_workspace,
@@ -117,7 +114,6 @@ class LangGraphOrchestrator:
         
         # DevOps Engineer
         devops_config = agent_configs.get("devops_engineer", {}).copy()
-        devops_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["devops_engineer"] = DevOpsEngineerAgent(
             agent_id="devops_001",
             cursor_workspace=self.cursor_workspace,
@@ -126,7 +122,6 @@ class LangGraphOrchestrator:
         
         # Technical Writer
         writer_config = agent_configs.get("technical_writer", {}).copy()
-        writer_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["technical_writer"] = TechnicalWriterAgent(
             agent_id="writer_001",
             cursor_workspace=self.cursor_workspace,

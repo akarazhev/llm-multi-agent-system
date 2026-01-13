@@ -378,15 +378,20 @@ llm-multi-agent-system/
 
 Comprehensive guides in the `docs/` directory:
 
-- **[LangGraph Integration](docs/LANGGRAPH_INTEGRATION.md)** - ⭐ NEW! Advanced orchestration guide
+- **[START_HERE.md](docs/START_HERE.md)** - ⭐ Complete setup and getting started guide
+- **[LangGraph Integration](docs/LANGGRAPH_INTEGRATION.md)** - Advanced orchestration with parallel execution
 - **[Quick Start Guide](docs/QUICK_START.md)** - Get started in 5 minutes
 - **[Architecture](docs/ARCHITECTURE.md)** - System design and components
+- **[Agent Specifications](docs/AGENT_SPECS.md)** - Detailed agent capabilities
 - **[Local-Only Mode](docs/LOCAL_ONLY_MODE.md)** - Privacy-first local execution
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment
 - **[API Reference](docs/API_REFERENCE.md)** - Programmatic usage
+- **[Tech Stack](docs/TECH_STACK.md)** - Technologies used
+- **[Integrations](docs/INTEGRATIONS.md)** - Third-party integrations
 - **[Testing Guide](docs/TESTING.md)** - Testing documentation
 - **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 - **[Contributing](docs/CONTRIBUTING.md)** - Development guidelines
+- **[Changelog](docs/CHANGELOG.md)** - Version history
 
 ## 🔒 Privacy & Security
 
@@ -426,7 +431,7 @@ log_level: "INFO"
 log_file: "logs/agent_system.log"
 
 # Execution settings
-cursor_timeout: 300
+llm_timeout: 300
 max_concurrent_agents: 5
 task_retry_attempts: 3
 task_timeout: 600
@@ -458,7 +463,7 @@ echo "OPENAI_API_BASE=http://127.0.0.1:8080/v1" >> .env
 **Task timeout**
 ```yaml
 # Increase in config.yaml
-cursor_timeout: 600
+llm_timeout: 600
 task_timeout: 900
 ```
 

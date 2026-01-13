@@ -56,7 +56,7 @@ File: analysis/user_stories.md
 # Your user stories here
 """
         
-        result = await self.execute_cursor_command(prompt)
+        result = await self.execute_llm_task(prompt)
         
         if result.get("success"):
             analysis_text = result.get("stdout", "")
@@ -81,7 +81,7 @@ File: analysis/user_stories.md
                 "agent_role": self.role.value
             }
         else:
-            raise Exception(f"Cursor command failed: {result.get('error', result.get('stderr'))}")
+            raise Exception(f"LLM task failed: {result.get('error', result.get('stderr'))}")
     
     def _format_context(self, context: Dict[str, Any]) -> str:
         lines = []

@@ -27,28 +27,22 @@ def check_python_version():
     return True
 
 
-def check_cursor_cli():
-    print("\nChecking Cursor CLI installation...")
+def check_llama_server():
+    print("\nChecking local llama-server...")
     try:
-        result = subprocess.run(
-            ["cursor", "--version"],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        if result.returncode == 0:
-            print("✓ Cursor CLI is installed and accessible")
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('127.0.0.1', 8080))
+        sock.close()
+        if result == 0:
+            print("✓ llama-server is running on port 8080")
             return True
         else:
-            print("⚠️  Cursor CLI found but may not be working correctly")
+            print("⚠️  llama-server is not running")
+            print("   Start it with: ./scripts/start_llama_server.sh")
             return False
-    except FileNotFoundError:
-        print("❌ Cursor CLI not found in PATH")
-        print("   Please install Cursor IDE from https://cursor.sh")
-        print("   Or specify the full path in config.yaml")
-        return False
     except Exception as e:
-        print(f"⚠️  Error checking Cursor CLI: {e}")
+        print(f"⚠️  Error checking llama-server: {e}")
         return False
 
 
@@ -136,7 +130,8 @@ def print_next_steps():
     
     print("\n4. Read the documentation:")
     print("   - Quick Start: docs/QUICK_START.md")
-    print("   - Full Guide: docs/CURSOR_CLI_ORCHESTRATION.md")
+    print("   - START_HERE Guide: docs/START_HERE.md")
+    print("   - LangGraph Integration: docs/INTEGRATIONS.md")
     
     print("\n" + "="*80 + "\n")
 
@@ -151,14 +146,11 @@ def main():
     if not check_python_version():
         checks_passed = False
     
-    cursor_ok = check_cursor_cli()
-    if not cursor_ok:
-        print("\n⚠️  Warning: Cursor CLI not found or not working.")
-        print("   The system will not work without Cursor CLI.")
-        response = input("\n   Continue anyway? (y/N): ").strip().lower()
-        if response != 'y':
-            print("\nSetup cancelled.")
-            return 1
+    llama_ok = check_llama_server()
+    if not llama_ok:
+        print("\n⚠️  Warning: llama-server not running.")
+        print("   You can start it later with: ./scripts/start_llama_server.sh")
+        print("   Continuing with setup...")
     
     if not checks_passed:
         print("\n❌ Prerequisites not met. Please fix the issues above and try again.")

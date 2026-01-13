@@ -33,7 +33,6 @@ class AgentOrchestrator:
         agent_configs = self.config.get("agents", {})
         
         ba_config = agent_configs.get("business_analyst", {}).copy()
-        ba_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["ba_001"] = BusinessAnalystAgent(
             agent_id="ba_001",
             cursor_workspace=self.cursor_workspace,
@@ -41,7 +40,6 @@ class AgentOrchestrator:
         )
         
         dev_config = agent_configs.get("developer", {}).copy()
-        dev_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["dev_001"] = DeveloperAgent(
             agent_id="dev_001",
             cursor_workspace=self.cursor_workspace,
@@ -49,7 +47,6 @@ class AgentOrchestrator:
         )
         
         qa_config = agent_configs.get("qa_engineer", {}).copy()
-        qa_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["qa_001"] = QAEngineerAgent(
             agent_id="qa_001",
             cursor_workspace=self.cursor_workspace,
@@ -57,7 +54,6 @@ class AgentOrchestrator:
         )
         
         devops_config = agent_configs.get("devops_engineer", {}).copy()
-        devops_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["devops_001"] = DevOpsEngineerAgent(
             agent_id="devops_001",
             cursor_workspace=self.cursor_workspace,
@@ -65,7 +61,6 @@ class AgentOrchestrator:
         )
         
         writer_config = agent_configs.get("technical_writer", {}).copy()
-        writer_config['cursor_cli_path'] = self.config.get('cursor_cli_path', 'cursor')
         self.agents["writer_001"] = TechnicalWriterAgent(
             agent_id="writer_001",
             cursor_workspace=self.cursor_workspace,

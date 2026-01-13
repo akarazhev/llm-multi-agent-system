@@ -26,7 +26,7 @@ async def simple_test():
     agent = DeveloperAgent(
         agent_id="dev_simple",
         cursor_workspace=str(PROJECT_ROOT),
-        config={'cursor_cli_path': 'cursor'}
+        config={}
     )
     
     print(f"\n✓ Agent created: {agent.agent_id}")

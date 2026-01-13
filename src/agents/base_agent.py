@@ -62,7 +62,6 @@ class BaseAgent(ABC):
         self.role = role
         self.cursor_workspace = cursor_workspace
         self.config = config or {}
-        self.cursor_cli_path = self.config.get('cursor_cli_path', 'cursor')
         self.status = AgentStatus.IDLE
         self.current_task: Optional[Task] = None
         self.task_history: List[Task] = []
@@ -77,15 +76,15 @@ class BaseAgent(ABC):
     def get_system_prompt(self) -> str:
         pass
     
-    async def execute_cursor_command(
+    async def execute_llm_task(
         self,
         prompt: str,
         files: Optional[List[str]] = None,
         timeout: int = 300
     ) -> Dict[str, Any]:
         """
-        Execute AI task using cursor-agent-tools SDK or direct OpenAI client.
-        Supports Claude, OpenAI, Ollama, and local llama-server.
+        Execute AI task using local llama-server.
+        All processing happens locally via OpenAI-compatible API.
         """
         try:
             import os

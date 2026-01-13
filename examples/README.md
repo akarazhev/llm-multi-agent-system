@@ -212,9 +212,10 @@ After running an example, you'll find:
 
 **If an example fails:**
 1. Check `logs/agent_system.log` for detailed error messages
-2. Verify Cursor CLI is working: `/Applications/Cursor.app/Contents/Resources/app/bin/cursor --version`
+2. Verify llama-server is running: `curl http://127.0.0.1:8080/health`
 3. Ensure virtual environment is activated
 4. Check that all dependencies are installed: `pip list`
+5. Verify .env file is configured with OPENAI_API_BASE
 
 **If execution is slow:**
 - This is normal for complex examples

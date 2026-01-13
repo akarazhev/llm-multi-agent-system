@@ -26,7 +26,7 @@ async def test_agent():
     agent = BusinessAnalystAgent(
         agent_id="test_ba",
         cursor_workspace=str(PROJECT_ROOT),
-        config={'cursor_cli_path': 'cursor'}
+        config={}
     )
     
     print(f"\n✓ Created agent: {agent.agent_id}")

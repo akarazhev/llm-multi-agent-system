@@ -16,6 +16,22 @@ class FileWriter:
         self.workspace_root = Path(workspace_root)
         self.output_dir = self.workspace_root / output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
+    
+    def _sanitize_filename(self, filename: str) -> str:
+        """
+        Sanitize filename by removing markdown formatting characters.
+        Removes backticks, asterisks, and other special characters that might
+        be captured from malformed LLM output.
+        """
+        # Remove backticks and asterisks from beginning and end
+        filename = filename.strip()
+        # Remove leading/trailing backticks and asterisks
+        filename = filename.strip('`*')
+        # Remove any remaining backticks in the path (but keep directory separators)
+        # Only strip them from individual path components
+        parts = filename.split('/')
+        cleaned_parts = [part.strip('`*') for part in parts]
+        return '/'.join(cleaned_parts)
         
     def parse_code_blocks(self, text: str) -> List[Dict[str, str]]:
         """
@@ -346,7 +362,7 @@ class FileWriter:
         
         if matches:
             for i, match in enumerate(matches):
-                filename = match.group(1).strip()
+                filename = self._sanitize_filename(match.group(1))
                 start_pos = match.end()
                 
                 # Find the matching closing ``` by counting backticks
@@ -397,7 +413,7 @@ class FileWriter:
         
         if matches:
             for i, match in enumerate(matches):
-                filename = match.group(1).strip()
+                filename = self._sanitize_filename(match.group(1))
                 start_pos = match.end()
                 
                 if i + 1 < len(matches):
@@ -424,7 +440,7 @@ class FileWriter:
             
             if matches:
                 for i, match in enumerate(matches):
-                    filename = match.group(1).strip()
+                    filename = self._sanitize_filename(match.group(1))
                     start_pos = match.end()
                     
                     if i + 1 < len(matches):
@@ -465,7 +481,7 @@ class FileWriter:
         if matches:
                 logger.debug(f"extract_file_structure: Found {len(matches)} matches with Pattern 3 (File: without backticks)")
                 for i, match in enumerate(matches):
-                    filename = match.group(1).strip()
+                    filename = self._sanitize_filename(match.group(1))
                     start_pos = match.end()
                     
                     if i + 1 < len(matches):

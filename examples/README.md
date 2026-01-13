@@ -4,6 +4,60 @@ This directory contains ready-to-run examples demonstrating the multi-agent syst
 
 ## Available Examples
 
+### ⭐ Interactive Chat Workflow (`interactive_chat_workflow.py`) **NEW!**
+
+**Complexity:** Demo/Tutorial  
+**Build Time:** Instant (demo mode) or ~10-15 minutes (full workflow)
+
+**Features:**
+- 💬 Real-time chat-like agent communication display
+- 🎨 Color-coded agents for easy visual distinction
+- 📊 Live progress bars and status tracking
+- 🔄 Inter-agent handoff visualization
+- ✅ Task completion summaries with file lists
+- 📝 Automatic chat log export to JSON
+- 🎭 Demo mode (no llama-server required) to see the interface
+
+**Run:**
+```bash
+source venv/bin/activate
+python examples/interactive_chat_workflow.py
+
+# Select option 1 for full workflow (requires llama-server)
+# Select option 2 for demo mode (no llama-server, instant)
+```
+
+**What You'll See:**
+```
+🤔 Business Analyst:
+  Analyzing requirements for task management API...
+  Identifying user stories and acceptance criteria.
+
+⚙️ Business Analyst is creating user stories and requirements
+  Identifying 8 user stories and 24 acceptance criteria
+
+✅ Business Analyst completed task
+  Requirements analysis complete. Identified 8 user stories.
+  📄 Files created: 2
+    • requirements.md
+    • user_stories.md
+
+🔄 Business Analyst → Developer
+  Handoff: Requirements ready for architecture design
+
+Progress: ████████████████░░░░░░░░░░░░░░░░░░░░ 40%
+```
+
+**Best for:**
+- Understanding how agents collaborate
+- Seeing workflow progress in real-time
+- Learning the system's capabilities
+- Debugging and monitoring workflows
+
+See [Interactive Chat Guide](../docs/INTERACTIVE_CHAT.md) for details.
+
+---
+
 ### 1. Task Management API (`task_management_api.py`)
 
 **Complexity:** Medium  

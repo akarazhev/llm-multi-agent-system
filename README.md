@@ -23,13 +23,14 @@ This system orchestrates specialized AI agents that collaborate to handle comple
 ### Key Features
 
 - 🤖 **5 Specialized AI Agents** - Business Analyst, Developer, QA Engineer, DevOps Engineer, Technical Writer
+- 💬 **Interactive Chat Display** - Watch agents communicate in real-time with color-coded chat interface
 - 🔄 **LangGraph Orchestration** - Advanced workflow engine with parallel execution and state persistence
 - ⚡ **Parallel Agent Execution** - QA and DevOps run simultaneously (30-40% faster)
 - 💾 **State Persistence** - Resume interrupted workflows from checkpoints
 - 🏠 **100% Local Execution** - No cloud APIs, complete data privacy, zero costs
 - 📋 **Flexible Workflow Engine** - Custom workflows or use predefined templates
 - 🔧 **Production-Ready** - Comprehensive error handling, logging, and monitoring
-- 📊 **Real-time Status Tracking** - Monitor agent progress and task completion
+- 📊 **Real-time Status Tracking** - Monitor agent progress and task completion with visual progress bars
 - 🧪 **Fully Tested** - Comprehensive test suite included
 
 ## 🏗️ Architecture
@@ -144,6 +145,43 @@ You'll be prompted to:
 3. Monitor execution
 4. Review results in `output/` directory
 
+### Interactive Chat Display (New! ✨)
+
+**Watch agents communicate in real-time** with our new interactive chat interface:
+
+```bash
+# Run the interactive example
+python examples/interactive_chat_workflow.py
+```
+
+**Features:**
+- 💬 Color-coded agent messages and thoughts
+- 🔄 Visual handoffs between agents
+- 📊 Real-time progress bars
+- ✅ Task completion summaries
+- 📄 File operation tracking
+- 📝 Automatic chat log export
+
+**Example Output:**
+```
+🤔 Business Analyst:
+  Analyzing requirements for task management API...
+  Identifying user stories and acceptance criteria.
+
+✅ Business Analyst completed task
+  Created 8 user stories with 24 acceptance criteria
+  📄 Files created: 2
+    • requirements.md
+    • user_stories.md
+
+🔄 Business Analyst → Developer
+  Requirements complete. Passing user stories for design.
+
+Progress: ████████████████░░░░░░░░░░░░░░░░░░░░ 40%
+```
+
+See [Interactive Chat Guide](docs/INTERACTIVE_CHAT.md) for full details.
+
 ### LangGraph Orchestration (Recommended)
 
 **New!** Use LangGraph for advanced features like parallel execution and state persistence:
@@ -153,8 +191,11 @@ import asyncio
 from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
 
 async def main():
-    # Initialize orchestrator with state persistence
-    orchestrator = LangGraphOrchestrator(workspace=".")
+    # Initialize orchestrator with interactive chat display
+    orchestrator = LangGraphOrchestrator(
+        workspace=".",
+        enable_chat_display=True  # Watch agents communicate!
+    )
     
     # Execute with parallel QA + DevOps (30-40% faster)
     result = await orchestrator.execute_feature_development(
@@ -182,6 +223,7 @@ python3 examples/langgraph_feature_development.py
 
 **Key Benefits:**
 - ⚡ 30-40% faster with parallel execution
+- 💬 Interactive chat display (enabled by default)
 - 💾 Resume interrupted workflows
 - 🔀 Smart conditional routing
 - 📊 Workflow visualization

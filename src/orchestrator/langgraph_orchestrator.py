@@ -52,6 +52,7 @@ from .langgraph_state import (
     create_infrastructure_state,
     create_analysis_state,
 )
+from ..utils.chat_display import AgentChatDisplay, ProgressTracker
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,8 @@ class LangGraphOrchestrator:
         self,
         workspace: str,
         config: Optional[Dict[str, Any]] = None,
-        checkpoint_db: Optional[str] = None
+        checkpoint_db: Optional[str] = None,
+        enable_chat_display: bool = True
     ):
         self.workspace = workspace
         self.config = config or {}
@@ -83,6 +85,11 @@ class LangGraphOrchestrator:
         
         # Compiled graphs cache
         self._compiled_graphs: Dict[str, Any] = {}
+        
+        # Interactive chat display
+        self.enable_chat_display = enable_chat_display
+        self.chat_display = AgentChatDisplay() if enable_chat_display else None
+        self.progress_tracker: Optional[ProgressTracker] = None
     
     def _initialize_agents(self):
         """Initialize all agent instances"""
@@ -136,8 +143,22 @@ class LangGraphOrchestrator:
         """Business Analyst Agent Node"""
         logger.info(f"[{state['workflow_id']}] Executing Business Analyst node")
         
+        if self.chat_display:
+            self.chat_display.agent_message(
+                "business_analyst",
+                f"Starting requirements analysis...\n\nRequirement: {state['requirement'][:150]}...",
+                message_type="start"
+            )
+        
         try:
             agent = self.agents["business_analyst"]
+            
+            if self.chat_display:
+                self.chat_display.agent_action(
+                    "business_analyst",
+                    "is analyzing requirements and creating user stories",
+                    "Identifying stakeholders, use cases, and acceptance criteria"
+                )
             
             task = Task(
                 task_id=f"ba_{datetime.now().timestamp()}",
@@ -152,6 +173,9 @@ class LangGraphOrchestrator:
             completed_task = await agent.run_task(task)
             
             if completed_task.error:
+                if self.chat_display:
+                    self.chat_display.agent_error("business_analyst", completed_task.error)
+                
                 return {
                     "errors": [{
                         "step": "business_analyst",
@@ -163,15 +187,29 @@ class LangGraphOrchestrator:
                     "status": "failed"
                 }
             
+            files_created = completed_task.result.get("files_created", []) if completed_task.result else []
+            
+            if self.chat_display:
+                summary = completed_task.result.get("summary", "Requirements analysis completed") if completed_task.result else "Requirements analysis completed"
+                self.chat_display.agent_completed(
+                    "business_analyst",
+                    summary,
+                    files_created
+                )
+            
             return {
                 "business_analysis": [completed_task.result] if completed_task.result else [],
-                "files_created": completed_task.result.get("files_created", []) if completed_task.result else [],
+                "files_created": files_created,
                 "current_step": "business_analyst",
                 "completed_steps": ["business_analyst"],
             }
             
         except Exception as e:
             logger.error(f"Error in business_analyst_node: {e}", exc_info=True)
+            
+            if self.chat_display:
+                self.chat_display.agent_error("business_analyst", str(e))
+            
             return {
                 "errors": [{
                     "step": "business_analyst",
@@ -187,11 +225,32 @@ class LangGraphOrchestrator:
         """Developer Agent - Architecture Design Node"""
         logger.info(f"[{state['workflow_id']}] Executing Developer Design node")
         
+        if self.chat_display:
+            self.chat_display.inter_agent_communication(
+                "business_analyst",
+                "developer",
+                "Handoff: Requirements and user stories are ready for architecture design",
+                communication_type="handoff"
+            )
+            
+            self.chat_display.agent_message(
+                "developer",
+                "Reviewing requirements and designing system architecture...\nPlanning components, services, and data models.",
+                message_type="thinking"
+            )
+        
         try:
             agent = self.agents["developer"]
             
             # Get business analysis from previous step
             business_analysis = state.get("business_analysis", [])
+            
+            if self.chat_display:
+                self.chat_display.agent_action(
+                    "developer",
+                    "is designing system architecture",
+                    "Creating architecture diagrams, API specifications, and data models"
+                )
             
             task = Task(
                 task_id=f"dev_design_{datetime.now().timestamp()}",
@@ -207,6 +266,9 @@ class LangGraphOrchestrator:
             completed_task = await agent.run_task(task)
             
             if completed_task.error:
+                if self.chat_display:
+                    self.chat_display.agent_error("developer", completed_task.error)
+                
                 return {
                     "errors": [{
                         "step": "architecture_design",
@@ -218,15 +280,29 @@ class LangGraphOrchestrator:
                     "status": "failed"
                 }
             
+            files_created = completed_task.result.get("files_created", []) if completed_task.result else []
+            
+            if self.chat_display:
+                summary = completed_task.result.get("summary", "Architecture design completed") if completed_task.result else "Architecture design completed"
+                self.chat_display.agent_completed(
+                    "developer",
+                    summary,
+                    files_created
+                )
+            
             return {
                 "architecture": [completed_task.result] if completed_task.result else [],
-                "files_created": completed_task.result.get("files_created", []) if completed_task.result else [],
+                "files_created": files_created,
                 "current_step": "architecture_design",
                 "completed_steps": ["architecture_design"],
             }
             
         except Exception as e:
             logger.error(f"Error in developer_design_node: {e}", exc_info=True)
+            
+            if self.chat_display:
+                self.chat_display.agent_error("developer", str(e))
+            
             return {
                 "errors": [{
                     "step": "architecture_design",
@@ -242,10 +318,24 @@ class LangGraphOrchestrator:
         """Developer Agent - Implementation Node"""
         logger.info(f"[{state['workflow_id']}] Executing Developer Implementation node")
         
+        if self.chat_display:
+            self.chat_display.agent_message(
+                "developer",
+                "Starting implementation based on architecture design...\nWriting code, creating modules, and setting up project structure.",
+                message_type="working"
+            )
+        
         try:
             agent = self.agents["developer"]
             
             architecture = state.get("architecture", [])
+            
+            if self.chat_display:
+                self.chat_display.agent_action(
+                    "developer",
+                    "is implementing the feature",
+                    "Writing source code, configuration files, and setting up dependencies"
+                )
             
             task = Task(
                 task_id=f"dev_impl_{datetime.now().timestamp()}",
@@ -261,6 +351,9 @@ class LangGraphOrchestrator:
             completed_task = await agent.run_task(task)
             
             if completed_task.error:
+                if self.chat_display:
+                    self.chat_display.agent_error("developer", completed_task.error)
+                
                 return {
                     "errors": [{
                         "step": "implementation",
@@ -272,15 +365,29 @@ class LangGraphOrchestrator:
                     "status": "failed"
                 }
             
+            files_created = completed_task.result.get("files_created", []) if completed_task.result else []
+            
+            if self.chat_display:
+                summary = completed_task.result.get("summary", "Implementation completed successfully") if completed_task.result else "Implementation completed successfully"
+                self.chat_display.agent_completed(
+                    "developer",
+                    summary,
+                    files_created
+                )
+            
             return {
                 "implementation": [completed_task.result] if completed_task.result else [],
-                "files_created": completed_task.result.get("files_created", []) if completed_task.result else [],
+                "files_created": files_created,
                 "current_step": "implementation",
                 "completed_steps": ["implementation"],
             }
             
         except Exception as e:
             logger.error(f"Error in developer_implementation_node: {e}", exc_info=True)
+            
+            if self.chat_display:
+                self.chat_display.agent_error("developer", str(e))
+            
             return {
                 "errors": [{
                     "step": "implementation",
@@ -296,10 +403,31 @@ class LangGraphOrchestrator:
         """QA Engineer Agent Node"""
         logger.info(f"[{state['workflow_id']}] Executing QA Engineer node")
         
+        if self.chat_display:
+            self.chat_display.inter_agent_communication(
+                "developer",
+                "qa_engineer",
+                "Handoff: Implementation ready for testing and quality assurance",
+                communication_type="handoff"
+            )
+            
+            self.chat_display.agent_message(
+                "qa_engineer",
+                "Reviewing implementation and creating test suite...\nPlanning unit tests, integration tests, and end-to-end tests.",
+                message_type="thinking"
+            )
+        
         try:
             agent = self.agents["qa_engineer"]
             
             implementation = state.get("implementation", [])
+            
+            if self.chat_display:
+                self.chat_display.agent_action(
+                    "qa_engineer",
+                    "is creating comprehensive test suite",
+                    "Writing test cases, test fixtures, and test automation scripts"
+                )
             
             task = Task(
                 task_id=f"qa_{datetime.now().timestamp()}",
@@ -315,6 +443,9 @@ class LangGraphOrchestrator:
             completed_task = await agent.run_task(task)
             
             if completed_task.error:
+                if self.chat_display:
+                    self.chat_display.agent_error("qa_engineer", completed_task.error)
+                
                 return {
                     "errors": [{
                         "step": "qa_testing",
@@ -324,14 +455,28 @@ class LangGraphOrchestrator:
                     "completed_steps": ["qa_testing"],
                 }
             
+            files_created = completed_task.result.get("files_created", []) if completed_task.result else []
+            
+            if self.chat_display:
+                summary = completed_task.result.get("summary", "Test suite created successfully") if completed_task.result else "Test suite created successfully"
+                self.chat_display.agent_completed(
+                    "qa_engineer",
+                    summary,
+                    files_created
+                )
+            
             return {
                 "tests": [completed_task.result] if completed_task.result else [],
-                "files_created": completed_task.result.get("files_created", []) if completed_task.result else [],
+                "files_created": files_created,
                 "completed_steps": ["qa_testing"],
             }
             
         except Exception as e:
             logger.error(f"Error in qa_engineer_node: {e}", exc_info=True)
+            
+            if self.chat_display:
+                self.chat_display.agent_error("qa_engineer", str(e))
+            
             return {
                 "errors": [{
                     "step": "qa_testing",
@@ -345,10 +490,31 @@ class LangGraphOrchestrator:
         """DevOps Engineer Agent Node"""
         logger.info(f"[{state['workflow_id']}] Executing DevOps Engineer node")
         
+        if self.chat_display:
+            self.chat_display.inter_agent_communication(
+                "developer",
+                "devops_engineer",
+                "Handoff: Implementation ready for infrastructure setup and deployment",
+                communication_type="handoff"
+            )
+            
+            self.chat_display.agent_message(
+                "devops_engineer",
+                "Setting up deployment infrastructure...\nConfiguring CI/CD pipelines, containers, and cloud resources.",
+                message_type="thinking"
+            )
+        
         try:
             agent = self.agents["devops_engineer"]
             
             implementation = state.get("implementation", [])
+            
+            if self.chat_display:
+                self.chat_display.agent_action(
+                    "devops_engineer",
+                    "is setting up deployment infrastructure",
+                    "Creating Docker containers, Kubernetes configs, and CI/CD pipelines"
+                )
             
             task = Task(
                 task_id=f"devops_{datetime.now().timestamp()}",
@@ -364,6 +530,9 @@ class LangGraphOrchestrator:
             completed_task = await agent.run_task(task)
             
             if completed_task.error:
+                if self.chat_display:
+                    self.chat_display.agent_error("devops_engineer", completed_task.error)
+                
                 return {
                     "errors": [{
                         "step": "infrastructure",
@@ -373,14 +542,28 @@ class LangGraphOrchestrator:
                     "completed_steps": ["infrastructure"],
                 }
             
+            files_created = completed_task.result.get("files_created", []) if completed_task.result else []
+            
+            if self.chat_display:
+                summary = completed_task.result.get("summary", "Infrastructure setup completed") if completed_task.result else "Infrastructure setup completed"
+                self.chat_display.agent_completed(
+                    "devops_engineer",
+                    summary,
+                    files_created
+                )
+            
             return {
                 "infrastructure": [completed_task.result] if completed_task.result else [],
-                "files_created": completed_task.result.get("files_created", []) if completed_task.result else [],
+                "files_created": files_created,
                 "completed_steps": ["infrastructure"],
             }
             
         except Exception as e:
             logger.error(f"Error in devops_engineer_node: {e}", exc_info=True)
+            
+            if self.chat_display:
+                self.chat_display.agent_error("devops_engineer", str(e))
+            
             return {
                 "errors": [{
                     "step": "infrastructure",
@@ -394,12 +577,38 @@ class LangGraphOrchestrator:
         """Technical Writer Agent Node"""
         logger.info(f"[{state['workflow_id']}] Executing Technical Writer node")
         
+        if self.chat_display:
+            self.chat_display.system_message(
+                "QA and DevOps completed in parallel. Moving to documentation...",
+                "info"
+            )
+            
+            self.chat_display.inter_agent_communication(
+                "system",
+                "technical_writer",
+                "Handoff: All development, testing, and infrastructure work completed. Ready for documentation.",
+                communication_type="handoff"
+            )
+            
+            self.chat_display.agent_message(
+                "technical_writer",
+                "Creating comprehensive documentation...\nWriting API docs, user guides, and deployment instructions.",
+                message_type="thinking"
+            )
+        
         try:
             agent = self.agents["technical_writer"]
             
             implementation = state.get("implementation", [])
             tests = state.get("tests", [])
             infrastructure = state.get("infrastructure", [])
+            
+            if self.chat_display:
+                self.chat_display.agent_action(
+                    "technical_writer",
+                    "is creating comprehensive documentation",
+                    "Writing README, API documentation, and user guides"
+                )
             
             task = Task(
                 task_id=f"writer_{datetime.now().timestamp()}",
@@ -417,6 +626,9 @@ class LangGraphOrchestrator:
             completed_task = await agent.run_task(task)
             
             if completed_task.error:
+                if self.chat_display:
+                    self.chat_display.agent_error("technical_writer", completed_task.error)
+                
                 return {
                     "errors": [{
                         "step": "documentation",
@@ -428,9 +640,24 @@ class LangGraphOrchestrator:
                     "status": "completed"
                 }
             
+            files_created = completed_task.result.get("files_created", []) if completed_task.result else []
+            
+            if self.chat_display:
+                summary = completed_task.result.get("summary", "Documentation completed successfully") if completed_task.result else "Documentation completed successfully"
+                self.chat_display.agent_completed(
+                    "technical_writer",
+                    summary,
+                    files_created
+                )
+                
+                self.chat_display.system_message(
+                    "✨ Workflow completed successfully! All agents have finished their tasks.",
+                    "completed"
+                )
+            
             return {
                 "documentation": [completed_task.result] if completed_task.result else [],
-                "files_created": completed_task.result.get("files_created", []) if completed_task.result else [],
+                "files_created": files_created,
                 "current_step": "documentation",
                 "completed_steps": ["documentation"],
                 "status": "completed",
@@ -439,6 +666,10 @@ class LangGraphOrchestrator:
             
         except Exception as e:
             logger.error(f"Error in technical_writer_node: {e}", exc_info=True)
+            
+            if self.chat_display:
+                self.chat_display.agent_error("technical_writer", str(e))
+            
             return {
                 "errors": [{
                     "step": "documentation",
@@ -711,6 +942,14 @@ class LangGraphOrchestrator:
         workflow_id = initial_state["workflow_id"]
         logger.info(f"Starting feature development workflow: {workflow_id}")
         
+        if self.chat_display:
+            self.chat_display.print_header("Multi-Agent Feature Development Workflow")
+            self.chat_display.system_message(
+                f"Starting workflow: {workflow_id}",
+                "start"
+            )
+            self.progress_tracker = ProgressTracker(total_steps=6)
+        
         # Build graph
         app = await self.build_feature_development_graph()
         
@@ -728,12 +967,33 @@ class LangGraphOrchestrator:
                 # Log progress
                 for node_name, node_state in event.items():
                     logger.info(f"[{workflow_id}] Completed node: {node_name}")
-                    if "current_step" in node_state:
+                    
+                    if self.progress_tracker:
+                        self.progress_tracker.update(node_name)
+                    
+                    if self.chat_display and "current_step" in node_state:
                         logger.info(f"[{workflow_id}] Current step: {node_state['current_step']}")
+                        
+                        # Show workflow status periodically
+                        if node_state.get("completed_steps"):
+                            self.chat_display.workflow_status(
+                                workflow_id,
+                                node_state.get("status", "running"),
+                                node_state.get("current_step", "unknown"),
+                                node_state.get("completed_steps", [])
+                            )
+                
                 final_state = event
             
             # Save results
             await self._save_workflow_results(workflow_id, final_state)
+            
+            # Save chat log if enabled
+            if self.chat_display:
+                output_dir = Path(self.workspace) / "output"
+                chat_log_path = output_dir / f"chat_log_{workflow_id}.json"
+                self.chat_display.save_chat_log(chat_log_path)
+                self.chat_display.conversation_summary()
             
             return final_state
             

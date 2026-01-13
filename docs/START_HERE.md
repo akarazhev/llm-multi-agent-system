@@ -26,7 +26,11 @@ pip install -r requirements.txt
 # 7. Test installation
 python -c "import langgraph; print('✅ Ready!')"
 
-# 8. Run your first workflow
+# 8. Try the interactive chat demo (no LLM required!)
+python examples/interactive_chat_workflow.py
+# Select option 2 for instant demo
+
+# 9. Run your first full workflow
 python examples/langgraph_feature_development.py
 ```
 
@@ -47,6 +51,8 @@ python examples/langgraph_feature_development.py
 | Document | When to Read |
 |----------|--------------|
 | **START_HERE.md** (this file) | First time setup |
+| **INTERACTIVE_CHAT.md** | Learn about chat display (NEW!) |
+| **CHAT_QUICK_REFERENCE.md** | Chat display quick guide |
 | **PYTHON_3.12_REQUIREMENT.md** | Quick reference |
 | **VENV_SETUP_GUIDE.md** | Complete venv tutorial |
 | **LANGGRAPH_QUICK_START.md** | Start using LangGraph |

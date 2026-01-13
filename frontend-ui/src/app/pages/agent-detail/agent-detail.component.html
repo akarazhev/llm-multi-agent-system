@@ -1,0 +1,242 @@
+<div class="agent-detail-container">
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Loading agent...</p>
+    </div>
+  }
+
+  <!-- Agent Not Found -->
+  @if (!loading() && !agentExists()) {
+    <div class="error-container">
+      <mat-icon class="error-icon">smart_toy_outline</mat-icon>
+      <h2>Agent not found</h2>
+      <p>The agent you're looking for doesn't exist or has been deleted.</p>
+      <button mat-raised-button color="primary" (click)="goBack()">
+        <span class="button-content">
+          <mat-icon>arrow_back</mat-icon>
+          <span>Back to Agents</span>
+        </span>
+      </button>
+    </div>
+  }
+
+  <!-- Agent Content -->
+  @if (!loading() && agentExists()) {
+    <!-- Header -->
+    <div class="agent-header">
+      <div class="header-left">
+        <button mat-icon-button (click)="goBack()" matTooltip="Back to Agents">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="agent-title-section">
+          <mat-icon class="agent-role-icon">{{ getRoleIcon() }}</mat-icon>
+          <div class="title-info">
+            <h1>{{ agent()!.name }}</h1>
+            <p class="role-name">{{ getRoleDisplayName() }}</p>
+            <div class="agent-meta">
+              <mat-chip [class]="getStatusClass(agent()!.status)">
+                <span class="chip-content">
+                  <mat-icon>{{ getStatusIcon(agent()!.status) }}</mat-icon>
+                  <span>{{ agent()!.status | uppercase }}</span>
+                </span>
+              </mat-chip>
+              <span class="meta-item">
+                <mat-icon>schedule</mat-icon>
+                Created {{ getTimeAgo(agent()!.created_at) }}
+              </span>
+              @if (agent()!.last_active) {
+                <span class="meta-item">
+                  <mat-icon>access_time</mat-icon>
+                  Last active {{ getTimeAgo(agent()!.last_active) }}
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button mat-button (click)="editAgent()">
+          <span class="button-content">
+            <mat-icon>edit</mat-icon>
+            <span>Edit</span>
+          </span>
+        </button>
+        <button mat-button color="warn" (click)="deleteAgent()">
+          <span class="button-content">
+            <mat-icon>delete</mat-icon>
+            <span>Delete</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Description -->
+    @if (agent()!.description) {
+      <mat-card class="description-card">
+        <mat-card-content>
+          <p>{{ agent()!.description }}</p>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Current Task -->
+    @if (agent()!.current_task) {
+      <mat-card class="current-task-card">
+        <mat-card-content>
+          <div class="task-content">
+            <mat-icon>play_circle_filled</mat-icon>
+            <div>
+              <strong>Currently Working On:</strong>
+              <p>{{ agent()!.current_task }}</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon>check_circle</mat-icon>
+          <div>
+            <h3>{{ agent()!.completed_tasks }}</h3>
+            <p>Completed Tasks</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon>error</mat-icon>
+          <div>
+            <h3>{{ agent()!.failed_tasks }}</h3>
+            <p>Failed Tasks</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon>trending_up</mat-icon>
+          <div>
+            <h3>{{ agent()!.metrics.success_rate.toFixed(1) }}%</h3>
+            <p>Success Rate</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <mat-icon>attach_money</mat-icon>
+          <div>
+            <h3>{{ formatCost(agent()!.metrics.cost_estimate) }}</h3>
+            <p>Total Cost</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Capabilities Card -->
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Capabilities</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-chip-set>
+            @for (cap of agent()!.capabilities; track cap) {
+              <mat-chip>{{ cap }}</mat-chip>
+            }
+          </mat-chip-set>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Configuration Card -->
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Configuration</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="config-content">
+          <div class="config-item">
+            <span class="label">Model:</span>
+            <span class="value">{{ agent()!.configuration.model }}</span>
+          </div>
+          <div class="config-item">
+            <span class="label">Temperature:</span>
+            <span class="value">{{ agent()!.configuration.temperature }}</span>
+          </div>
+          <div class="config-item">
+            <span class="label">Max Tokens:</span>
+            <span class="value">{{ formatNumber(agent()!.configuration.max_tokens) }}</span>
+          </div>
+          <div class="config-item">
+            <span class="label">Auto-approve:</span>
+            <mat-chip [class]="agent()!.configuration.auto_approve ? 'enabled' : 'disabled'">
+              {{ agent()!.configuration.auto_approve ? 'Enabled' : 'Disabled' }}
+            </mat-chip>
+          </div>
+          <div class="config-item">
+            <span class="label">Max Retries:</span>
+            <span class="value">{{ agent()!.configuration.max_retries }}</span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Metrics Card -->
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Performance Metrics</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="metrics-content">
+          <div class="metric-item">
+            <mat-icon>speed</mat-icon>
+            <div>
+              <strong>Avg Response Time</strong>
+              <span>{{ agent()!.metrics.avg_response_time.toFixed(1) }}s</span>
+            </div>
+          </div>
+          <div class="metric-item">
+            <mat-icon>token</mat-icon>
+            <div>
+              <strong>Tokens Used</strong>
+              <span>{{ formatNumber(agent()!.metrics.tokens_used) }}</span>
+            </div>
+          </div>
+          <div class="metric-item">
+            <mat-icon>timeline</mat-icon>
+            <div>
+              <strong>Total Tasks</strong>
+              <span>{{ agent()!.metrics.total_tasks }}</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Assigned Projects Card -->
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Assigned Projects</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (agent()!.assigned_projects && agent()!.assigned_projects!.length > 0) {
+            <div class="projects-list">
+              @for (projectId of agent()!.assigned_projects; track projectId) {
+                <div class="project-item" [routerLink]="['/projects', projectId]">
+                  <mat-icon>folder</mat-icon>
+                  <span>{{ projectId }}</span>
+                  <mat-icon class="arrow">arrow_forward</mat-icon>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-data">Not assigned to any projects yet</p>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>

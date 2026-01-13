@@ -37,7 +37,16 @@ export const routes: Routes = [
   },
   {
     path: 'agents',
-    loadComponent: () => import('./pages/agents/agents.component').then(m => m.AgentsComponent)
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./pages/agents/agents.component').then(m => m.AgentsComponent)
+      },
+      {
+        path: ':id',
+        loadComponent: () => import('./pages/agent-detail/agent-detail.component').then(m => m.AgentDetailComponent)
+      }
+    ]
   },
   {
     path: '**',

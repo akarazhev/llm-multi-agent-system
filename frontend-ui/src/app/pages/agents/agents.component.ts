@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
@@ -114,9 +114,10 @@ export class AgentsComponent {
   }
 
   viewAgentDetails(agent: Agent): void {
-    // TODO: Navigate to agent detail page or open dialog
-    console.log('Viewing agent details:', agent);
+    this.router.navigate(['/agents', agent.agent_id]);
   }
+
+  private router = inject(Router);
 
   getStatusClass(status: AgentStatus): string {
     return `status-${status.toLowerCase()}`;

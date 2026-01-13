@@ -189,6 +189,17 @@ body {
   color: vars.$error;
 }
 
+/* Button Styles */
+.button-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    margin: 0;
+  }
+}
+
 /* Full Height Container */
 .full-height {
   height: 100%;

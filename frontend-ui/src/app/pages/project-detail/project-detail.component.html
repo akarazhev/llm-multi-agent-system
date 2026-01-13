@@ -14,8 +14,10 @@
       <h2>Project not found</h2>
       <p>The project you're looking for doesn't exist or has been deleted.</p>
       <button mat-raised-button color="primary" (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
-        Back to Projects
+        <span class="button-content">
+          <mat-icon>arrow_back</mat-icon>
+          <span>Back to Projects</span>
+        </span>
       </button>
     </div>
   }
@@ -56,16 +58,22 @@
       </div>
       <div class="header-actions">
         <button mat-button (click)="editProject()">
-          <mat-icon>edit</mat-icon>
-          Edit
+          <span class="button-content">
+            <mat-icon>edit</mat-icon>
+            <span>Edit</span>
+          </span>
         </button>
         <button mat-button (click)="archiveProject()">
-          <mat-icon>archive</mat-icon>
-          Archive
+          <span class="button-content">
+            <mat-icon>archive</mat-icon>
+            <span>Archive</span>
+          </span>
         </button>
         <button mat-raised-button color="primary" routerLink="/workflows">
-          <mat-icon>add</mat-icon>
-          New Workflow
+          <span class="button-content">
+            <mat-icon>add</mat-icon>
+            <span>New Workflow</span>
+          </span>
         </button>
       </div>
     </div>

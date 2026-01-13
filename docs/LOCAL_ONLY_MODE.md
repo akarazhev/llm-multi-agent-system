@@ -1,14 +1,15 @@
 # Local-Only Mode
 
-This multi-agent system is configured to run **100% locally** using llama.cpp. No cloud APIs are used.
+The LLM Multi-Agent System is designed to run **100% locally** using llama.cpp. This document explains the local-only architecture, setup, and benefits.
 
 ## Why Local-Only?
 
-✅ **Zero Cost** - No API fees  
-✅ **Complete Privacy** - Data never leaves your machine  
-✅ **No Internet Required** - Works offline  
-✅ **Full Control** - Choose any model you want  
-✅ **No Rate Limits** - Use as much as you need  
+✅ **Zero Cost** - No API fees, no subscription required  
+✅ **Complete Privacy** - All data stays on your machine  
+✅ **No Internet Required** - Works completely offline (after model download)  
+✅ **Full Control** - Choose any GGUF model you want  
+✅ **No Rate Limits** - Use as much as needed, hardware is your only limit  
+✅ **Customizable** - Fine-tune models for specific use cases  
 
 ## Architecture
 

@@ -239,7 +239,7 @@ start_server() {
     cmd="$cmd --parallel $PARALLEL"
     cmd="$cmd --host $HOST"
     cmd="$cmd --port $PORT"
-    cmd="$cmd --log-level $LOG_LEVEL"
+    # Note: --log-level is not supported in all versions of llama-server
     
     # Add Metal support for Apple Silicon
     if [[ "$(uname)" == "Darwin" ]] && [[ "$(uname -m)" == "arm64" ]]; then

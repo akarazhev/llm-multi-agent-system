@@ -94,23 +94,17 @@
   border-top: 1px solid var(--mat-sys-surface-container-highest);
 
   button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    ::ng-deep .mdc-button__label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
     mat-icon {
-      margin: 0;
+      margin: 0 !important;
       font-size: 20px;
       width: 20px;
       height: 20px;
-    }
-
-    &:first-child mat-icon {
-      margin-right: 4px;
-    }
-
-    &:last-child mat-icon {
-      margin-left: 4px;
     }
   }
 }

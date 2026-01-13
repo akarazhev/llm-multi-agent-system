@@ -95,9 +95,9 @@
 
   button {
     ::ng-deep .mdc-button__label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
     }
 
     mat-icon {

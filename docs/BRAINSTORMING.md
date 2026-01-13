@@ -67,8 +67,8 @@
 **Proposed Technology Stack:**
 
 **Core Framework:**
-- **LangGraph** or **CrewAI** for agent orchestration
-- **Python 3.11+** as primary language
+- **LangGraph** for agent orchestration
+- **Python 3.12** as primary language
 - **FastAPI** for REST API
 
 **LLM Providers:**
@@ -245,9 +245,9 @@ Shared Context Update → Next Agent → ... → Final Output
 ### Key Decisions
 
 1. **Framework**: LangGraph for agent orchestration
-2. **Language**: Python 3.11+
-3. **LLM**: OpenAI GPT-4 primary, Anthropic Claude fallback
-4. **Storage**: PostgreSQL + ChromaDB
+2. **Language**: Python 3.12
+3. **LLM**: Local llama-server (llama.cpp) with Devstral
+4. **Storage**: File-based + SQLite checkpoints
 5. **Communication**: Event-driven with message queue
 6. **Infrastructure**: Docker + Kubernetes
 7. **Testing**: Multi-layer approach with mocks

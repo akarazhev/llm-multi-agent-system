@@ -1,10 +1,20 @@
 # LLM Multi-Agent System
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 > A production-ready multi-agent orchestration system powered by local LLMs for automated software development workflows.
+
+## ⚠️ Important: Python 3.12 Required
+
+**This project requires Python 3.12.x**
+
+- Install: `brew install python@3.12` (macOS)
+- Create venv: `python3.12 -m venv venv`
+- See: [`START_HERE.md`](START_HERE.md) for complete setup
+
+> Python 3.14 and other versions are NOT supported due to LangChain/LangGraph compatibility.
 
 ## 🎯 Overview
 
@@ -50,7 +60,7 @@ This system orchestrates specialized AI agents that collaborate to handle comple
 
 ### Prerequisites
 
-- **Python 3.11+**
+- **Python 3.12** (required - install with `brew install python@3.12`)
 - **llama.cpp** installed (with llama-server)
 - 16GB+ RAM recommended
 - macOS, Linux, or Windows
@@ -76,11 +86,11 @@ This will:
 ### Manual Setup (Alternative)
 
 ```bash
-# Create virtual environment
-python -m venv venv
+# Create virtual environment with Python 3.12
+python3.12 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install dependencies
+# Install dependencies (inside venv, use python/pip)
 pip install -r requirements.txt
 
 # Configure environment
@@ -90,7 +100,7 @@ cp .env.example .env
 # Start local LLM server
 ./scripts/start_llama_server.sh
 
-# Run the system
+# Run the system (inside venv, use python)
 python main.py
 ```
 
@@ -161,6 +171,15 @@ async def main():
 asyncio.run(main())
 ```
 
+**Run it:**
+```bash
+# Inside virtual environment (use python)
+python examples/langgraph_feature_development.py
+
+# Outside virtual environment (use python3)
+python3 examples/langgraph_feature_development.py
+```
+
 **Key Benefits:**
 - ⚡ 30-40% faster with parallel execution
 - 💾 Resume interrupted workflows
@@ -199,14 +218,16 @@ asyncio.run(main())
 Run example workflows:
 
 ```bash
-# LangGraph Examples (New!)
+# Inside virtual environment (recommended)
+source venv/bin/activate
 python examples/langgraph_feature_development.py  # Parallel execution demo
 python examples/langgraph_bug_fix.py              # Bug fix workflow
 python examples/langgraph_resume_workflow.py      # Resume interrupted workflow
 python examples/visualize_workflow.py             # Generate workflow diagrams
 
-# Classic Examples
-python examples/simple_workflow.py
+# Outside virtual environment (use python3)
+python3 examples/langgraph_feature_development.py
+python3 examples/simple_workflow.py
 python examples/custom_workflow.py
 python examples/ecommerce_catalog.py
 python examples/agent_status_monitor.py
@@ -456,13 +477,13 @@ For more solutions, see [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 ## 🚦 System Requirements
 
 ### Minimum
-- Python 3.11+
+- **Python 3.12** (required)
 - 16GB RAM
 - 8-core CPU
 - 50GB disk space
 
 ### Recommended
-- Python 3.11+
+- **Python 3.12** (required)
 - 32GB+ RAM
 - Apple Silicon (M1/M2/M3) or NVIDIA GPU
 - 100GB+ disk space
@@ -485,7 +506,12 @@ Contributions are welcome! Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) f
 git clone https://github.com/yourusername/llm-multi-agent-system.git
 cd llm-multi-agent-system
 
-# Install dev dependencies
+# Create virtual environment with Python 3.12
+python3.12 -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate   # Windows
+
+# Install dev dependencies (inside venv, use python/pip)
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 

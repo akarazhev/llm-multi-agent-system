@@ -21,22 +21,28 @@ Common issues and solutions for the LLM Multi-Agent System.
 
 **Error:**
 ```
-RuntimeError: Python 3.11+ required. Current version: 3.9.x
+RuntimeError: Python 3.12 required. Current version: x.x.x
 ```
 
 **Solution:**
 ```bash
 # macOS with Homebrew
-brew install python@3.11
+brew install python@3.12
 
 # Ubuntu/Debian
-sudo apt install python3.11 python3.11-venv
+sudo apt install python3.12 python3.12-venv
 
-# Windows - Download from python.org
+# Windows - Download Python 3.12 from python.org
 # https://www.python.org/downloads/
 
 # Verify installation
-python3.11 --version
+python3.12 --version
+
+# Recreate virtual environment
+rm -rf venv
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ### Issue: pip install Fails

@@ -40,7 +40,7 @@ We are committed to providing a welcoming and inspiring community for everyone. 
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12
 - Git
 - llama.cpp with llama-server
 - Familiarity with async Python
@@ -63,8 +63,8 @@ git remote add upstream https://github.com/ORIGINAL_OWNER/llm-multi-agent-system
 ### 1. Create Development Environment
 
 ```bash
-# Create virtual environment
-python3.11 -m venv venv
+# Create virtual environment with Python 3.12
+python3.12 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies

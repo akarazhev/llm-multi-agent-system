@@ -194,25 +194,25 @@ All examples are ready to run:
 
 ### 1. Feature Development
 ```bash
-python examples/langgraph_feature_development.py
+python3 examples/langgraph_feature_development.py
 ```
 **Demonstrates:** Parallel execution, progress monitoring, result summary
 
 ### 2. Bug Fix Workflow
 ```bash
-python examples/langgraph_bug_fix.py
+python3 examples/langgraph_bug_fix.py
 ```
 **Demonstrates:** 4-step bug resolution, error handling
 
 ### 3. Resume Workflow
 ```bash
-python examples/langgraph_resume_workflow.py
+python3 examples/langgraph_resume_workflow.py
 ```
 **Demonstrates:** Checkpoint persistence, workflow resumption
 
 ### 4. Visualization
 ```bash
-python examples/visualize_workflow.py
+python3 examples/visualize_workflow.py
 ```
 **Demonstrates:** Mermaid diagrams, ASCII art, workflow structure
 

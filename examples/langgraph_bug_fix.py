@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 LangGraph Bug Fix Workflow Example
 

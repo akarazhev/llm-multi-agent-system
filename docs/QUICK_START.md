@@ -8,10 +8,10 @@ Before you begin, ensure you have:
 
 ### Required
 
-1. **Python 3.11 or higher**
+1. **Python 3.12**
    ```bash
-   python --version
-   # Should output: Python 3.11.x or higher
+   python3.12 --version
+   # Should output: Python 3.12.x
    ```
 
 2. **llama.cpp with llama-server**

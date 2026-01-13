@@ -138,7 +138,7 @@ The LLM Multi-Agent System can be deployed in various configurations depending o
 ### Software Requirements
 
 - **OS**: Ubuntu 22.04 LTS, macOS 12+, or Windows 11
-- **Python**: 3.11+
+- **Python**: 3.12
 - **llama.cpp**: Latest version
 - **Git**: For deployment
 - **systemd**: For process management (Linux)
@@ -172,8 +172,8 @@ cd /opt/agent-system
 git clone https://github.com/yourusername/llm-multi-agent-system.git app
 cd app
 
-# Create virtual environment
-python3.11 -m venv venv
+# Create virtual environment with Python 3.12
+python3.12 -m venv venv
 source venv/bin/activate
 
 # Install dependencies
@@ -400,7 +400,7 @@ CMD ["/app/llama.cpp/llama-server", \
 Create `docker/agent-system/Dockerfile`:
 
 ```dockerfile
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 

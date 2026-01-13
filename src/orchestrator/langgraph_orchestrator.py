@@ -14,7 +14,17 @@ from pathlib import Path
 import json
 
 from langgraph.graph import StateGraph, END, START
-from langgraph.checkpoint.aiosqlite import AsyncSqliteSaver
+try:
+    # Try newer import path first (langgraph >= 0.2.0)
+    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+except ImportError:
+    try:
+        # Fall back to older import path
+        from langgraph.checkpoint.aiosqlite import AsyncSqliteSaver
+    except ImportError:
+        # Last resort - try without checkpoint functionality
+        print("Warning: AsyncSqliteSaver not available. Checkpoint functionality disabled.")
+        AsyncSqliteSaver = None
 
 from ..agents import (
     BaseAgent,
@@ -516,8 +526,14 @@ class LangGraphOrchestrator:
         4. [PARALLEL] QA Engineer → Testing + DevOps Engineer → Infrastructure
         5. Technical Writer → Documentation
         """
-        # Create checkpointer
-        async with AsyncSqliteSaver.from_conn_string(self.checkpoint_db) as checkpointer:
+        # Create checkpointer if available
+        if AsyncSqliteSaver is None:
+            checkpointer = None
+            logger.warning("Running without checkpoint persistence (AsyncSqliteSaver not available)")
+        else:
+            checkpointer = await AsyncSqliteSaver.from_conn_string(self.checkpoint_db).__aenter__()
+        
+        try:
             # Create graph
             workflow = StateGraph(MultiAgentState)
             
@@ -551,10 +567,23 @@ class LangGraphOrchestrator:
             
             # Compile with checkpointing
             return workflow.compile(checkpointer=checkpointer)
+        finally:
+            # Clean up checkpointer if it was created
+            if checkpointer is not None and AsyncSqliteSaver is not None:
+                try:
+                    await checkpointer.__aexit__(None, None, None)
+                except:
+                    pass
     
     async def build_bug_fix_graph(self) -> Any:
         """Build Bug Fix workflow graph"""
-        async with AsyncSqliteSaver.from_conn_string(self.checkpoint_db) as checkpointer:
+        if AsyncSqliteSaver is None:
+            checkpointer = None
+            logger.warning("Running without checkpoint persistence (AsyncSqliteSaver not available)")
+        else:
+            checkpointer = await AsyncSqliteSaver.from_conn_string(self.checkpoint_db).__aenter__()
+        
+        try:
             workflow = StateGraph(BugFixState)
             
             # For bug fix, we'll need simpler node implementations
@@ -649,6 +678,12 @@ class LangGraphOrchestrator:
             workflow.add_edge("release_notes", END)
             
             return workflow.compile(checkpointer=checkpointer)
+        finally:
+            if checkpointer is not None and AsyncSqliteSaver is not None:
+                try:
+                    await checkpointer.__aexit__(None, None, None)
+                except:
+                    pass
     
     # ==================== Execution Methods ====================
     

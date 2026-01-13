@@ -16,9 +16,13 @@ def print_header(text):
 
 def check_python_version():
     print("Checking Python version...")
-    if sys.version_info < (3, 11):
-        print(f"❌ Python 3.11+ required. Current version: {sys.version}")
+    if sys.version_info < (3, 12):
+        print(f"❌ Python 3.12 required. Current version: {sys.version}")
+        print(f"   Install with: brew install python@3.12")
         return False
+    if sys.version_info >= (3, 13):
+        print(f"⚠️  Warning: Python {sys.version_info.major}.{sys.version_info.minor} detected")
+        print(f"   Python 3.12 is recommended. Newer versions may have compatibility issues.")
     print(f"✓ Python {sys.version_info.major}.{sys.version_info.minor} detected")
     return True
 

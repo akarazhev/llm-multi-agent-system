@@ -23,7 +23,8 @@ Create an autonomous system that:
 - **Orchestration**: LangGraph for workflow management
 - **Communication**: Event-driven architecture with message queue (RabbitMQ)
 - **Storage**: PostgreSQL for structured data, ChromaDB for vector embeddings
-- **Framework**: Python 3.11+ with FastAPI
+- **Language**: Python 3.12
+- **Framework**: FastAPI (for generated code)
 
 ### Technology Stack
 - **LLM**: OpenAI GPT-4 (primary), Anthropic Claude (fallback)

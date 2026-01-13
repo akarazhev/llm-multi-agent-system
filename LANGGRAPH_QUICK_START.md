@@ -74,7 +74,11 @@ if __name__ == "__main__":
 
 Run it:
 ```bash
+# Inside venv
 python my_workflow.py
+
+# Outside venv
+python3 my_workflow.py
 ```
 
 ---
@@ -179,7 +183,7 @@ async for event in app.astream(initial_state, config):
 ## 📊 Visualize Your Workflow
 
 ```bash
-python examples/visualize_workflow.py
+python3 examples/visualize_workflow.py
 ```
 
 This generates:
@@ -360,7 +364,12 @@ python examples/visualize_workflow.py
 
 **Solution:**
 ```bash
+# Inside virtual environment (recommended)
+source venv/bin/activate
 pip install langgraph langchain-core aiosqlite
+
+# Outside virtual environment (not recommended)
+pip3 install --user langgraph langchain-core aiosqlite
 ```
 
 ### Issue: Checkpoint database locked
@@ -388,6 +397,15 @@ tail -f logs/agent_system.log
 
 ### Issue: Want to see what's happening
 
+**Check which Python is being used:**
+```bash
+# Outside venv
+python3.12 --version  # Should be 3.12.x
+
+# Inside venv
+python --version  # Should be 3.12.x
+```
+
 **Add progress monitoring:**
 ```python
 app = await orchestrator.build_feature_development_graph()
@@ -403,7 +421,11 @@ async for event in app.astream(initial_state, config):
 
 Before running your first workflow:
 
-- [ ] Dependencies installed (`pip install -r requirements.txt`)
+- [ ] **Python 3.12 installed** (`python3.12 --version`)
+- [ ] Virtual environment created with Python 3.12 (`python3.12 -m venv venv`)
+- [ ] Virtual environment activated (`source venv/bin/activate`)
+- [ ] Python version verified inside venv (`python --version` shows 3.12.x)
+- [ ] Dependencies installed inside venv (`pip install -r requirements.txt`)
 - [ ] Local LLM server running (`./scripts/start_llama_server.sh`)
 - [ ] Environment configured (`.env` file set up)
 - [ ] Workspace directory exists
@@ -414,6 +436,8 @@ Before running your first workflow:
 
 1. **Run the examples** to see LangGraph in action
    ```bash
+   # Inside venv
+   source venv/bin/activate
    python examples/langgraph_feature_development.py
    ```
 
@@ -421,7 +445,7 @@ Before running your first workflow:
    ```bash
    cp examples/langgraph_feature_development.py my_workflow.py
    # Edit my_workflow.py with your requirements
-   python my_workflow.py
+   python my_workflow.py  # inside venv
    ```
 
 3. **Explore advanced features**
@@ -473,7 +497,14 @@ async for event in app.astream(state, config):
 
 ---
 
-**Ready to build?** Start with `python examples/langgraph_feature_development.py`
+**Ready to build?**
+```bash
+# Create and activate venv with Python 3.12
+python3.12 -m venv venv && source venv/bin/activate
+
+# Then run
+python examples/langgraph_feature_development.py
+```
 
 For questions, check the [full documentation](docs/LANGGRAPH_INTEGRATION.md) or open a GitHub issue.
 

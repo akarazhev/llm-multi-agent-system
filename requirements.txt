@@ -1,3 +1,7 @@
+# Python 3.12 REQUIRED
+# This project requires Python 3.12.x to create the virtual environment
+# Command: python3.12 -m venv venv
+
 pyyaml>=6.0.1
 asyncio>=3.4.3
 python-dotenv>=1.0.0

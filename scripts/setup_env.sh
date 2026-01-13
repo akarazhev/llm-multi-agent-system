@@ -7,6 +7,13 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Create Python virtual environment in project root using Python 3.12
+if ! command -v python3.12 &> /dev/null; then
+    echo "❌ Python 3.12 not found!"
+    echo "Install with: brew install python@3.12"
+    exit 1
+fi
+
+echo "Creating virtual environment with python3.12..."
 python3.12 -m venv "$PROJECT_ROOT/.venv" || {
     echo "Failed to create virtual environment"
     exit 1

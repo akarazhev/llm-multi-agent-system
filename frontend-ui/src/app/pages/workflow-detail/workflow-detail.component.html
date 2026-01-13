@@ -1,176 +1,490 @@
 <div class="workflow-detail-container">
+  <!-- Loading State -->
   @if (loading()) {
     <div class="loading-container">
-      <mat-spinner></mat-spinner>
+      <mat-spinner diameter="50"></mat-spinner>
       <p>Loading workflow details...</p>
     </div>
-  } @else if (workflow()) {
+  }
+
+  <!-- Workflow Not Found -->
+  @if (!loading() && !workflowExists()) {
+    <div class="error-container">
+      <mat-icon class="error-icon">account_tree_off</mat-icon>
+      <h2>Workflow not found</h2>
+      <p>The workflow you're looking for doesn't exist or has been deleted.</p>
+      <button mat-raised-button color="primary" (click)="goBack()">
+        <span class="button-content">
+          <mat-icon>arrow_back</mat-icon>
+          <span>Back to Workflows</span>
+        </span>
+      </button>
+    </div>
+  }
+
+  <!-- Workflow Content -->
+  @if (!loading() && workflowExists()) {
     <!-- Header -->
     <div class="workflow-header">
-      <button mat-icon-button routerLink="/workflows">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-      <div class="header-content">
-        <h1>Workflow Details</h1>
-        <mat-chip [class]="getStatusClass(workflow()!.status)">
-          {{ workflow()!.status }}
-        </mat-chip>
+      <div class="header-left">
+        <button mat-icon-button (click)="goBack()" matTooltip="Back to Workflows">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="workflow-title-section">
+          <div class="title-row">
+            <mat-icon class="workflow-icon">{{ getTypeIcon(workflow()!.workflow_type) }}</mat-icon>
+            <h1>{{ workflow()!.name }}</h1>
+            <mat-chip [class]="getStatusClass(workflow()!.status)" class="status-chip">
+              <span class="chip-content">
+                <mat-icon>{{ getStatusIcon(workflow()!.status) }}</mat-icon>
+                <span>{{ workflow()!.status | uppercase }}</span>
+              </span>
+            </mat-chip>
+          </div>
+          <p class="workflow-description">{{ workflow()!.description || workflow()!.requirement }}</p>
+          <div class="workflow-meta">
+            <span class="meta-item">
+              <mat-icon>category</mat-icon>
+              {{ getTypeDisplayName(workflow()!.workflow_type) }}
+            </span>
+            <span class="meta-item" [class]="getPriorityClass(workflow()!.priority)">
+              <mat-icon>{{ getPriorityIcon(workflow()!.priority) }}</mat-icon>
+              {{ workflow()!.priority | titlecase }} Priority
+            </span>
+            <span class="meta-item">
+              <mat-icon>schedule</mat-icon>
+              Started {{ getTimeAgo(workflow()!.started_at) }}
+            </span>
+            @if (workflow()!.duration) {
+              <span class="meta-item">
+                <mat-icon>timer</mat-icon>
+                {{ getDuration(workflow()!.duration) }}
+              </span>
+            }
+          </div>
+        </div>
       </div>
-      <button mat-icon-button (click)="refreshWorkflow()">
-        <mat-icon>refresh</mat-icon>
-      </button>
+      <div class="header-actions">
+        <button mat-icon-button (click)="refreshWorkflow()" matTooltip="Refresh">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        @if (workflow()!.status === 'running') {
+          <button mat-button color="warn" (click)="cancelWorkflow()">
+            <span class="button-content">
+              <mat-icon>stop</mat-icon>
+              <span>Cancel</span>
+            </span>
+          </button>
+        }
+        <button mat-raised-button color="warn" (click)="deleteWorkflow()">
+          <span class="button-content">
+            <mat-icon>delete</mat-icon>
+            <span>Delete</span>
+          </span>
+        </button>
+      </div>
     </div>
 
     <!-- Progress Bar -->
     <mat-card class="progress-card">
       <mat-card-content>
         <div class="progress-header">
-          <h3>Overall Progress</h3>
-          <span>{{ workflow()!.completed_steps.length }} / 6 steps completed</span>
-        </div>
-        <mat-progress-bar 
-          mode="determinate" 
-          [value]="getProgressPercentage()">
-        </mat-progress-bar>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Workflow Info -->
-    <div class="content-grid">
-      <!-- Main Info -->
-      <mat-card class="info-card">
-        <mat-card-header>
-          <mat-card-title>Workflow Information</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="info-item">
-            <mat-icon>fingerprint</mat-icon>
-            <div>
-              <label>Workflow ID</label>
-              <span class="workflow-id">{{ workflow()!.workflow_id }}</span>
-            </div>
+          <div class="progress-info">
+            <span class="progress-text">Overall Progress: {{ workflow()!.progress_percentage }}%</span>
+            <span class="progress-steps">{{ workflow()!.completed_steps.length }} / {{ workflow()!.total_steps }} steps completed</span>
           </div>
-
-          <div class="info-item">
-            <mat-icon>category</mat-icon>
-            <div>
-              <label>Type</label>
-              <span class="workflow-type">{{ workflow()!.workflow_type.replace('_', ' ') }}</span>
-            </div>
-          </div>
-
-          <div class="info-item">
-            <mat-icon>schedule</mat-icon>
-            <div>
-              <label>Started At</label>
-              <span>{{ workflow()!.started_at | date:'medium' }}</span>
-            </div>
-          </div>
-
-          @if (workflow()!.completed_at) {
-            <div class="info-item">
-              <mat-icon>done_all</mat-icon>
-              <div>
-                <label>Completed At</label>
-                <span>{{ workflow()!.completed_at | date:'medium' }}</span>
-              </div>
+          @if (workflow()!.current_step) {
+            <div class="current-step">
+              <mat-icon>play_circle</mat-icon>
+              <span>Current: {{ workflow()!.current_step }}</span>
             </div>
           }
+        </div>
+        <mat-progress-bar mode="determinate" [value]="workflow()!.progress_percentage" class="workflow-progress-bar"></mat-progress-bar>
+      </mat-card-content>
+    </mat-card>
 
-          <div class="info-item">
-            <mat-icon>task_alt</mat-icon>
-            <div>
-              <label>Current Step</label>
-              <span>{{ workflow()!.current_step || 'N/A' }}</span>
+    <!-- Tabs -->
+    <mat-tab-group class="workflow-tabs">
+      <!-- Overview Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>info</mat-icon>
+            <span>Overview</span>
+          </span>
+        </ng-template>
+        <div class="tab-content">
+          <div class="overview-grid">
+            <!-- Details Card -->
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>info</mat-icon>
+                <mat-card-title>Details</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="detail-item">
+                  <strong>Workflow ID:</strong> <span class="monospace">{{ workflow()!.workflow_id }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Type:</strong> <span>{{ getTypeDisplayName(workflow()!.workflow_type) }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Priority:</strong> <span [class]="getPriorityClass(workflow()!.priority)">{{ workflow()!.priority | titlecase }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Created By:</strong> <span>{{ workflow()!.created_by }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Started At:</strong> <span>{{ workflow()!.started_at | date:'medium' }}</span>
+                </div>
+                @if (workflow()!.completed_at) {
+                  <div class="detail-item">
+                    <strong>Completed At:</strong> <span>{{ workflow()!.completed_at | date:'medium' }}</span>
+                  </div>
+                }
+                @if (assignedProject()) {
+                  <div class="detail-item">
+                    <strong>Project:</strong>
+                    <a [routerLink]="['/projects', assignedProject()!.id]">{{ assignedProject()!.name }}</a>
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Stats Card -->
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>analytics</mat-icon>
+                <mat-card-title>Statistics</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="detail-item">
+                  <strong>Files Created:</strong> <span>{{ workflow()!.files_created.length }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Agents Assigned:</strong> <span>{{ workflow()!.assigned_agents.length }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Errors:</strong> <span [style.color]="workflow()!.errors.length > 0 ? '#f44336' : 'inherit'">{{ workflow()!.errors.length }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Total Steps:</strong> <span>{{ workflow()!.total_steps }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong>Duration:</strong> <span>{{ getDuration(workflow()!.duration) }}</span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Assigned Agents Card -->
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>smart_toy</mat-icon>
+                <mat-card-title>Assigned Agents</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                @if (assignedAgents().length === 0) {
+                  <p class="text-secondary">No agents assigned</p>
+                } @else {
+                  <div class="agents-list">
+                    @for (agent of assignedAgents(); track agent.agent_id) {
+                      <div class="agent-chip" [routerLink]="['/agents', agent.agent_id]">
+                        <mat-icon>smart_toy</mat-icon>
+                        <span>{{ agent.name }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Tags Card -->
+            @if (workflow()!.tags.length > 0) {
+              <mat-card class="info-card">
+                <mat-card-header>
+                  <mat-icon mat-card-avatar>local_offer</mat-icon>
+                  <mat-card-title>Tags</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="tags-list">
+                    @for (tag of workflow()!.tags; track tag) {
+                      <mat-chip class="tag-chip">{{ tag }}</mat-chip>
+                    }
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Steps Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>format_list_numbered</mat-icon>
+            <span>Steps ({{ workflow()!.steps.length }})</span>
+          </span>
+        </ng-template>
+        <div class="tab-content">
+          @if (workflow()!.steps.length === 0) {
+            <mat-card class="empty-state">
+              <mat-card-content>
+                <mat-icon>format_list_numbered_off</mat-icon>
+                <h3>No steps available</h3>
+                <p>This workflow hasn't started execution yet.</p>
+              </mat-card-content>
+            </mat-card>
+          } @else {
+            <div class="steps-timeline">
+              @for (step of workflow()!.steps; track step.step_id; let i = $index) {
+                <mat-card class="step-card" [class]="getStepStatusClass(step.status)">
+                  <mat-card-content>
+                    <div class="step-header">
+                      <div class="step-number">{{ i + 1 }}</div>
+                      <div class="step-info">
+                        <div class="step-title-row">
+                          <h3>{{ step.name }}</h3>
+                          <mat-chip [class]="getStepStatusClass(step.status)" class="step-status-chip">
+                            <span class="chip-content">
+                              <mat-icon>{{ getStepStatusIcon(step.status) }}</mat-icon>
+                              <span>{{ step.status.replace('_', ' ') | uppercase }}</span>
+                            </span>
+                          </mat-chip>
+                        </div>
+                        <p class="step-description">{{ step.description }}</p>
+                        <div class="step-meta">
+                          @if (step.agent_id) {
+                            <span class="meta-item">
+                              <mat-icon>smart_toy</mat-icon>
+                              {{ step.agent_id }}
+                            </span>
+                          }
+                          @if (step.started_at) {
+                            <span class="meta-item">
+                              <mat-icon>schedule</mat-icon>
+                              {{ getTimeAgo(step.started_at) }}
+                            </span>
+                          }
+                          @if (step.duration) {
+                            <span class="meta-item">
+                              <mat-icon>timer</mat-icon>
+                              {{ getDuration(step.duration) }}
+                            </span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                    @if (step.output) {
+                      <div class="step-output">
+                        <strong>Output:</strong>
+                        <p>{{ step.output }}</p>
+                      </div>
+                    }
+                    @if (step.logs.length > 0) {
+                      <mat-expansion-panel class="step-logs-panel">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title>
+                            <mat-icon>article</mat-icon>
+                            Logs ({{ step.logs.length }})
+                          </mat-panel-title>
+                        </mat-expansion-panel-header>
+                        <div class="logs-content">
+                          @for (log of step.logs; track $index) {
+                            <div class="log-line">{{ log }}</div>
+                          }
+                        </div>
+                      </mat-expansion-panel>
+                    }
+                  </mat-card-content>
+                </mat-card>
+              }
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Artifacts Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>folder</mat-icon>
+            <span>Artifacts ({{ workflow()!.artifacts.length }})</span>
+          </span>
+        </ng-template>
+        <div class="tab-content">
+          @if (workflow()!.artifacts.length === 0) {
+            <mat-card class="empty-state">
+              <mat-card-content>
+                <mat-icon>folder_off</mat-icon>
+                <h3>No artifacts yet</h3>
+                <p>Artifacts will appear here as the workflow progresses.</p>
+              </mat-card-content>
+            </mat-card>
+          } @else {
+            <div class="artifacts-grid">
+              @for (artifact of workflow()!.artifacts; track artifact.artifact_id) {
+                <mat-card class="artifact-card">
+                  <mat-card-content>
+                    <div class="artifact-icon">
+                      <mat-icon>{{ getArtifactIcon(artifact.type) }}</mat-icon>
+                    </div>
+                    <div class="artifact-info">
+                      <h4>{{ artifact.name }}</h4>
+                      <p class="artifact-path monospace">{{ artifact.path }}</p>
+                      <div class="artifact-meta">
+                        <span class="meta-item">
+                          <mat-icon>insert_drive_file</mat-icon>
+                          {{ formatBytes(artifact.size) }}
+                        </span>
+                        <span class="meta-item">
+                          <mat-icon>schedule</mat-icon>
+                          {{ getTimeAgo(artifact.created_at) }}
+                        </span>
+                        <span class="meta-item">
+                          <mat-icon>smart_toy</mat-icon>
+                          {{ artifact.created_by }}
+                        </span>
+                      </div>
+                      <mat-chip class="artifact-type-chip">{{ artifact.type }}</mat-chip>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              }
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Metrics Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>insights</mat-icon>
+            <span>Metrics</span>
+          </span>
+        </ng-template>
+        <div class="tab-content">
+          <div class="metrics-grid">
+            <mat-card class="metric-card">
+              <mat-card-content>
+                <mat-icon>timer</mat-icon>
+                <div class="metric-value">{{ getDuration(workflow()!.metrics.total_duration) }}</div>
+                <div class="metric-label">Total Duration</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+              <mat-card-content>
+                <mat-icon>insert_drive_file</mat-icon>
+                <div class="metric-value">{{ workflow()!.metrics.files_generated }}</div>
+                <div class="metric-label">Files Generated</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+              <mat-card-content>
+                <mat-icon>code</mat-icon>
+                <div class="metric-value">{{ workflow()!.metrics.lines_of_code }}</div>
+                <div class="metric-label">Lines of Code</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+              <mat-card-content">
+                <mat-icon>science</mat-icon>
+                <div class="metric-value">{{ workflow()!.metrics.tests_created }}</div>
+                <div class="metric-label">Tests Created</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+              <mat-card-content>
+                <mat-icon>attach_money</mat-icon>
+                <div class="metric-value">${{ workflow()!.metrics.cost_estimate | number:'1.2-2' }}</div>
+                <div class="metric-label">Cost Estimate</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card">
+              <mat-card-content>
+                <mat-icon>trending_up</mat-icon>
+                <div class="metric-value">{{ workflow()!.metrics.success_rate }}%</div>
+                <div class="metric-label">Success Rate</div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Agent Time Breakdown -->
+          @if (Object.keys(workflow()!.metrics.agent_time).length > 0) {
+            <mat-card class="agent-time-card">
+              <mat-card-header>
+                <mat-icon mat-card-avatar>smart_toy</mat-icon>
+                <mat-card-title>Agent Time Breakdown</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-list>
+                  @for (agentTime of Object.entries(workflow()!.metrics.agent_time); track agentTime[0]) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon>smart_toy</mat-icon>
+                      <div matListItemTitle>{{ agentTime[0] }}</div>
+                      <div matListItemLine>{{ getDuration(agentTime[1]) }}</div>
+                    </mat-list-item>
+                  }
+                </mat-list>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Errors Tab -->
+      @if (workflow()!.errors.length > 0) {
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <span class="tab-label">
+              <mat-icon>error</mat-icon>
+              <span>Errors ({{ workflow()!.errors.length }})</span>
+            </span>
+          </ng-template>
+          <div class="tab-content">
+            <div class="errors-list">
+              @for (error of workflow()!.errors; track $index) {
+                <mat-card class="error-card" [class.error-critical]="error.severity === 'critical'">
+                  <mat-card-content>
+                    <div class="error-header">
+                      <mat-icon class="error-icon">error</mat-icon>
+                      <div class="error-info">
+                        <h4>{{ error.error }}</h4>
+                        <div class="error-meta">
+                          <span class="error-step">Step: {{ error.step }}</span>
+                          <span class="error-severity" [class.severity-critical]="error.severity === 'critical'">
+                            {{ error.severity | uppercase }}
+                          </span>
+                          <span class="error-time">{{ getTimeAgo(error.timestamp) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="error-message">{{ error.message }}</p>
+                    @if (error.stack_trace) {
+                      <mat-expansion-panel class="stack-trace-panel">
+                        <mat-expansion-panel-header>
+                          <mat-panel-title>
+                            <mat-icon>code</mat-icon>
+                            Stack Trace
+                          </mat-panel-title>
+                        </mat-expansion-panel-header>
+                        <pre class="stack-trace">{{ error.stack_trace }}</pre>
+                      </mat-expansion-panel>
+                    }
+                  </mat-card-content>
+                </mat-card>
+              }
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Requirement -->
-      <mat-card class="requirement-card">
-        <mat-card-header>
-          <mat-card-title>Requirement</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="requirement-text">{{ workflow()!.requirement }}</p>
-        </mat-card-content>
-      </mat-card>
-    </div>
-
-    <!-- Completed Steps -->
-    <mat-card class="steps-card">
-      <mat-card-header>
-        <mat-card-title>Completed Steps</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        @if (workflow()!.completed_steps.length === 0) {
-          <p class="no-data">No steps completed yet</p>
-        } @else {
-          <div class="steps-list">
-            @for (step of workflow()!.completed_steps; track step) {
-              <div class="step-item">
-                <mat-icon class="step-icon">check_circle</mat-icon>
-                <span class="step-name">{{ step }}</span>
-              </div>
-            }
-          </div>
-        }
-      </mat-card-content>
-    </mat-card>
-
-    <!-- Files Created -->
-    @if (workflow()!.files_created.length > 0) {
-      <mat-card class="files-card">
-        <mat-card-header>
-          <mat-card-title>Files Created ({{ workflow()!.files_created.length }})</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="files-list">
-            @for (file of workflow()!.files_created; track file) {
-              <div class="file-item">
-                <mat-icon>insert_drive_file</mat-icon>
-                <span class="file-path">{{ file }}</span>
-              </div>
-            }
-          </div>
-        </mat-card-content>
-      </mat-card>
-    }
-
-    <!-- Errors -->
-    @if (workflow()!.errors.length > 0) {
-      <mat-card class="errors-card">
-        <mat-card-header>
-          <mat-card-title>Errors ({{ workflow()!.errors.length }})</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="errors-list">
-            @for (error of workflow()!.errors; track error.timestamp) {
-              <div class="error-item">
-                <mat-icon class="error-icon">error</mat-icon>
-                <div class="error-details">
-                  <div class="error-step">Step: {{ error.step }}</div>
-                  <div class="error-message">{{ error.error }}</div>
-                  <div class="error-timestamp">{{ error.timestamp | date:'medium' }}</div>
-                </div>
-              </div>
-            }
-          </div>
-        </mat-card-content>
-      </mat-card>
-    }
-  } @else {
-    <!-- Not Found -->
-    <mat-card class="not-found">
-      <mat-card-content>
-        <mat-icon>error_outline</mat-icon>
-        <h2>Workflow Not Found</h2>
-        <p>The requested workflow could not be found.</p>
-        <button mat-raised-button color="primary" routerLink="/workflows">
-          Back to Workflows
-        </button>
-      </mat-card-content>
-    </mat-card>
+        </mat-tab>
+      }
+    </mat-tab-group>
   }
 </div>

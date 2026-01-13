@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatDialog } from '@angular/material/dialog';
 import { WorkflowService } from '../../shared/services/workflow.service';
 import {
   Workflow,
@@ -20,6 +21,7 @@ import {
   WorkflowType,
   WorkflowPriority
 } from '../../core/interfaces/workflow.interface';
+import { WorkflowCreateDialogComponent } from './workflow-create-dialog/workflow-create-dialog.component';
 
 @Component({
   selector: 'app-workflows',
@@ -45,6 +47,7 @@ import {
 })
 export class WorkflowsComponent implements OnInit {
   private readonly workflowService = inject(WorkflowService);
+  private readonly dialog = inject(MatDialog);
 
   // All workflows from service
   allWorkflows = this.workflowService.workflowsSignal;
@@ -208,5 +211,20 @@ export class WorkflowsComponent implements OnInit {
     this.searchTerm.set('');
     this.selectedType.set('all');
     this.selectedPriority.set('all');
+  }
+
+  openCreateDialog(): void {
+    const dialogRef = this.dialog.open(WorkflowCreateDialogComponent, {
+      width: '900px',
+      maxHeight: '90vh'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const newWorkflow = this.workflowService.createWorkflow(result);
+        console.log('Workflow created:', newWorkflow);
+        // Optionally show a success snackbar
+      }
+    });
   }
 }

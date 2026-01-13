@@ -1,0 +1,230 @@
+<h2 mat-dialog-title>
+  <span class="dialog-title-content">
+    <mat-icon>add_circle</mat-icon>
+    <span>Create New Workflow</span>
+  </span>
+</h2>
+
+<mat-dialog-content class="mat-typography">
+  <mat-stepper #stepper [linear]="true" class="workflow-stepper">
+    <!-- Step 1: Choose Template (Optional) -->
+    <mat-step [stepControl]="templateForm">
+      <form [formGroup]="templateForm">
+        <ng-template matStepLabel>Choose Template (Optional)</ng-template>
+        <div class="form-section">
+          <p class="section-description">Start with a pre-configured template or create from scratch</p>
+
+          <div class="templates-grid">
+            @for (template of templates(); track template.template_id) {
+              <mat-card class="template-card" 
+                        [class.selected]="templateForm.get('template')?.value === template.template_id"
+                        (click)="templateForm.patchValue({ template: template.template_id })">
+                <mat-card-content>
+                  <div class="template-icon">{{ template.icon }}</div>
+                  <h4>{{ template.name }}</h4>
+                  <p class="template-description">{{ template.description }}</p>
+                  <div class="template-meta">
+                    <span class="meta-item">
+                      <mat-icon>schedule</mat-icon>
+                      ~{{ template.estimated_duration / 60 }}min
+                    </span>
+                    <span class="meta-item">
+                      <mat-icon>format_list_numbered</mat-icon>
+                      {{ template.default_steps.length }} steps
+                    </span>
+                  </div>
+                  <div class="template-tags">
+                    @for (tag of template.tags; track tag) {
+                      <mat-chip class="tag-chip">{{ tag }}</mat-chip>
+                    }
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        </div>
+        <div class="step-actions">
+          <button mat-button (click)="templateForm.patchValue({ template: '' })">
+            <span class="button-content">
+              <mat-icon>clear</mat-icon>
+              <span>Skip Template</span>
+            </span>
+          </button>
+          <button mat-raised-button color="primary" matStepperNext>
+            <span class="button-content">
+              <span>Next</span>
+              <mat-icon>arrow_forward</mat-icon>
+            </span>
+          </button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 2: Workflow Details -->
+    <mat-step [stepControl]="detailsForm">
+      <form [formGroup]="detailsForm">
+        <ng-template matStepLabel>Workflow Details</ng-template>
+        <div class="form-section">
+          <mat-form-field appearance="outline">
+            <mat-label>Workflow Name</mat-label>
+            <input matInput formControlName="name" placeholder="e.g., User Authentication Feature" required>
+            @if (detailsForm.get('name')?.invalid && detailsForm.get('name')?.touched) {
+              <mat-error>Workflow name is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" placeholder="Brief description of what this workflow will do" rows="2"></textarea>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Requirement</mat-label>
+            <textarea matInput formControlName="requirement" placeholder="Detailed requirements for this workflow" rows="4" required></textarea>
+            @if (detailsForm.get('requirement')?.invalid && detailsForm.get('requirement')?.touched) {
+              <mat-error>Requirement is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Workflow Type</mat-label>
+            <mat-select formControlName="workflow_type" required>
+              <mat-option [value]="WorkflowType.FEATURE_DEVELOPMENT">
+                <mat-icon>rocket_launch</mat-icon> Feature Development
+              </mat-option>
+              <mat-option [value]="WorkflowType.BUG_FIX">
+                <mat-icon>bug_report</mat-icon> Bug Fix
+              </mat-option>
+              <mat-option [value]="WorkflowType.INFRASTRUCTURE">
+                <mat-icon>cloud</mat-icon> Infrastructure
+              </mat-option>
+              <mat-option [value]="WorkflowType.DOCUMENTATION">
+                <mat-icon>description</mat-icon> Documentation
+              </mat-option>
+              <mat-option [value]="WorkflowType.CODE_REVIEW">
+                <mat-icon>rate_review</mat-icon> Code Review
+              </mat-option>
+              <mat-option [value]="WorkflowType.TESTING">
+                <mat-icon>science</mat-icon> Testing
+              </mat-option>
+              <mat-option [value]="WorkflowType.DEPLOYMENT">
+                <mat-icon>publish</mat-icon> Deployment
+              </mat-option>
+              <mat-option [value]="WorkflowType.REFACTORING">
+                <mat-icon>build</mat-icon> Refactoring
+              </mat-option>
+            </mat-select>
+            @if (detailsForm.get('workflow_type')?.invalid && detailsForm.get('workflow_type')?.touched) {
+              <mat-error>Workflow type is required</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Priority</mat-label>
+            <mat-select formControlName="priority" required>
+              <mat-option [value]="WorkflowPriority.LOW">Low</mat-option>
+              <mat-option [value]="WorkflowPriority.MEDIUM">Medium</mat-option>
+              <mat-option [value]="WorkflowPriority.HIGH">High</mat-option>
+              <mat-option [value]="WorkflowPriority.CRITICAL">Critical</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>
+            <span class="button-content">
+              <mat-icon>arrow_back</mat-icon>
+              <span>Back</span>
+            </span>
+          </button>
+          <button mat-raised-button color="primary" matStepperNext [disabled]="detailsForm.invalid">
+            <span class="button-content">
+              <span>Next</span>
+              <mat-icon>arrow_forward</mat-icon>
+            </span>
+          </button>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 3: Configuration -->
+    <mat-step [stepControl]="configurationForm">
+      <form [formGroup]="configurationForm">
+        <ng-template matStepLabel>Configuration</ng-template>
+        <div class="form-section">
+          <mat-form-field appearance="outline">
+            <mat-label>Assign to Project (Optional)</mat-label>
+            <mat-select formControlName="project_id">
+              <mat-option value="">None</mat-option>
+              @for (project of projects(); track project.id) {
+                <mat-option [value]="project.id">{{ project.name }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint>You can assign this workflow to a project later.</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Assign Agents (Optional)</mat-label>
+            <mat-select formControlName="assigned_agents" multiple>
+              @for (agent of agents(); track agent.agent_id) {
+                <mat-option [value]="agent.agent_id">
+                  <mat-icon>smart_toy</mat-icon> {{ agent.name }}
+                </mat-option>
+              }
+            </mat-select>
+            <mat-hint>Select AI agents to work on this workflow.</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Tags (Optional)</mat-label>
+            <input matInput placeholder="Enter tags separated by commas" #tagsInput>
+            <mat-hint>e.g., authentication, backend, security</mat-hint>
+          </mat-form-field>
+
+          @if (selectedTemplate()) {
+            <mat-card class="template-info-card">
+              <mat-card-content>
+                <div class="template-info-header">
+                  <mat-icon>lightbulb</mat-icon>
+                  <h4>Template Recommendations</h4>
+                </div>
+                <p><strong>Recommended Agents:</strong></p>
+                <div class="recommended-agents">
+                  @for (agentId of selectedTemplate()!.recommended_agents; track agentId) {
+                    <mat-chip>{{ agentId }}</mat-chip>
+                  }
+                </div>
+                <p class="template-note">
+                  <mat-icon>info</mat-icon>
+                  This workflow will follow {{ selectedTemplate()!.default_steps.length }} predefined steps.
+                </p>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+        <div class="step-actions">
+          <button mat-button matStepperPrevious>
+            <span class="button-content">
+              <mat-icon>arrow_back</mat-icon>
+              <span>Back</span>
+            </span>
+          </button>
+          <button mat-raised-button color="primary" (click)="onCreate()">
+            <span class="button-content">
+              <mat-icon>add</mat-icon>
+              <span>Create Workflow</span>
+            </span>
+          </button>
+        </div>
+      </form>
+    </mat-step>
+  </mat-stepper>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">
+    <span class="button-content">
+      <mat-icon>close</mat-icon>
+      <span>Cancel</span>
+    </span>
+  </button>
+</mat-dialog-actions>

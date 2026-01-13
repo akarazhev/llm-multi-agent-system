@@ -30,10 +30,15 @@ class FileWriter:
         """
         code_blocks = []
         
+        if not text or not text.strip():
+            logger.debug("parse_code_blocks: Empty or whitespace-only text provided")
+            return code_blocks
+        
         # First, try to extract File: `filename` format (same as extract_file_structure)
         # This prevents creating duplicate files
         files_dict = self.extract_file_structure(text)
         if files_dict:
+            logger.debug(f"parse_code_blocks: Found {len(files_dict)} files using extract_file_structure")
             for filename, content in files_dict.items():
                 # Infer language from filename extension
                 ext = Path(filename).suffix.lower()
@@ -48,14 +53,66 @@ class FileWriter:
         
         # Fallback: Pattern to match fenced code blocks with optional filename
         # Supports: ```python, ```python:filename.py, ```filename.py
-        pattern = r'```(?:(\w+)(?::([^\n]+))?)?\n(.*?)\n```'
+        # More flexible pattern that handles:
+        # - Optional whitespace after ```
+        # - Optional newline after language/filename
+        # - Language identifiers with hyphens (e.g., dockerfile, yaml)
+        # Use non-greedy matching to handle multiple code blocks
+        pattern = r'```\s*(?:(\w+(?:-\w+)*)(?::\s*([^\n]+))?)?\s*\n?(.*?)\n?```'
         
-        matches = re.finditer(pattern, text, re.DOTALL)
+        matches = list(re.finditer(pattern, text, re.DOTALL | re.MULTILINE))
+        logger.debug(f"parse_code_blocks: Found {len(matches)} potential code blocks with regex pattern")
+        
+        # If we found code blocks but extract_file_structure didn't, it means they're not in "File:" format
+        # Try to infer filenames from context (look for "File:" markers before code blocks)
+        if matches and not code_blocks:
+            logger.debug("parse_code_blocks: Code blocks found but not in File: format, trying to infer filenames from context")
+            # Look for "File: filename" patterns that might be near code blocks
+            file_markers = list(re.finditer(r'File:\s+([^\n]+)', text, re.IGNORECASE))
+            for i, match in enumerate(matches):
+                language = (match.group(1) or 'text').strip()
+                filename_from_block = match.group(2).strip() if match.group(2) else None
+                content = (match.group(3) or '').strip()
+                
+                if not content:
+                    continue
+                
+                # If filename is in the code block header, use it
+                if filename_from_block:
+                    filename = filename_from_block
+                else:
+                    # Try to find a "File:" marker before this code block
+                    block_start = match.start()
+                    filename = None
+                    for file_marker in file_markers:
+                        if file_marker.end() < block_start and (block_start - file_marker.end()) < 200:
+                            # Found a File: marker close before this code block
+                            filename = file_marker.group(1).strip()
+                            logger.debug(f"parse_code_blocks: Inferred filename '{filename}' from File: marker before code block")
+                            break
+                    
+                    if not filename:
+                        filename = self._infer_filename(content, language)
+                
+                code_blocks.append({
+                    'language': language,
+                    'filename': filename,
+                    'content': content
+                })
+            
+            if code_blocks:
+                logger.debug(f"parse_code_blocks: Successfully parsed {len(code_blocks)} code blocks with inferred filenames")
+                return code_blocks
         
         for match in matches:
-            language = match.group(1) or 'text'
-            filename = match.group(2)
-            content = match.group(3).strip()
+            language = (match.group(1) or 'text').strip()
+            filename = match.group(2).strip() if match.group(2) else None
+            content = (match.group(3) or '').strip()
+            
+            # Skip empty code blocks
+            if not content:
+                logger.debug(f"parse_code_blocks: Skipping empty code block (language: {language}, filename: {filename})")
+                continue
             
             # Try to infer filename from content if not specified
             if not filename:
@@ -67,6 +124,7 @@ class FileWriter:
                 'content': content
             })
         
+        logger.debug(f"parse_code_blocks: Returning {len(code_blocks)} code blocks")
         return code_blocks
     
     def _get_language_from_extension(self, ext: str) -> str:
@@ -166,7 +224,16 @@ class FileWriter:
         created_files = []
         
         if not code_blocks:
-            logger.warning(f"No code blocks found in response for task {task_id}")
+            # Log a snippet of the response for debugging
+            text_preview = text[:500] if len(text) > 500 else text
+            logger.warning(
+                f"No code blocks found in response for task {task_id} (agent: {agent_role})\n"
+                f"Response preview (first 500 chars):\n{text_preview}\n"
+                f"Response length: {len(text)} characters"
+            )
+            # Also check if there are any code block markers at all
+            if '```' in text:
+                logger.debug(f"Found backticks in response but parsing failed. Full response:\n{text}")
             return created_files
         
         # Determine output directory
@@ -268,11 +335,13 @@ class FileWriter:
         - ## path/to/file.py
         """
         files = {}
+        logger.debug(f"extract_file_structure: Processing text of length {len(text)}")
         
         # Pattern 1: ```language:filename format
         # This handles: ```markdown:analysis/file.md
         # Need to handle nested code blocks, so we manually parse
-        pattern_colon = r'```(?:\w+):([^\n]+)\n'
+        # More flexible: allow optional whitespace and language with hyphens
+        pattern_colon = r'```\s*(?:\w+(?:-\w+)*):\s*([^\n]+)\s*\n?'
         matches = list(re.finditer(pattern_colon, text, re.DOTALL))
         
         if matches:
@@ -308,7 +377,8 @@ class FileWriter:
         # - **File: `analysis/file.md`** \n```markdown\n content \n```
         
         # Try with bold first - use similar approach to handle nested blocks
-        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n```(?:\w+)?\n'
+        # More flexible: allow optional whitespace and newlines
+        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
         matches = list(re.finditer(pattern_bold, text, re.DOTALL))
         
         if matches:
@@ -332,7 +402,8 @@ class FileWriter:
         
         # If no matches with bold, try without bold (with backticks)
         if not files:
-            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n```(?:\w+)?\n'
+            # More flexible: allow optional whitespace and newlines
+            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
             matches = list(re.finditer(pattern_no_bold, text, re.DOTALL))
             
             if matches:
@@ -356,10 +427,14 @@ class FileWriter:
         
         # Pattern 3: File: path/to/file.py (without backticks)
         if not files:
-            pattern_no_backticks = r'File:\s+([^\n]+)\n```(?:\w+)?\n'
+            # More flexible: allow optional whitespace and newlines
+            # This pattern matches: "File: filename\n```language\n" or "File: filename\n```\n"
+            # The pattern requires at least one newline between "File:" and the code block
+            pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n+\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
             matches = list(re.finditer(pattern_no_backticks, text, re.DOTALL))
             
             if matches:
+                logger.debug(f"extract_file_structure: Found {len(matches)} matches with Pattern 3 (File: without backticks)")
                 for i, match in enumerate(matches):
                     filename = match.group(1).strip()
                     start_pos = match.end()
@@ -370,13 +445,44 @@ class FileWriter:
                         end_search = len(text)
                     
                     remaining_text = text[start_pos:end_search]
+                    logger.debug(f"extract_file_structure: Pattern 3 - Processing file '{filename}', remaining text length: {len(remaining_text)}, preview: {remaining_text[:100]}")
+                    
+                    # Look for closing ``` - try multiple patterns
+                    # Pattern 1: ``` on its own line (with optional whitespace before and after)
                     close_match = None
-                    for m in re.finditer(r'\n```(?:\s|$)', remaining_text):
+                    for m in re.finditer(r'\n\s*```\s*(?:\n|$)', remaining_text):
                         close_match = m
+                        break  # Take the first match
+                    
+                    # Pattern 2: ``` at start of line (beginning of remaining_text or after newline)
+                    if not close_match:
+                        for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
+                            close_match = m
+                            break
+                    
+                    # Pattern 3: Any ``` followed by whitespace or end (most permissive)
+                    if not close_match:
+                        for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
+                            close_match = m
+                            break
                     
                     if close_match:
                         content = remaining_text[:close_match.start()].strip()
-                        files[filename] = content
+                        if content:
+                            files[filename] = content
+                            logger.debug(f"extract_file_structure: Successfully extracted file '{filename}' with {len(content)} chars")
+                        else:
+                            logger.warning(f"extract_file_structure: Found closing ``` but content is empty for '{filename}'")
+                    else:
+                        logger.warning(f"extract_file_structure: Could not find closing ``` for '{filename}'. Remaining text preview: {remaining_text[:200]}")
+                        # As a fallback, if we can't find closing ```, try to extract up to the next "File:" marker
+                        # or use all remaining text if it's the last file
+                        if i + 1 >= len(matches):
+                            # Last file, use all remaining text
+                            content = remaining_text.strip()
+                            if content:
+                                files[filename] = content
+                                logger.debug(f"extract_file_structure: Using all remaining text for last file '{filename}' ({len(content)} chars)")
         
         # Return files if any patterns matched, otherwise return empty dict
         return files

@@ -56,14 +56,36 @@ Please provide:
 5. Security configurations
 6. Documentation for operations team
 
-IMPORTANT: Format your configuration files using markdown code blocks with filenames:
+CRITICAL FORMATTING REQUIREMENTS:
+You MUST format ALL configuration files using markdown code blocks. Use one of these formats:
+
+Format 1 (Preferred - with language and filename):
 ```yaml:docker-compose.yml
-# Your config here
+version: '3.8'
+services:
+  app:
+    image: myapp:latest
 ```
 
-Or specify files explicitly:
+Format 2 (With explicit File: marker):
 File: Dockerfile
-# Your config here
+```dockerfile
+FROM python:3.9
+WORKDIR /app
+COPY . .
+```
+
+Format 3 (Simple code block - will auto-detect filename):
+```dockerfile
+FROM python:3.9
+WORKDIR /app
+```
+
+IMPORTANT: 
+- Every configuration file MUST be in a code block (between ``` markers)
+- Include the filename either in the code block header or with "File:" marker
+- Do NOT provide explanations without code blocks - all files must be extractable
+- If you provide multiple files, use separate code blocks for each file
 """
         
         result = await self.execute_llm_task(

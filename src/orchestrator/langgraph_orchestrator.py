@@ -14,6 +14,10 @@ from pathlib import Path
 import json
 
 from langgraph.graph import StateGraph, END, START
+from langgraph.types import Send
+from langgraph.checkpoint.memory import MemorySaver
+
+# Try to import AsyncSqliteSaver for persistent checkpointing (optional)
 try:
     # Try newer import path first (langgraph >= 0.2.0)
     from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
@@ -22,9 +26,11 @@ except ImportError:
         # Fall back to older import path
         from langgraph.checkpoint.aiosqlite import AsyncSqliteSaver
     except ImportError:
-        # Last resort - try without checkpoint functionality
-        print("Warning: AsyncSqliteSaver not available. Checkpoint functionality disabled.")
+        # Use in-memory checkpointing as fallback
+        # Note: This doesn't persist across restarts but enables all checkpoint features
         AsyncSqliteSaver = None
+        logger = logging.getLogger(__name__)
+        logger.info("Using MemorySaver for checkpointing (in-memory, not persistent)")
 
 from ..agents import (
     BaseAgent,
@@ -460,10 +466,11 @@ class LangGraphOrchestrator:
     
     def should_continue_after_implementation(
         self, state: MultiAgentState
-    ) -> Literal["continue", "failed"]:
+    ) -> List[Send] | Literal[END]:
         """
         Conditional routing after implementation.
         Decides whether to proceed with parallel QA/DevOps or stop on failure.
+        Returns Send objects for parallel execution or END to stop.
         """
         errors = state.get("errors", [])
         
@@ -472,7 +479,7 @@ class LangGraphOrchestrator:
         
         if impl_errors:
             logger.warning(f"Implementation failed, stopping workflow")
-            return "failed"
+            return END
         
         # Check implementation status
         implementation = state.get("implementation", [])
@@ -480,10 +487,14 @@ class LangGraphOrchestrator:
             impl_status = implementation[-1].get("status")
             if impl_status == "failed":
                 logger.warning(f"Implementation marked as failed")
-                return "failed"
+                return END
         
         logger.info(f"Implementation successful, proceeding with parallel QA/DevOps")
-        return "continue"
+        # Return Send objects for parallel execution
+        return [
+            Send("qa_testing", state),
+            Send("infrastructure", state)
+        ]
     
     def route_after_parallel(
         self, state: MultiAgentState
@@ -526,10 +537,10 @@ class LangGraphOrchestrator:
         4. [PARALLEL] QA Engineer → Testing + DevOps Engineer → Infrastructure
         5. Technical Writer → Documentation
         """
-        # Create checkpointer if available
+        # Create checkpointer (use MemorySaver if AsyncSqliteSaver not available)
         if AsyncSqliteSaver is None:
-            checkpointer = None
-            logger.warning("Running without checkpoint persistence (AsyncSqliteSaver not available)")
+            checkpointer = MemorySaver()
+            logger.info("Using MemorySaver for checkpointing (in-memory, not persisted across restarts)")
         else:
             checkpointer = await AsyncSqliteSaver.from_conn_string(self.checkpoint_db).__aenter__()
         
@@ -550,14 +561,11 @@ class LangGraphOrchestrator:
             workflow.add_edge("business_analyst", "architecture_design")
             workflow.add_edge("architecture_design", "implementation")
             
-            # Conditional routing after implementation
+            # Conditional routing after implementation with parallel execution
+            # The routing function returns Send objects for parallel execution
             workflow.add_conditional_edges(
                 "implementation",
-                self.should_continue_after_implementation,
-                {
-                    "continue": ["qa_testing", "infrastructure"],  # PARALLEL!
-                    "failed": END
-                }
+                self.should_continue_after_implementation
             )
             
             # Both QA and Infrastructure must complete before documentation
@@ -578,8 +586,8 @@ class LangGraphOrchestrator:
     async def build_bug_fix_graph(self) -> Any:
         """Build Bug Fix workflow graph"""
         if AsyncSqliteSaver is None:
-            checkpointer = None
-            logger.warning("Running without checkpoint persistence (AsyncSqliteSaver not available)")
+            checkpointer = MemorySaver()
+            logger.info("Using MemorySaver for checkpointing (in-memory, not persisted across restarts)")
         else:
             checkpointer = await AsyncSqliteSaver.from_conn_string(self.checkpoint_db).__aenter__()
         

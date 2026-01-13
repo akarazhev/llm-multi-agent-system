@@ -1,73 +1,254 @@
 <div class="agents-container">
   <!-- Header -->
   <div class="agents-header">
-    <div>
+    <div class="header-content">
       <h1>AI Agents</h1>
-      <p class="header-subtitle">Monitor and manage your specialized AI agents</p>
+      <p class="subtitle">Manage your AI-powered development team</p>
     </div>
-    <button mat-icon-button (click)="refreshAgents()">
-      <mat-icon>refresh</mat-icon>
+    <button mat-raised-button color="primary" (click)="refreshAgents()" class="refresh-button">
+      <span class="button-content">
+        <mat-icon>refresh</mat-icon>
+        <span>Refresh</span>
+      </span>
     </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>smart_toy</mat-icon>
+        </div>
+        <div class="stat-details">
+          <h3>{{ stats().total }}</h3>
+          <p>Total Agents</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card working">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>play_circle</mat-icon>
+        </div>
+        <div class="stat-details">
+          <h3>{{ stats().working }}</h3>
+          <p>Active Now</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card idle">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>pause_circle</mat-icon>
+        </div>
+        <div class="stat-details">
+          <h3>{{ stats().idle }}</h3>
+          <p>Idle</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card error" *ngIf="stats().error > 0">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>error</mat-icon>
+        </div>
+        <div class="stat-details">
+          <h3>{{ stats().error }}</h3>
+          <p>Errors</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
 
   <!-- Loading State -->
   @if (loading()) {
     <div class="loading-container">
-      <mat-spinner></mat-spinner>
+      <mat-spinner diameter="50"></mat-spinner>
       <p>Loading agents...</p>
     </div>
-  } @else {
-    <!-- Agents Grid -->
-    <div class="agents-grid">
-      @for (agent of agents(); track agent.agent_id) {
-        <mat-card class="agent-card">
-          <mat-card-content>
-            <!-- Agent Header -->
-            <div class="agent-header">
-              <div class="agent-icon-container">
-                <mat-icon class="agent-icon">{{ getAgentIcon(agent.role) }}</mat-icon>
+  }
+
+  <!-- Tabs -->
+  @if (!loading()) {
+    <mat-tab-group [(selectedIndex)]="selectedTab" class="agents-tabs" animationDuration="300ms">
+      <!-- Active Agents Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>smart_toy</mat-icon>
+            <span>Active Agents ({{ agents().length }})</span>
+          </span>
+        </ng-template>
+        <ng-template matTabContent>
+          <div class="tab-content">
+            @if (agents().length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">smart_toy</mat-icon>
+                <h2>No agents yet</h2>
+                <p>Create your first AI agent from a template</p>
+                <button mat-raised-button color="primary" (click)="selectedTab.set(1)">
+                  <span class="button-content">
+                    <mat-icon>add</mat-icon>
+                    <span>Browse Templates</span>
+                  </span>
+                </button>
               </div>
-              <mat-chip [class]="getStatusClass(agent.status)">
-                {{ agent.status }}
-              </mat-chip>
+            } @else {
+              <div class="agents-grid">
+                @for (agent of filteredAgents(); track agent.agent_id) {
+                  <mat-card class="agent-card" (click)="viewAgentDetails(agent)">
+                    <mat-card-header>
+                      <div class="agent-header-content">
+                        <div class="agent-title-section">
+                          <mat-icon class="agent-role-icon">{{ getRoleIcon(agent.role) }}</mat-icon>
+                          <div class="agent-title-info">
+                            <mat-card-title>{{ agent.name }}</mat-card-title>
+                            <mat-card-subtitle>{{ getRoleDisplayName(agent.role) }}</mat-card-subtitle>
+                          </div>
+                        </div>
+                        <mat-chip [class]="getStatusClass(agent.status)">
+                          <span class="chip-content">
+                            <mat-icon>{{ getStatusIcon(agent.status) }}</mat-icon>
+                            <span>{{ agent.status | uppercase }}</span>
+                          </span>
+                        </mat-chip>
+                      </div>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p class="agent-description">{{ agent.description }}</p>
+
+                      @if (agent.current_task) {
+                        <div class="current-task">
+                          <mat-icon>schedule</mat-icon>
+                          <span>{{ agent.current_task }}</span>
+                        </div>
+                      }
+
+                      <div class="agent-capabilities">
+                        <strong>Capabilities:</strong>
+                        <mat-chip-set>
+                          @for (cap of agent.capabilities.slice(0, 3); track cap) {
+                            <mat-chip>{{ cap }}</mat-chip>
+                          }
+                          @if (agent.capabilities.length > 3) {
+                            <mat-chip class="more-chip">+{{ agent.capabilities.length - 3 }} more</mat-chip>
+                          }
+                        </mat-chip-set>
+                      </div>
+
+                      <div class="agent-metrics">
+                        <div class="metric-item">
+                          <mat-icon>check_circle</mat-icon>
+                          <span>{{ agent.completed_tasks }} tasks completed</span>
+                        </div>
+                        <div class="metric-item">
+                          <mat-icon>speed</mat-icon>
+                          <span>{{ agent.metrics.success_rate.toFixed(1) }}% success rate</span>
+                        </div>
+                        <div class="metric-item">
+                          <mat-icon>attach_money</mat-icon>
+                          <span>{{ formatCost(agent.metrics.cost_estimate) }} spent</span>
+                        </div>
+                      </div>
+
+                      @if (agent.assigned_projects && agent.assigned_projects.length > 0) {
+                        <div class="agent-projects">
+                          <mat-icon>folder</mat-icon>
+                          <span>{{ agent.assigned_projects.length }} project(s)</span>
+                        </div>
+                      }
+                    </mat-card-content>
+                    <mat-card-footer>
+                      <div class="agent-footer">
+                        <span class="last-active">Last active: {{ agent.last_active | date:'short' }}</span>
+                        <button mat-icon-button (click)="viewAgentDetails(agent); $event.stopPropagation()">
+                          <mat-icon>arrow_forward</mat-icon>
+                        </button>
+                      </div>
+                    </mat-card-footer>
+                  </mat-card>
+                }
+              </div>
+            }
+          </div>
+        </ng-template>
+      </mat-tab>
+
+      <!-- Templates Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>library_add</mat-icon>
+            <span>Templates ({{ templates().length }})</span>
+          </span>
+        </ng-template>
+        <ng-template matTabContent>
+          <div class="tab-content">
+            <div class="templates-header">
+              <h2>Agent Templates</h2>
+              <p>Choose a pre-configured template to create a new AI agent</p>
             </div>
 
-            <!-- Agent Info -->
-            <div class="agent-info">
-              <h3 class="agent-title">{{ agent.role.replace('_', ' ') }}</h3>
-              <p class="agent-description">
-                {{ agentRoleDescriptions[agent.role] }}
-              </p>
-            </div>
+            <div class="templates-grid">
+              @for (template of templates(); track template.template_id) {
+                <mat-card class="template-card">
+                  <mat-card-header>
+                    <div class="template-header-content">
+                      <span class="template-icon">{{ template.icon }}</span>
+                      <div class="template-title-info">
+                        <mat-card-title>{{ template.name }}</mat-card-title>
+                        <mat-card-subtitle>{{ getRoleDisplayName(template.role) }}</mat-card-subtitle>
+                      </div>
+                    </div>
+                  </mat-card-header>
+                  <mat-card-content>
+                    <p class="template-description">{{ template.description }}</p>
 
-            <!-- Agent Stats -->
-            <div class="agent-stats">
-              <div class="stat-item">
-                <mat-icon>assignment_turned_in</mat-icon>
-                <div class="stat-details">
-                  <span class="stat-value">{{ agent.completed_tasks }}</span>
-                  <span class="stat-label">Tasks Completed</span>
-                </div>
-              </div>
+                    <div class="template-capabilities">
+                      <strong>Capabilities:</strong>
+                      <ul>
+                        @for (cap of template.capabilities; track cap) {
+                          <li>{{ cap }}</li>
+                        }
+                      </ul>
+                    </div>
 
-              @if (agent.current_task) {
-                <div class="stat-item">
-                  <mat-icon>hourglass_empty</mat-icon>
-                  <div class="stat-details">
-                    <span class="stat-value">In Progress</span>
-                    <span class="stat-label">Current Task</span>
-                  </div>
-                </div>
+                    <div class="template-recommended">
+                      <strong>Recommended for:</strong>
+                      <mat-chip-set>
+                        @for (rec of template.recommended_for; track rec) {
+                          <mat-chip>{{ rec }}</mat-chip>
+                        }
+                      </mat-chip-set>
+                    </div>
+
+                    <div class="template-config">
+                      <strong>Configuration:</strong>
+                      <div class="config-details">
+                        <span><mat-icon>memory</mat-icon> {{ template.default_configuration.model }}</span>
+                        <span><mat-icon>tune</mat-icon> Temp: {{ template.default_configuration.temperature }}</span>
+                        <span><mat-icon>format_size</mat-icon> Max: {{ formatNumber(template.default_configuration.max_tokens) }}</span>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                  <mat-card-actions>
+                    <button mat-raised-button color="primary" (click)="createAgentFromTemplate(template)">
+                      <span class="button-content">
+                        <mat-icon>add</mat-icon>
+                        <span>Create Agent</span>
+                      </span>
+                    </button>
+                  </mat-card-actions>
+                </mat-card>
               }
             </div>
-
-            <!-- Agent ID -->
-            <div class="agent-footer">
-              <span class="agent-id">ID: {{ agent.agent_id }}</span>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      }
-    </div>
+          </div>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
   }
 </div>

@@ -1,46 +1,7 @@
-import { Agent, AgentRole, AgentStatus } from '../core/interfaces/agent.interface';
 import { Workflow, WorkflowStatus, WorkflowType, WorkflowState } from '../core/interfaces/workflow.interface';
 
-/**
- * Mock Agents Data
- */
-export const MOCK_AGENTS: Agent[] = [
-  {
-    agent_id: 'ba_001',
-    role: AgentRole.BUSINESS_ANALYST,
-    status: AgentStatus.IDLE,
-    completed_tasks: 15,
-    current_task: undefined
-  },
-  {
-    agent_id: 'dev_001',
-    role: AgentRole.DEVELOPER,
-    status: AgentStatus.WORKING,
-    completed_tasks: 28,
-    current_task: 'task_dev_123'
-  },
-  {
-    agent_id: 'qa_001',
-    role: AgentRole.QA_ENGINEER,
-    status: AgentStatus.COMPLETED,
-    completed_tasks: 22,
-    current_task: undefined
-  },
-  {
-    agent_id: 'devops_001',
-    role: AgentRole.DEVOPS_ENGINEER,
-    status: AgentStatus.WORKING,
-    completed_tasks: 19,
-    current_task: 'task_devops_456'
-  },
-  {
-    agent_id: 'writer_001',
-    role: AgentRole.TECHNICAL_WRITER,
-    status: AgentStatus.IDLE,
-    completed_tasks: 12,
-    current_task: undefined
-  }
-];
+// Export agents from the new centralized file
+export { MOCK_AGENTS, AGENT_TEMPLATES } from './mock-agents';
 
 /**
  * Mock Workflows Data

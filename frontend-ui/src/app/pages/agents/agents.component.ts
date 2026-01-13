@@ -1,76 +1,129 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
 import { AgentService } from '../../shared/services/agent.service';
-import { Agent, AgentRole } from '../../core/interfaces/agent.interface';
+import { Agent, AgentTemplate, AgentRole, AgentStatus } from '../../core/interfaces/agent.interface';
 
 @Component({
   selector: 'app-agents',
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     MatCardModule,
     MatIconModule,
     MatChipsModule,
     MatButtonModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatTabsModule,
+    MatBadgeModule,
+    MatTooltipModule,
+    MatDialogModule
   ],
   templateUrl: './agents.component.html',
   styleUrl: './agents.component.scss'
 })
-export class AgentsComponent implements OnInit {
-  private readonly agentService = inject(AgentService);
+export class AgentsComponent {
+  readonly agentService = inject(AgentService);
 
-  agents = signal<Agent[]>([]);
-  loading = signal(true);
+  // Signals from service
+  readonly agents = this.agentService.agentsSignal;
+  readonly templates = this.agentService.templatesSignal;
+  readonly loading = this.agentService.loadingSignal;
 
-  agentRoleDescriptions: Record<AgentRole, string> = {
-    [AgentRole.BUSINESS_ANALYST]: 'Analyzes requirements and creates user stories',
-    [AgentRole.DEVELOPER]: 'Designs architecture and implements features',
-    [AgentRole.QA_ENGINEER]: 'Creates test suites and ensures quality',
-    [AgentRole.DEVOPS_ENGINEER]: 'Sets up infrastructure and deployment pipelines',
-    [AgentRole.TECHNICAL_WRITER]: 'Creates comprehensive documentation'
-  };
+  // Local signals
+  readonly selectedTab = signal(0);
+  readonly searchQuery = signal('');
 
-  ngOnInit(): void {
-    this.loadAgents();
-  }
+  // Computed signals
+  readonly filteredAgents = computed(() => {
+    const query = this.searchQuery().toLowerCase();
+    if (!query) return this.agents();
+    return this.agents().filter(a => 
+      a.name.toLowerCase().includes(query) || 
+      a.role.toLowerCase().includes(query) ||
+      a.description.toLowerCase().includes(query)
+    );
+  });
 
-  private loadAgents(): void {
-    this.loading.set(true);
-
-    this.agentService.getAgents().subscribe({
-      next: (agents) => {
-        this.agents.set(agents);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading agents:', error);
-        this.loading.set(false);
-      }
-    });
-  }
-
-  getAgentIcon(role: AgentRole): string {
-    const icons: Record<AgentRole, string> = {
-      [AgentRole.BUSINESS_ANALYST]: 'analytics',
-      [AgentRole.DEVELOPER]: 'code',
-      [AgentRole.QA_ENGINEER]: 'bug_report',
-      [AgentRole.DEVOPS_ENGINEER]: 'cloud',
-      [AgentRole.TECHNICAL_WRITER]: 'description'
+  readonly agentsByStatus = computed(() => {
+    const byStatus = {
+      working: [] as Agent[],
+      idle: [] as Agent[],
+      offline: [] as Agent[],
+      error: [] as Agent[]
     };
-    return icons[role];
+    this.agents().forEach(agent => {
+      if (agent.status === AgentStatus.WORKING) byStatus.working.push(agent);
+      else if (agent.status === AgentStatus.IDLE) byStatus.idle.push(agent);
+      else if (agent.status === AgentStatus.OFFLINE) byStatus.offline.push(agent);
+      else if (agent.status === AgentStatus.ERROR) byStatus.error.push(agent);
+    });
+    return byStatus;
+  });
+
+  readonly stats = computed(() => ({
+    total: this.agents().length,
+    working: this.agentsByStatus().working.length,
+    idle: this.agentsByStatus().idle.length,
+    offline: this.agentsByStatus().offline.length,
+    error: this.agentsByStatus().error.length
+  }));
+
+  refreshAgents(): void {
+    this.agentService.loadAgents();
   }
 
-  getStatusClass(status: string): string {
+  createAgentFromTemplate(template: AgentTemplate): void {
+    // TODO: Open dialog for agent creation
+    console.log('Creating agent from template:', template);
+  }
+
+  viewAgentDetails(agent: Agent): void {
+    // TODO: Navigate to agent detail page or open dialog
+    console.log('Viewing agent details:', agent);
+  }
+
+  getStatusClass(status: AgentStatus): string {
     return `status-${status.toLowerCase()}`;
   }
 
-  refreshAgents(): void {
-    this.loadAgents();
+  getStatusIcon(status: AgentStatus): string {
+    const icons: Record<AgentStatus, string> = {
+      [AgentStatus.IDLE]: 'pause_circle',
+      [AgentStatus.WORKING]: 'play_circle',
+      [AgentStatus.WAITING]: 'schedule',
+      [AgentStatus.COMPLETED]: 'check_circle',
+      [AgentStatus.ERROR]: 'error',
+      [AgentStatus.OFFLINE]: 'offline_bolt'
+    };
+    return icons[status] || 'help';
+  }
+
+  getRoleDisplayName(role: AgentRole): string {
+    return this.agentService.getRoleDisplayName(role);
+  }
+
+  getRoleIcon(role: AgentRole): string {
+    return this.agentService.getRoleIcon(role);
+  }
+
+  formatCost(cost: number): string {
+    return `$${cost.toFixed(2)}`;
+  }
+
+  formatNumber(num: number): string {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
   }
 }

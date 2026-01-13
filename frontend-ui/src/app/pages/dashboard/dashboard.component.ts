@@ -62,44 +62,33 @@ export class DashboardComponent implements OnInit {
     
     this.activeProjects.set(activeProjectsList);
 
-    // Load agents
-    this.agentService.getAgents().subscribe({
-      next: (agents) => {
-        this.agents.set(agents);
-      },
-      error: (error) => {
-        console.error('Error loading agents:', error);
-      }
+    // Load agents (use signal)
+    this.agentService.loadAgents();
+    const agents = this.agentService.agentsSignal();
+    this.agents.set(agents);
+
+    // Load recent workflows (use signal)
+    this.workflowService.loadWorkflows();
+    const workflows = this.workflowService.workflowsSignal();
+    this.recentWorkflows.set(workflows.slice(0, 5)); // Last 5 workflows
+    
+    // Calculate stats
+    const activeWorkflows = workflows.filter((w: any) => w.status === 'running').length;
+    const today = new Date().toDateString();
+    const completedToday = workflows.filter((w: any) => 
+      w.completed_at && new Date(w.completed_at).toDateString() === today
+    ).length;
+
+    this.stats.set({
+      totalProjects: projects.length,
+      activeProjects: activeProjectsList.length,
+      totalAgents: agents.length,
+      activeWorkflows,
+      completedToday,
+      totalWorkflows: workflows.length
     });
 
-    // Load recent workflows
-    this.workflowService.getWorkflows().subscribe({
-      next: (workflows) => {
-        this.recentWorkflows.set(workflows.slice(0, 5)); // Last 5 workflows
-        
-        // Calculate stats
-        const activeWorkflows = workflows.filter(w => w.status === 'running').length;
-        const today = new Date().toDateString();
-        const completedToday = workflows.filter(w => 
-          w.completed_at && new Date(w.completed_at).toDateString() === today
-        ).length;
-
-        this.stats.set({
-          totalProjects: projects.length,
-          activeProjects: activeProjectsList.length,
-          totalAgents: 5,
-          activeWorkflows,
-          completedToday,
-          totalWorkflows: workflows.length
-        });
-
-        this.loading.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading workflows:', error);
-        this.loading.set(false);
-      }
-    });
+    this.loading.set(false);
   }
 
   getAgentStatusClass(status: string): string {

@@ -1,6 +1,6 @@
 {
   "name": "llm-agent-ui",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "type": "module",
   "scripts": {
     "ng": "ng",
@@ -48,6 +48,7 @@
     "@angular/cli": "^20.3.12",
     "@angular/compiler-cli": "20.3.14",
     "@types/jasmine": "~5.1.0",
+    "@types/node": "^25.0.8",
     "@typescript-eslint/eslint-plugin": "^8.33.1",
     "@typescript-eslint/parser": "^8.33.1",
     "eslint": "^9.28.0",

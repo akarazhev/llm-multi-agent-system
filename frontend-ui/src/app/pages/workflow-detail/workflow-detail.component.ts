@@ -60,16 +60,18 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
   assignedAgents = computed(() => {
     const w = this.workflow();
     if (!w || !w.assigned_agents || w.assigned_agents.length === 0) return [];
-    return this.agentService.agents().filter(agent =>
+    return this.agentService.agentsSignal().filter(agent =>
       w.assigned_agents.includes(agent.agent_id)
     );
   });
 
-  // Get assigned project
+  // Get assigned project (synchronous)
   assignedProject = computed(() => {
     const w = this.workflow();
     if (!w || !w.project_id) return undefined;
-    return this.projectService.getProjectById(w.project_id);
+    // getProjectById returns Project | undefined, not Observable
+    const projects = this.projectService.projects();
+    return projects.find(p => p.id === w.project_id);
   });
 
   ngOnInit(): void {
@@ -251,4 +253,7 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
+
+  // Expose Object for template use
+  readonly Object = Object;
 }

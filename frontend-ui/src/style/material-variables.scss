@@ -37,6 +37,10 @@ $error-container: var(--mat-sys-error-container);
 $on-error: var(--mat-sys-on-error);
 $on-error-container: var(--mat-sys-on-error-container);
 
+// Accent colors (for backwards compatibility)
+$accent: var(--mat-sys-secondary);
+$warn: var(--mat-sys-error);
+
 // Outline colors
 $outline: var(--mat-sys-outline);
 $outline-variant: var(--mat-sys-outline-variant);

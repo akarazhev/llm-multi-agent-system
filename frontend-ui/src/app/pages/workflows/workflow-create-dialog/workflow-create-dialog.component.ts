@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -22,6 +22,7 @@ import { AgentService } from '../../../shared/services/agent.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -50,7 +51,7 @@ export class WorkflowCreateDialogComponent implements OnInit {
   // Data
   templates = this.workflowService.templatesSignal;
   projects = this.projectService.projects;
-  agents = this.agentService.agents;
+  agents = this.agentService.agentsSignal;
 
   // State
   selectedTemplate = signal<WorkflowTemplate | undefined>(undefined);

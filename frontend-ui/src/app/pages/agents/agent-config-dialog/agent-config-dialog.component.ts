@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatStepperModule } from '@angular/material/stepper';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AgentTemplate, AgentRole, CreateAgentRequest } from '../../../core/interfaces/agent.interface';
 
 export interface AgentConfigDialogData {
@@ -34,7 +35,8 @@ export interface AgentConfigDialogData {
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
-    MatStepperModule
+    MatStepperModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './agent-config-dialog.component.html',
   styleUrl: './agent-config-dialog.component.scss'

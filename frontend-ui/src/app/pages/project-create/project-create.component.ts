@@ -1,6 +1,6 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,7 +19,6 @@ import { ProjectFormData, ProjectType, ProjectStatus } from '../../core/interfac
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    RouterLink,
     MatStepperModule,
     MatFormFieldModule,
     MatInputModule,

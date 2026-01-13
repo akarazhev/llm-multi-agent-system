@@ -108,7 +108,8 @@ export class AgentDetailComponent implements OnInit {
     return num.toString();
   }
 
-  getTimeAgo(dateString: string): string {
+  getTimeAgo(dateString?: string): string {
+    if (!dateString) return 'Never';
     const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();

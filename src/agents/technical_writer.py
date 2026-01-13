@@ -37,13 +37,16 @@ class TechnicalWriterAgent(BaseAgent):
         
         source_files = task.context.get("files", [])
         
+        # Use smart context formatting that truncates large items
+        formatted_context = self._format_context_smart(task.context)
+        
         prompt = f"""
 {self.get_system_prompt()}
 
 Task: {task.description}
 
 Context:
-{self._format_context(task.context)}
+{formatted_context}
 
 Documentation Type: {task.context.get('doc_type', 'general')}
 Target Audience: {task.context.get('audience', 'developers')}
@@ -102,4 +105,82 @@ File: docs/API.md
         for key, value in context.items():
             if key != "files":
                 lines.append(f"- {key}: {value}")
+        return "\n".join(lines)
+    
+    def _format_context_smart(self, context: Dict[str, Any], max_size_per_item: int = 1000) -> str:
+        """
+        Format context with smart truncation to avoid exceeding token limits.
+        Large items (implementation, tests, infrastructure) are summarized.
+        """
+        lines = []
+        
+        for key, value in context.items():
+            if key == "files":
+                continue
+            
+            # For simple string values, include as-is
+            if isinstance(value, str):
+                if len(value) > max_size_per_item:
+                    lines.append(f"- {key}: {value[:max_size_per_item]}... (truncated, {len(value)} chars total)")
+                else:
+                    lines.append(f"- {key}: {value}")
+            
+            # For dict values (implementation, tests, infrastructure), summarize
+            elif isinstance(value, dict):
+                # Extract key information: files_created, status, summary
+                summary_parts = []
+                
+                if "files_created" in value:
+                    files = value["files_created"]
+                    if isinstance(files, list):
+                        summary_parts.append(f"Files created: {len(files)} files")
+                        if files:
+                            summary_parts.append(f"File paths: {', '.join(files[:5])}")
+                            if len(files) > 5:
+                                summary_parts.append(f"... and {len(files) - 5} more files")
+                    else:
+                        summary_parts.append(f"Files: {files}")
+                
+                if "status" in value:
+                    summary_parts.append(f"Status: {value['status']}")
+                
+                # Include a small snippet of the main content if available
+                if "code" in value:
+                    code_snippet = str(value["code"])[:200]
+                    summary_parts.append(f"Code snippet: {code_snippet}...")
+                elif "documentation" in value:
+                    doc_snippet = str(value["documentation"])[:200]
+                    summary_parts.append(f"Content snippet: {doc_snippet}...")
+                elif "analysis" in value:
+                    analysis_snippet = str(value["analysis"])[:200]
+                    summary_parts.append(f"Analysis snippet: {analysis_snippet}...")
+                
+                # If no specific fields, just show it's a dict with keys
+                if not summary_parts:
+                    keys = list(value.keys())[:5]
+                    summary_parts.append(f"Contains: {', '.join(keys)}")
+                    if len(value) > 5:
+                        summary_parts.append(f"... and {len(value) - 5} more keys")
+                
+                lines.append(f"- {key}: {' | '.join(summary_parts)}")
+            
+            # For list values, summarize
+            elif isinstance(value, list):
+                if len(value) > 0:
+                    lines.append(f"- {key}: List with {len(value)} items")
+                    # Show first item summary if it's a dict
+                    if isinstance(value[0], dict):
+                        first_keys = list(value[0].keys())[:3]
+                        lines.append(f"  First item keys: {', '.join(first_keys)}")
+                else:
+                    lines.append(f"- {key}: []")
+            
+            # For other types, convert to string with truncation
+            else:
+                value_str = str(value)
+                if len(value_str) > max_size_per_item:
+                    lines.append(f"- {key}: {value_str[:max_size_per_item]}... (truncated)")
+                else:
+                    lines.append(f"- {key}: {value_str}")
+        
         return "\n".join(lines)

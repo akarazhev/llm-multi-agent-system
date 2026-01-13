@@ -1,26 +1,72 @@
-<mat-sidenav-container class="app-container">
-  <!-- Sidenav -->
-  <mat-sidenav mode="side" opened class="app-sidenav">
-    <app-sidenav></app-sidenav>
+<!-- Header -->
+<mat-toolbar class="header">
+  <div class="header-buttons">
+    <button mat-icon-button (click)="menuCollapsed.set(!menuCollapsed())">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <img [ngSrc]="getSpgLogo()" width="164" height="20" alt="SPG Logo" priority/>
+  </div>
+  <span class="toolbar-title">{{ title }}</span>
+  <div class="header-buttons">
+    <button mat-icon-button>
+      <mat-icon>notifications</mat-icon>
+    </button>
+    <button mat-icon-button>
+      <mat-icon>settings</mat-icon>
+    </button>
+  </div>
+</mat-toolbar>
+
+<!-- Sidenav Container -->
+<mat-sidenav-container class="sidenav-container">
+  <!-- Collapsible Sidenav -->
+  <mat-sidenav mode="side" opened class="menu" [style.width]="sideNavWidth()">
+    <div class="menu-content">
+      <mat-nav-list class="menu-nav">
+        @for (item of navItems; track item.route) {
+          <a mat-list-item [routerLink]="[item.route]" [activated]="isActive(item.route)">
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            @if (!menuCollapsed()) {
+              <span matListItemTitle>{{ item.label }}</span>
+            }
+          </a>
+        }
+      </mat-nav-list>
+
+      <div class="menu-version" [class.is-collapsed]="menuCollapsed()">
+        <mat-icon aria-hidden="true">info</mat-icon>
+        @if (!menuCollapsed()) {
+          <span>v1.0.0</span>
+        } @else {
+          <span class="sr-only">v1.0.0</span>
+        }
+      </div>
+    </div>
   </mat-sidenav>
 
   <!-- Main Content -->
-  <mat-sidenav-content class="app-content">
-    <!-- Header -->
-    <mat-toolbar color="primary" class="app-toolbar">
-      <span class="toolbar-title">{{ title }}</span>
-      <span class="spacer"></span>
-      <button mat-icon-button>
-        <mat-icon>notifications</mat-icon>
-      </button>
-      <button mat-icon-button>
-        <mat-icon>settings</mat-icon>
-      </button>
-    </mat-toolbar>
+  <mat-sidenav-content class="sidenav-content" [style.margin-left]="sideNavOffset()">
+    <!-- Background Grid Pattern -->
+    <div class="background-container">
+      <div class="background">
+        <svg aria-hidden="true" class="svg">
+          <defs>
+            <pattern id="grid-pattern" width="72" height="56" patternUnits="userSpaceOnUse" x="-12" y="4">
+              <path d="M.5 56V.5H72" fill="none"></path>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" stroke-width="0" fill="url(#grid-pattern)"></rect>
+          <svg x="-12" y="4" class="overflow-visible">
+            <rect stroke-width="0" width="73" height="57" x="288" y="168"></rect>
+            <rect stroke-width="0" width="73" height="57" x="144" y="56"></rect>
+            <rect stroke-width="0" width="73" height="57" x="504" y="168"></rect>
+            <rect stroke-width="0" width="73" height="57" x="720" y="336"></rect>
+          </svg>
+        </svg>
+      </div>
+    </div>
 
     <!-- Router Outlet -->
-    <div class="app-main-content">
-      <router-outlet></router-outlet>
-    </div>
+    <router-outlet />
   </mat-sidenav-content>
 </mat-sidenav-container>

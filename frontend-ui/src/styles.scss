@@ -26,6 +26,16 @@ $llm-agent-theme: mat.define-theme((
 // Include theme styles for core and each component
 @include mat.all-component-themes($llm-agent-theme);
 
+// Material Design Overrides
+@include mat.sidenav-overrides((
+  container-shape: 0,
+  content-background-color: transparent
+));
+
+@include mat.list-overrides((
+  active-indicator-shape: .5rem
+));
+
 /* Global Styles */
 * {
   box-sizing: border-box;
@@ -170,4 +180,10 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 200px;
+}
+
+/* Page Content Positioning */
+.page-content {
+  position: relative;
+  z-index: 1;
 }

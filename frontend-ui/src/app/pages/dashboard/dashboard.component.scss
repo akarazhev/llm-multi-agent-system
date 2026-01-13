@@ -3,6 +3,8 @@
 .dashboard-container {
   max-width: 1400px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .dashboard-header {

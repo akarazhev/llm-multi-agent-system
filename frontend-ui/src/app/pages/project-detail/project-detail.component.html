@@ -322,9 +322,11 @@
           <div class="team-section">
             <div class="section-header">
               <h3>AI Agents ({{ project()!.aiAgents.length }})</h3>
-              <button mat-raised-button color="primary">
-                <mat-icon>smart_toy</mat-icon>
-                Configure Agents
+              <button mat-raised-button color="primary" (click)="configureAgents()">
+                <span class="button-content">
+                  <mat-icon>smart_toy</mat-icon>
+                  <span>Configure Agents</span>
+                </span>
               </button>
             </div>
             <div class="agents-list">

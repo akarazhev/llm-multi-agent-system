@@ -1,0 +1,65 @@
+<div class="dialog-container">
+  <h2 mat-dialog-title>
+    Assign AI Agents
+    <span class="project-name">{{ data.projectName }}</span>
+  </h2>
+
+  <mat-dialog-content>
+    <p class="dialog-description">
+      Select AI agents to work on this project. You can assign multiple agents with different roles.
+    </p>
+
+    <div class="selected-summary">
+      <mat-icon>smart_toy</mat-icon>
+      <span>{{ selectedCount() }} agent{{selectedCount() !== 1 ? 's' : ''}} selected</span>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="agents-list">
+      @for (agent of agents(); track agent.agent_id) {
+        <div class="agent-item" [class.selected]="isSelected(agent.agent_id)" (click)="toggleAgent(agent)">
+          <mat-checkbox [checked]="isSelected(agent.agent_id)" (click)="$event.stopPropagation()"></mat-checkbox>
+          <mat-icon class="agent-icon">{{ getRoleIcon(agent) }}</mat-icon>
+          <div class="agent-info">
+            <div class="agent-name">{{ agent.name }}</div>
+            <div class="agent-role">{{ getRoleDisplayName(agent) }}</div>
+          </div>
+          <div class="agent-stats">
+            <mat-chip class="stat-chip">
+              {{ agent.completed_tasks }} tasks
+            </mat-chip>
+            <mat-chip class="stat-chip success">
+              {{ agent.metrics.success_rate.toFixed(0) }}%
+            </mat-chip>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">
+          <mat-icon>smart_toy_outline</mat-icon>
+          <p>No agents available. Create agents first.</p>
+        </div>
+      }
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="cancel()">
+      <span class="button-content">
+        <mat-icon>close</mat-icon>
+        <span>Cancel</span>
+      </span>
+    </button>
+    <button mat-raised-button color="primary" (click)="save()" [disabled]="!hasChanges() || saving()">
+      <span class="button-content">
+        @if (saving()) {
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Saving...</span>
+        } @else {
+          <mat-icon>check</mat-icon>
+          <span>Save Changes</span>
+        }
+      </span>
+    </button>
+  </mat-dialog-actions>
+</div>

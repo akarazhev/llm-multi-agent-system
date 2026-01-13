@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,8 +10,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ProjectService } from '../../shared/services/project.service';
 import { Project, ProjectStatus } from '../../core/interfaces/project.interface';
+import { AssignAgentsDialogComponent } from './assign-agents-dialog/assign-agents-dialog.component';
 
 @Component({
   selector: 'app-project-detail',
@@ -27,7 +30,9 @@ import { Project, ProjectStatus } from '../../core/interfaces/project.interface'
     MatProgressSpinnerModule,
     MatTooltipModule,
     MatDividerModule,
-    MatListModule
+    MatListModule,
+    MatDialogModule,
+    MatSnackBarModule
   ],
   templateUrl: './project-detail.component.html',
   styleUrl: './project-detail.component.scss',
@@ -38,6 +43,9 @@ export class ProjectDetailComponent implements OnInit {
   loading = signal(true);
 
   projectExists = computed(() => !!this.project());
+
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   constructor(
     private route: ActivatedRoute,
@@ -120,5 +128,35 @@ export class ProjectDetailComponent implements OnInit {
   archiveProject(): void {
     // TODO: Archive project
     console.log('Archive project');
+  }
+
+  configureAgents(): void {
+    const dialogRef = this.dialog.open(AssignAgentsDialogComponent, {
+      width: '700px',
+      maxWidth: '90vw',
+      data: {
+        projectId: this.project()!.id,
+        projectName: this.project()!.name,
+        currentlyAssignedAgentIds: this.project()!.aiAgents
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((selectedAgentIds: string[]) => {
+      if (selectedAgentIds) {
+        // Update project with new agent assignments
+        this.projectService.updateProject(this.project()!.id, {
+          aiAgents: selectedAgentIds
+        });
+        
+        // Reload project to get updated data
+        this.loadProject(this.project()!.id);
+        
+        this.snackBar.open('Agent assignments updated successfully!', 'Close', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+      }
+    });
   }
 }

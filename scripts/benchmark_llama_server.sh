@@ -131,26 +131,14 @@ run_test() {
     }"
     
     # Measure time (use seconds * 1000 for milliseconds, as macOS date doesn't support %N)
-    # #region agent log
     local start=$(($(date +%s) * 1000))
-    echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\",\"location\":\"benchmark_llama_server.sh:134\",\"message\":\"Time measurement start\",\"data\":{\"start\":\"$start\",\"is_numeric\":true},\"timestamp\":$(date +%s)000}" >> /Users/andrey.karazhev/Developer/spg/llm-multi-agent-system/.cursor/debug.log
-    # #endregion
     local response=$(curl -s -f --max-time 60 \
         -H "Content-Type: application/json" \
         -d "$request" \
         "$API_URL" 2>/dev/null || echo "")
-    # #region agent log
-    echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"E\",\"location\":\"benchmark_llama_server.sh:138\",\"message\":\"API response received\",\"data\":{\"response_length\":${#response},\"response_preview\":\"${response:0:100}\"},\"timestamp\":$(date +%s)000}" >> /Users/andrey.karazhev/Developer/spg/llm-multi-agent-system/.cursor/debug.log
-    # #endregion
     local end=$(($(date +%s) * 1000))
-    # #region agent log
-    echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\",\"location\":\"benchmark_llama_server.sh:141\",\"message\":\"Time measurement end\",\"data\":{\"start\":\"$start\",\"end\":\"$end\",\"calculation_result\":$((end - start))},\"timestamp\":$(date +%s)000}" >> /Users/andrey.karazhev/Developer/spg/llm-multi-agent-system/.cursor/debug.log
-    # #endregion
     
     local latency=$((end - start))
-    # #region agent log
-    echo "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"benchmark_llama_server.sh:145\",\"message\":\"Latency calculated\",\"data\":{\"latency\":$latency,\"is_numeric\":true},\"timestamp\":$(date +%s)000}" >> /Users/andrey.karazhev/Developer/spg/llm-multi-agent-system/.cursor/debug.log
-    # #endregion
     
     # Parse response
     if [ -z "$response" ] || echo "$response" | grep -q '"error"'; then
@@ -167,16 +155,10 @@ run_test() {
         prompt_tokens=$(echo "$response" | jq -r '.usage.prompt_tokens // 0' 2>/dev/null)
         completion_tokens=$(echo "$response" | jq -r '.usage.completion_tokens // 0' 2>/dev/null)
         total_tokens=$(echo "$response" | jq -r '.usage.total_tokens // 0' 2>/dev/null)
-        # #region agent log
-        echo "{\"sessionId\":\"debug-session\",\"runId\":\"initial\",\"hypothesisId\":\"D\",\"location\":\"benchmark_llama_server.sh:158\",\"message\":\"Token counts parsed\",\"data\":{\"prompt_tokens\":\"$prompt_tokens\",\"completion_tokens\":\"$completion_tokens\",\"total_tokens\":\"$total_tokens\"},\"timestamp\":$(date +%s)000}" >> /Users/andrey.karazhev/Developer/spg/llm-multi-agent-system/.cursor/debug.log
-        # #endregion
     fi
     
     # Calculate tokens per second
     local tokens_per_sec=0
-    # #region agent log
-    echo "{\"sessionId\":\"debug-session\",\"runId\":\"initial\",\"hypothesisId\":\"C\",\"location\":\"benchmark_llama_server.sh:162\",\"message\":\"Before tokens_per_sec calculation\",\"data\":{\"latency\":\"$latency\",\"completion_tokens\":\"$completion_tokens\",\"latency_gt_0\":\"$([ -n \"$latency\" ] && [ \"$latency\" -gt 0 ] 2>/dev/null && echo true || echo false)\",\"completion_gt_0\":\"$([ -n \"$completion_tokens\" ] && [ \"$completion_tokens\" -gt 0 ] 2>/dev/null && echo true || echo false)\"},\"timestamp\":$(date +%s)000}" >> /Users/andrey.karazhev/Developer/spg/llm-multi-agent-system/.cursor/debug.log
-    # #endregion
     if [ -n "$latency" ] && [ "$latency" -gt 0 ] 2>/dev/null && [ -n "$completion_tokens" ] && [ "$completion_tokens" -gt 0 ] 2>/dev/null; then
         tokens_per_sec=$(awk "BEGIN {printf \"%.2f\", $completion_tokens / ($latency / 1000)}")
     fi
@@ -211,9 +193,6 @@ test_latency() {
             fi
             
             local latency=$(echo "$result" | cut -d'|' -f1)
-            # #region agent log
-            echo "{\"sessionId\":\"debug-session\",\"runId\":\"initial\",\"hypothesisId\":\"B\",\"location\":\"benchmark_llama_server.sh:195\",\"message\":\"Latency from result\",\"data\":{\"result\":\"$result\",\"latency\":\"$latency\",\"is_empty\":\"$([ -z \"$latency\" ] && echo true || echo false)\"},\"timestamp\":$(date +%s)000}" >> /Users/andrey.karazhev/Developer/spg/llm-multi-agent-system/.cursor/debug.log
-            # #endregion
             latencies+=($latency)
             sum=$((sum + latency))
             
@@ -263,9 +242,6 @@ test_throughput() {
             
             local latency=$(echo "$result" | cut -d'|' -f1)
             local tps=$(echo "$result" | cut -d'|' -f5)
-            # #region agent log
-            echo "{\"sessionId\":\"debug-session\",\"runId\":\"initial\",\"hypothesisId\":\"C\",\"location\":\"benchmark_llama_server.sh:244\",\"message\":\"Throughput values\",\"data\":{\"latency\":\"$latency\",\"tps\":\"$tps\",\"total_tps\":\"$total_tps\"},\"timestamp\":$(date +%s)000}" >> /Users/andrey.karazhev/Developer/spg/llm-multi-agent-system/.cursor/debug.log
-            # #endregion
             
             total_latency=$((total_latency + latency))
             total_tps=$(awk "BEGIN {print $total_tps + $tps}")

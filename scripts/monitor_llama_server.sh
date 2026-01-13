@@ -123,12 +123,12 @@ test_inference() {
         "max_tokens": 5
     }'
     
-    local start=$(date +%s%3N)
+    local start=$(($(date +%s) * 1000))
     local response=$(curl -s -f --max-time 30 \
         -H "Content-Type: application/json" \
         -d "$test_request" \
         "$api_url" 2>/dev/null || echo "")
-    local end=$(date +%s%3N)
+    local end=$(($(date +%s) * 1000))
     local latency=$((end - start))
     
     if [ -n "$response" ] && ! echo "$response" | grep -q '"error"'; then

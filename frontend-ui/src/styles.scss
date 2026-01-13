@@ -200,6 +200,17 @@ body {
   }
 }
 
+/* Tab Label Styles */
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    margin: 0;
+  }
+}
+
 /* Full Height Container */
 .full-height {
   height: 100%;

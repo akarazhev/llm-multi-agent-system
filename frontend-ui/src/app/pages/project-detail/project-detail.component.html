@@ -83,8 +83,10 @@
       <!-- Overview Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon>overview</mat-icon>
-          Overview
+          <span class="tab-label">
+            <mat-icon>overview</mat-icon>
+            <span>Overview</span>
+          </span>
         </ng-template>
         <div class="tab-content">
           <!-- Statistics Cards -->
@@ -268,8 +270,10 @@
       <!-- Team Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon>groups</mat-icon>
-          Team ({{ project()!.teamMembers.length }})
+          <span class="tab-label">
+            <mat-icon>groups</mat-icon>
+            <span>Team ({{ project()!.teamMembers.length }})</span>
+          </span>
         </ng-template>
         <div class="tab-content">
           <div class="team-section">
@@ -336,8 +340,10 @@
       <!-- Activity Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon>history</mat-icon>
-          Activity
+          <span class="tab-label">
+            <mat-icon>history</mat-icon>
+            <span>Activity</span>
+          </span>
         </ng-template>
         <div class="tab-content">
           <mat-card>
@@ -356,8 +362,10 @@
       <!-- Workflows Tab -->
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon>account_tree</mat-icon>
-          Workflows
+          <span class="tab-label">
+            <mat-icon>account_tree</mat-icon>
+            <span>Workflows</span>
+          </span>
         </ng-template>
         <div class="tab-content">
           <mat-card>

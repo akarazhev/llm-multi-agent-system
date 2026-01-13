@@ -5,8 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgOptimizedImage } from '@angular/common';
 import { Router } from '@angular/router';
+import { ThemeService } from './shared/services/theme.service';
 
 interface NavItem {
   label: string;
@@ -25,6 +27,7 @@ interface NavItem {
     MatIconModule,
     MatSidenavModule,
     MatListModule,
+    MatTooltipModule,
     NgOptimizedImage
   ],
   templateUrl: './app.component.html',
@@ -50,17 +53,32 @@ export class AppComponent {
     { label: 'Agents', icon: 'smart_toy', route: '/agents' },
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    public themeService: ThemeService
+  ) {}
 
   isActive(route: string): boolean {
     return this.router.url.startsWith(route);
   }
 
   getSpgLogo(): string {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (this.themeService.isDark()) {
       return 'images/spg_logo.png';
     } else {
       return 'images/spg_logo_black.svg';
     }
+  }
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
+
+  getThemeIcon(): string {
+    return this.themeService.isDark() ? 'light_mode' : 'dark_mode';
+  }
+
+  getThemeTooltip(): string {
+    return this.themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode';
   }
 }

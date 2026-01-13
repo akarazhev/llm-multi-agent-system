@@ -119,3 +119,16 @@ mat-toolbar {
     }
   }
 }
+
+// Dark theme background
+:root.dark-theme {
+  .background-container .background {
+    opacity: .3;
+    background-image: linear-gradient(to right, #1a1a2e, #2d4a7c);
+
+    .svg {
+      stroke: #ffffff20;
+      fill: #fff2;
+    }
+  }
+}

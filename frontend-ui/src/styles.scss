@@ -26,6 +26,27 @@ $llm-agent-theme: mat.define-theme((
 // Include theme styles for core and each component
 @include mat.all-component-themes($llm-agent-theme);
 
+// Dark theme definition
+$llm-agent-dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: theme-colors.$primary-palette,
+    tertiary: theme-colors.$tertiary-palette,
+  ),
+  typography: (
+    brand-family: 'Roboto, sans-serif',
+    plain-family: 'Roboto, sans-serif',
+  ),
+  density: (
+    scale: 0,
+  )
+));
+
+// Apply dark theme when dark-theme class is present
+.dark-theme {
+  @include mat.all-component-colors($llm-agent-dark-theme);
+}
+
 // Material Design Overrides
 @include mat.sidenav-overrides((
   container-shape: 0,
@@ -186,4 +207,17 @@ body {
 .page-content {
   position: relative;
   z-index: 1;
+}
+
+/* Theme-specific custom variables */
+:root {
+  --llm-card-background: #f5f5f5;
+  --llm-hover-background: #f0f0f0;
+  --llm-border-color: #e0e0e0;
+}
+
+.dark-theme {
+  --llm-card-background: #303031;
+  --llm-hover-background: #3b3b3c;
+  --llm-border-color: #424242;
 }

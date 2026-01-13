@@ -8,10 +8,17 @@
   </div>
   <span class="toolbar-title">{{ title }}</span>
   <div class="header-buttons">
-    <button mat-icon-button>
+    <button 
+      mat-icon-button 
+      (click)="toggleTheme()" 
+      [matTooltip]="getThemeTooltip()"
+      aria-label="Toggle theme">
+      <mat-icon>{{ getThemeIcon() }}</mat-icon>
+    </button>
+    <button mat-icon-button matTooltip="Notifications">
       <mat-icon>notifications</mat-icon>
     </button>
-    <button mat-icon-button>
+    <button mat-icon-button matTooltip="Settings">
       <mat-icon>settings</mat-icon>
     </button>
   </div>

@@ -71,29 +71,109 @@ export LLAMA_THREADS="-1"          # CPU threads (-1 for auto)
 
 ## Available Scripts
 
-### Start Server
+### 🚀 Start Server
 ```bash
 ./scripts/start_llama_server.sh
 ```
-- Checks if llama-server is installed
-- Detects port conflicts
-- Starts server with configured model
-- Logs to `logs/llama-server.log`
+**Enhanced features:**
+- Automatic port conflict detection and resolution
+- System resource validation (CPU, memory, disk)
+- Configuration verification
+- Real-time startup monitoring with health checks
+- Graceful handling of existing processes
+- Detailed logging and progress indicators
 
-### Check Server Status
+### 🏥 Comprehensive Health Check
 ```bash
 ./scripts/check_llama_server.sh
-```
-- Verifies server is running
-- Tests API health
-- Shows available models
 
-### Stop Server
+# With verbose diagnostics
+./scripts/check_llama_server.sh --verbose
+```
+**6-stage health verification:**
+1. Process status and resource usage
+2. Network port availability
+3. HTTP connectivity
+4. API health endpoint
+5. Model availability
+6. Inference endpoint testing
+
+### 📊 Continuous Monitoring
+```bash
+# Basic monitoring
+./scripts/monitor_llama_server.sh
+
+# With auto-restart on failure
+./scripts/monitor_llama_server.sh --auto-restart
+
+# Custom check interval
+./scripts/monitor_llama_server.sh --interval 15
+```
+**Production-grade monitoring:**
+- Real-time performance metrics
+- Automatic restart on failure
+- Configurable health checks
+- Resource usage tracking
+- Alert logging
+
+### ⚙️ Configuration Management
+```bash
+# Interactive configuration wizard
+./scripts/configure_llama_server.sh
+
+# View current settings
+./scripts/configure_llama_server.sh --show
+
+# Export configuration
+./scripts/configure_llama_server.sh --export
+```
+**Pre-configured presets:**
+- Development (fast, 6GB RAM)
+- Balanced (default, 18GB RAM)
+- Production (high quality, 24GB RAM)
+- Maximum Performance (40GB RAM)
+- CPU Only (no GPU)
+
+### 🎯 Performance Benchmarking
+```bash
+# Full benchmark suite
+./scripts/benchmark_llama_server.sh
+
+# Specific tests
+./scripts/benchmark_llama_server.sh --latency
+./scripts/benchmark_llama_server.sh --throughput
+./scripts/benchmark_llama_server.sh --concurrent
+./scripts/benchmark_llama_server.sh --stress
+```
+**Comprehensive testing:**
+- Latency measurements
+- Throughput (tokens/second)
+- Concurrent request handling
+- Stress testing under load
+
+### 🔄 Restart Server
+```bash
+./scripts/restart_llama_server.sh
+```
+Safely restarts with health verification
+
+### ✋ Stop Server
 ```bash
 ./scripts/stop_llama_server.sh
 ```
-- Gracefully stops the llama-server
-- Cleans up processes
+**Graceful shutdown:**
+- SIGTERM before SIGKILL
+- Port cleanup verification
+- Process status display
+
+### 📋 Quick Status Check
+```bash
+./scripts/check_server_status.sh
+```
+Fast check for scripts/automation (exit codes: 0=healthy, 1=down, 2=unhealthy)
+
+### 📖 Documentation
+See [`scripts/README.md`](../scripts/README.md) for complete documentation and [`scripts/QUICK_REFERENCE.md`](../scripts/QUICK_REFERENCE.md) for quick command reference.
 
 ## Model Selection
 

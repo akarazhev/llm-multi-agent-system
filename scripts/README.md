@@ -41,15 +41,33 @@ Starts the llama-server with comprehensive validation and monitoring.
 
 **Usage:**
 ```bash
+# Default (Q8_0 quantization - higher quality)
 ./scripts/start_llama_server.sh
+
+# Use smaller/faster model (UD-Q4_K_XL)
+MODEL_QUANTIZATION=UD-Q4_K_XL ./scripts/start_llama_server.sh
 
 # With custom configuration
 LLAMA_PORT=8081 LLAMA_CTX_SIZE=8192 ./scripts/start_llama_server.sh
+
+# Use full model path directly
+LLAMA_MODEL="unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:Q8_0" ./scripts/start_llama_server.sh
 ```
 
 **Configuration:**
 ```bash
+# Model selection - choose quantization level
+# Option 1: Use MODEL_QUANTIZATION (recommended)
+export MODEL_QUANTIZATION="Q8_0"        # Higher quality, ~24GB (default)
+# or
+export MODEL_QUANTIZATION="UD-Q4_K_XL"  # Smaller, faster, ~12GB
+
+# Option 2: Set full model path directly
+export LLAMA_MODEL="unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:Q8_0"
+# or
 export LLAMA_MODEL="unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:UD-Q4_K_XL"
+
+# Other configuration options
 export LLAMA_HOST="127.0.0.1"
 export LLAMA_PORT="8080"
 export LLAMA_CTX_SIZE="16384"
@@ -59,6 +77,10 @@ export LLAMA_BATCH_SIZE="512"
 export LLAMA_PARALLEL="4"
 export LLAMA_LOG_LEVEL="info"
 ```
+
+**Model Quantization Options:**
+- **Q8_0** (default): Higher quality, larger size (~24GB), better accuracy. Recommended for production use.
+- **UD-Q4_K_XL**: Smaller size (~12GB), faster inference, slightly lower quality. Good for development or systems with limited memory.
 
 **Output:**
 - Real-time progress indicators
@@ -724,7 +746,11 @@ After=network.target
 Type=simple
 User=youruser
 WorkingDirectory=/path/to/project
-Environment="LLAMA_MODEL=unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:UD-Q4_K_XL"
+# Option 1: Use MODEL_QUANTIZATION (recommended)
+Environment="MODEL_QUANTIZATION=Q8_0"
+# Option 2: Or set full model path directly
+# Environment="LLAMA_MODEL=unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:Q8_0"
+# For smaller/faster model, use: Environment="MODEL_QUANTIZATION=UD-Q4_K_XL"
 Environment="LLAMA_PORT=8080"
 ExecStart=/path/to/scripts/start_llama_server.sh
 ExecStop=/path/to/scripts/stop_llama_server.sh

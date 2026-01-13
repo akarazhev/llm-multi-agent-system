@@ -35,8 +35,10 @@
             <span class="project-icon">{{ project()!.icon || '📁' }}</span>
             <h1>{{ project()!.name }}</h1>
             <mat-chip [color]="getStatusColor(project()!.status)" class="status-chip">
-              <mat-icon>{{ getStatusIcon(project()!.status) }}</mat-icon>
-              {{ project()!.status | uppercase }}
+              <span class="chip-content">
+                <mat-icon>{{ getStatusIcon(project()!.status) }}</mat-icon>
+                <span>{{ project()!.status | uppercase }}</span>
+              </span>
             </mat-chip>
           </div>
           <p class="project-description">{{ project()!.description }}</p>
@@ -328,8 +330,10 @@
             <div class="agents-list">
               @for (agentId of project()!.aiAgents; track agentId) {
                 <mat-chip class="agent-chip">
-                  <mat-icon>smart_toy</mat-icon>
-                  {{ agentId.replace('_', ' ') | titlecase }}
+                  <span class="chip-content">
+                    <mat-icon>smart_toy</mat-icon>
+                    <span>{{ agentId.replace('_', ' ') | titlecase }}</span>
+                  </span>
                 </mat-chip>
               }
             </div>

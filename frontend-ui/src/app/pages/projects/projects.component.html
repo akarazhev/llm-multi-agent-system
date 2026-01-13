@@ -52,8 +52,10 @@
             <mat-card-title>{{ project.name }}</mat-card-title>
             <mat-card-subtitle>
               <mat-chip [color]="getStatusColor(project.status)" class="status-chip">
-                <mat-icon>{{ getStatusIcon(project.status) }}</mat-icon>
-                {{ project.status | uppercase }}
+                <span class="chip-content">
+                  <mat-icon>{{ getStatusIcon(project.status) }}</mat-icon>
+                  <span>{{ project.status | uppercase }}</span>
+                </span>
               </mat-chip>
             </mat-card-subtitle>
           </mat-card-header>

@@ -211,6 +211,20 @@ body {
   }
 }
 
+/* Chip Content Styles */
+.chip-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    margin: 0;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
 /* Full Height Container */
 .full-height {
   height: 100%;

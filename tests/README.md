@@ -19,12 +19,6 @@ python -m pytest tests/ -v
 
 - **`simple_test.py`** - Simple workflow tests
 - **`test_agent.py`** - Agent functionality tests
-- **`test_all_formats.py`** - File format tests
-- **`test_file_writer.py`** - File writer tests
-- **`test_full_response.py`** - Full response tests
-- **`test_nested_blocks.py`** - Nested block tests
-- **`test_no_backticks.py`** - No backticks tests
-- **`test_no_duplicates.py`** - Duplicate prevention tests
 
 ## Documentation
 
@@ -36,8 +30,6 @@ Each test file can be run independently:
 
 ```bash
 python tests/simple_test.py
-python tests/test_file_writer.py
-python tests/test_all_formats.py
 ```
 
 ## Requirements

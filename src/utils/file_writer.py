@@ -356,20 +356,34 @@ class FileWriter:
                 else:
                     end_search = len(text)
                 
-                # Find the last ``` before the next file marker
+                # Find the closing ``` before the next file marker
                 remaining_text = text[start_pos:end_search]
-                # Look for closing ``` that's on its own line
+                # Look for closing ``` - try multiple patterns, take the FIRST match
                 close_match = None
-                for m in re.finditer(r'\n```(?:\s|$)', remaining_text):
+                # Pattern 1: ``` on its own line (with optional whitespace)
+                for m in re.finditer(r'\n\s*```\s*(?:\n|$)', remaining_text):
                     close_match = m
+                    break  # Take the first match
+                # Pattern 2: ``` at start of remaining_text or after newline
+                if not close_match:
+                    for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
+                        close_match = m
+                        break
+                    # Pattern 3: Any ``` followed by whitespace or end (most permissive)
+                    if not close_match:
+                        for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
+                            close_match = m
+                            break
                 
                 if close_match:
                     content = remaining_text[:close_match.start()].strip()
                     files[filename] = content
         
-        # If found files with colon format, return them
-        if files:
+        # If found files with colon format, only return if we successfully extracted all matches
+        # Otherwise, fall through to Pattern 2 which handles "File: `filename`" format
+        if files and len(files) == len(matches):
             return files
+        # Don't return - let Pattern 2 try to extract the remaining files
         
         # Pattern 2: File: `filename` followed by ```language code block
         # This handles formats:
@@ -401,7 +415,9 @@ class FileWriter:
                     files[filename] = content
         
         # If no matches with bold, try without bold (with backticks)
-        if not files:
+        # Always try this pattern even if files dict has entries from Pattern 1
+        # (matches variable is from Pattern 2 bold section above)
+        if not matches or len(matches) == 0:
             # More flexible: allow optional whitespace and newlines
             pattern_no_bold = r'File:\s*`([^`]+)`\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
             matches = list(re.finditer(pattern_no_bold, text, re.DOTALL))
@@ -417,23 +433,36 @@ class FileWriter:
                         end_search = len(text)
                     
                     remaining_text = text[start_pos:end_search]
+                    # Look for closing ``` - try multiple patterns, take the FIRST match
                     close_match = None
-                    for m in re.finditer(r'\n```(?:\s|$)', remaining_text):
+                    # Pattern 1: ``` on its own line (with optional whitespace)
+                    for m in re.finditer(r'\n\s*```\s*(?:\n|$)', remaining_text):
                         close_match = m
+                        break  # Take the first match
+                    # Pattern 2: ``` at start of remaining_text or after newline
+                    if not close_match:
+                        for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
+                            close_match = m
+                            break
+                    # Pattern 3: Any ``` followed by whitespace or end (most permissive)
+                    if not close_match:
+                        for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
+                            close_match = m
+                            break
                     
                     if close_match:
                         content = remaining_text[:close_match.start()].strip()
                         files[filename] = content
         
         # Pattern 3: File: path/to/file.py (without backticks)
-        if not files:
-            # More flexible: allow optional whitespace and newlines
-            # This pattern matches: "File: filename\n```language\n" or "File: filename\n```\n"
-            # The pattern requires at least one newline between "File:" and the code block
-            pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n+\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
-            matches = list(re.finditer(pattern_no_backticks, text, re.DOTALL))
-            
-            if matches:
+        # Always try this pattern even if files dict has entries from previous patterns
+        # More flexible: allow optional whitespace and newlines
+        # This pattern matches: "File: filename\n```language\n" or "File: filename\n```\n"
+        # The pattern requires at least one newline between "File:" and the code block
+        pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n+\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
+        matches = list(re.finditer(pattern_no_backticks, text, re.DOTALL))
+        
+        if matches:
                 logger.debug(f"extract_file_structure: Found {len(matches)} matches with Pattern 3 (File: without backticks)")
                 for i, match in enumerate(matches):
                     filename = match.group(1).strip()

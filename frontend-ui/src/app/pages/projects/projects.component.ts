@@ -18,7 +18,6 @@ import { Project, ProjectStatus } from '../../core/interfaces/project.interface'
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     MatCardModule,
     MatButtonModule,
     MatIconModule,

@@ -102,7 +102,7 @@
 
             <div class="project-integrations">
               @if (project.integrations.git?.connected) {
-                <mat-icon [matTooltip]="'Git: ' + project.integrations.git.platform" class="integration-icon connected">
+                <mat-icon [matTooltip]="'Git: ' + (project.integrations.git?.platform || 'unknown')" class="integration-icon connected">
                   code
                 </mat-icon>
               }

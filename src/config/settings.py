@@ -43,6 +43,8 @@ class Settings:
     enable_metrics: bool = True
     
     output_directory: str = "./output"
+    database_url: str = "postgresql+asyncpg://postgres:password@localhost:5432/llm_agents"
+    keycloak: Dict[str, Any] = field(default_factory=dict)
     
     def __post_init__(self):
         """Validate settings after initialization"""
@@ -109,6 +111,10 @@ class Settings:
         # Validate output directory
         if not self.output_directory:
             errors.append("output_directory cannot be empty")
+
+        # Validate database URL
+        if not self.database_url:
+            errors.append("database_url cannot be empty")
         
         # Raise all errors at once
         if errors:
@@ -137,7 +143,9 @@ class Settings:
             enable_task_persistence=config.get('enable_task_persistence', False),
             enable_structured_logging=config.get('enable_structured_logging', True),
             enable_metrics=config.get('enable_metrics', True),
-            output_directory=config.get('output_directory', './output')
+            output_directory=config.get('output_directory', './output'),
+            database_url=config.get('database_url', 'postgresql+asyncpg://postgres:password@localhost:5432/llm_agents'),
+            keycloak=config.get('keycloak', {})
         )
     
     def to_dict(self) -> Dict[str, Any]:
@@ -160,7 +168,9 @@ class Settings:
             'enable_task_persistence': self.enable_task_persistence,
             'enable_structured_logging': self.enable_structured_logging,
             'enable_metrics': self.enable_metrics,
-            'output_directory': self.output_directory
+            'output_directory': self.output_directory,
+            'database_url': self.database_url,
+            'keycloak': self.keycloak
         }
 
 

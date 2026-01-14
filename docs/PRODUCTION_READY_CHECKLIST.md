@@ -179,9 +179,9 @@ If you encounter issues:
    ```
 
 4. **Review Documentation**:
-   - [Production-Ready Guide](docs/PRODUCTION_READY_GUIDE.md)
-   - [Troubleshooting](docs/TROUBLESHOOTING.md)
-   - [Migration Guide](docs/MIGRATION_GUIDE.md)
+   - [Production-Ready Guide](PRODUCTION_READY_GUIDE.md)
+   - [Troubleshooting](TROUBLESHOOTING.md)
+   - [Migration Guide](MIGRATION_GUIDE.md)
 
 5. **Common Issues**:
    - Circuit breaker opening frequently → Check LLM server health

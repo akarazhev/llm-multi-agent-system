@@ -89,8 +89,8 @@ python examples/interactive_chat_workflow.py
 
 ## 📚 Documentation
 
-- **[Interactive Chat Guide](docs/INTERACTIVE_CHAT.md)** - Complete documentation
-- **[Quick Reference](docs/CHAT_QUICK_REFERENCE.md)** - One-page cheat sheet
+- **[Interactive Chat Guide](INTERACTIVE_CHAT.md)** - Complete documentation
+- **[Quick Reference](CHAT_QUICK_REFERENCE.md)** - One-page cheat sheet
 - **[Update Summary](INTERACTIVE_CHAT_UPDATE.md)** - Technical details
 
 ## 💡 Features You'll Love
@@ -305,14 +305,14 @@ orchestrator = LangGraphOrchestrator(
    ```
 
 2. **Read quick reference** (5 minutes)
-   - [docs/CHAT_QUICK_REFERENCE.md](docs/CHAT_QUICK_REFERENCE.md)
+   - [CHAT_QUICK_REFERENCE.md](CHAT_QUICK_REFERENCE.md)
 
 3. **Run full workflow** (15 minutes)
    - Start llama-server
    - Run example with Option 1
 
 4. **Explore full guide** (30 minutes)
-   - [docs/INTERACTIVE_CHAT.md](docs/INTERACTIVE_CHAT.md)
+   - [INTERACTIVE_CHAT.md](INTERACTIVE_CHAT.md)
 
 5. **Integrate in your code**
    - Already works! Just run your existing workflows
@@ -397,9 +397,9 @@ We'd love to hear from you!
 
 ## 📖 More Resources
 
-- **Main README**: [README.md](README.md)
-- **Interactive Chat Guide**: [docs/INTERACTIVE_CHAT.md](docs/INTERACTIVE_CHAT.md)
-- **Quick Reference**: [docs/CHAT_QUICK_REFERENCE.md](docs/CHAT_QUICK_REFERENCE.md)
+- **Main README**: [README.md](../README.md)
+- **Interactive Chat Guide**: [INTERACTIVE_CHAT.md](INTERACTIVE_CHAT.md)
+- **Quick Reference**: [CHAT_QUICK_REFERENCE.md](CHAT_QUICK_REFERENCE.md)
 - **Update Details**: [INTERACTIVE_CHAT_UPDATE.md](INTERACTIVE_CHAT_UPDATE.md)
 
 ---

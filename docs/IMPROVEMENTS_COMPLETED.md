@@ -170,7 +170,7 @@ Successfully transformed the LLM Multi-Agent System into a production-ready impl
 - `docs/PRODUCTION_READY_GUIDE.md` - Comprehensive production guide (850 lines)
 - `docs/MIGRATION_GUIDE.md` - Step-by-step migration (350 lines)
 - `docs/PRODUCTION_ENHANCEMENTS_SUMMARY.md` - Technical summary (600 lines)
-- `PRODUCTION_READY_CHECKLIST.md` - Deployment checklist (250 lines)
+- `docs/PRODUCTION_READY_CHECKLIST.md` - Deployment checklist (250 lines)
 
 ### Configuration
 - `.env.example` - Enhanced with 50+ environment variables
@@ -278,6 +278,6 @@ The LLM Multi-Agent System is now **production-ready** with:
 ---
 
 For questions or issues, refer to:
-- [Production-Ready Guide](docs/PRODUCTION_READY_GUIDE.md)
-- [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
-- [Migration Guide](docs/MIGRATION_GUIDE.md)
+- [Production-Ready Guide](PRODUCTION_READY_GUIDE.md)
+- [Troubleshooting Guide](TROUBLESHOOTING.md)
+- [Migration Guide](MIGRATION_GUIDE.md)

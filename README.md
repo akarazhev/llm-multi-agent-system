@@ -12,7 +12,7 @@
 
 - Install: `brew install python@3.12` (macOS)
 - Create venv: `python3.12 -m venv venv`
-- See: [`START_HERE.md`](START_HERE.md) for complete setup
+- See: [`START_HERE.md`](docs/START_HERE.md) for complete setup
 
 > Python 3.14 and other versions are NOT supported due to LangChain/LangGraph compatibility.
 

@@ -439,7 +439,7 @@ This project follows Semantic Versioning (SemVer):
 
 ## Contributing
 
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for how to contribute changes.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute changes.
 
 ## Links
 

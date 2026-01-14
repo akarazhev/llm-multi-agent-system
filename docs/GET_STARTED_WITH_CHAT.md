@@ -188,9 +188,9 @@ Already in requirements.txt if you installed normally.
 
 ### Quick References
 
-- **[1-page reference](docs/CHAT_QUICK_REFERENCE.md)** - Commands and examples
-- **[Full guide](docs/INTERACTIVE_CHAT.md)** - Complete documentation
-- **[Visual examples](docs/CHAT_EXAMPLES.md)** - See output examples
+- **[1-page reference](CHAT_QUICK_REFERENCE.md)** - Commands and examples
+- **[Full guide](INTERACTIVE_CHAT.md)** - Complete documentation
+- **[Visual examples](CHAT_EXAMPLES.md)** - See output examples
 
 ### Try More Examples
 
@@ -207,7 +207,7 @@ python examples/custom_workflow.py
 
 ### Advanced Usage
 
-Read the full guide: [docs/INTERACTIVE_CHAT.md](docs/INTERACTIVE_CHAT.md)
+Read the full guide: [INTERACTIVE_CHAT.md](INTERACTIVE_CHAT.md)
 
 ## Quick Troubleshooting
 
@@ -260,9 +260,9 @@ python main.py
 
 ## Need Help?
 
-- **Examples don't work?** Check [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
-- **Want more details?** Read [INTERACTIVE_CHAT.md](docs/INTERACTIVE_CHAT.md)
-- **Quick commands?** See [CHAT_QUICK_REFERENCE.md](docs/CHAT_QUICK_REFERENCE.md)
+- **Examples don't work?** Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- **Want more details?** Read [INTERACTIVE_CHAT.md](INTERACTIVE_CHAT.md)
+- **Quick commands?** See [CHAT_QUICK_REFERENCE.md](CHAT_QUICK_REFERENCE.md)
 
 ## One More Thing...
 

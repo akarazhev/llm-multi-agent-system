@@ -523,8 +523,8 @@ The implementation is production-ready, well-documented, and provides immediate 
 
 ## Quick Links
 
-- **Main Guide**: [docs/INTERACTIVE_CHAT.md](docs/INTERACTIVE_CHAT.md)
-- **Quick Reference**: [docs/CHAT_QUICK_REFERENCE.md](docs/CHAT_QUICK_REFERENCE.md)
+- **Main Guide**: [INTERACTIVE_CHAT.md](INTERACTIVE_CHAT.md)
+- **Quick Reference**: [CHAT_QUICK_REFERENCE.md](CHAT_QUICK_REFERENCE.md)
 - **What's New**: [WHATS_NEW.md](WHATS_NEW.md)
 - **Update Details**: [INTERACTIVE_CHAT_UPDATE.md](INTERACTIVE_CHAT_UPDATE.md)
 - **Example**: [examples/interactive_chat_workflow.py](examples/interactive_chat_workflow.py)

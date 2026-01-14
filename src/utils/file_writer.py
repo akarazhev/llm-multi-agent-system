@@ -363,6 +363,11 @@ class FileWriter:
         if matches:
             for i, match in enumerate(matches):
                 filename = self._sanitize_filename(match.group(1))
+                # Extract language from the pattern (e.g., markdown from ```markdown:filename)
+                full_match = match.group(0)
+                language_match = re.search(r'```\s*(\w+(?:-\w+)*):', full_match)
+                language = language_match.group(1) if language_match else ''
+                
                 start_pos = match.end()
                 
                 # Find the matching closing ``` by counting backticks
@@ -374,47 +379,62 @@ class FileWriter:
                 
                 # Find the closing ``` before the next file marker
                 remaining_text = text[start_pos:end_search]
-                # Look for closing ``` - need to handle nested code blocks
-                # Count opening ``` markers and find the matching closing one
-                close_match = None
-                backtick_depth = 1  # We already passed one opening ```
                 
-                # Find all ``` markers (both opening and closing)
-                all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
-                
-                for m in all_backtick_matches:
-                    # Check what comes after the ``` to determine if it's opening or closing
-                    match_end = m.end()
-                    # Look at the rest of the line after ```
-                    line_end = remaining_text.find('\n', match_end)
-                    if line_end == -1:
-                        line_end = len(remaining_text)
-                    rest_of_line = remaining_text[match_end:line_end].strip()
-                    
-                    if rest_of_line and not rest_of_line.isspace():
-                        # Has content after ``` (like ```python or ```markdown) - it's an opening
-                        backtick_depth += 1
+                # For markdown files with nested code blocks, use rfind approach
+                if language in ('markdown', 'md'):
+                    # For markdown, find last ``` before next file or end
+                    last_fence = remaining_text.rfind('\n```')
+                    if last_fence > 0:
+                        content = remaining_text[:last_fence].strip()
                     else:
-                        # No content or just whitespace after ``` - it's a closing
-                        backtick_depth -= 1
-                        if backtick_depth == 0:
-                            # Found the matching closing ```
-                            close_match = m
-                            break
-                # Pattern 2: ``` at start of remaining_text or after newline
-                if not close_match:
-                    for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
-                        close_match = m
-                        break
-                    # Pattern 3: Any ``` followed by whitespace or end (most permissive)
+                        last_fence = remaining_text.rfind('```')
+                        if last_fence > 0:
+                            content = remaining_text[:last_fence].strip()
+                        else:
+                            content = remaining_text.strip()
+                    if content:
+                        files[filename] = content
+                else:
+                    # For non-markdown, use depth tracking
+                    close_match = None
+                    backtick_depth = 1  # We already passed one opening ```
+                    
+                    # Find all ``` markers (both opening and closing)
+                    all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
+                    
+                    for m in all_backtick_matches:
+                        # Check what comes after the ``` to determine if it's opening or closing
+                        match_end = m.end()
+                        # Look at the rest of the line after ```
+                        line_end = remaining_text.find('\n', match_end)
+                        if line_end == -1:
+                            line_end = len(remaining_text)
+                        rest_of_line = remaining_text[match_end:line_end].strip()
+                        
+                        if rest_of_line and not rest_of_line.isspace():
+                            # Has content after ``` (like ```python or ```markdown) - it's an opening
+                            backtick_depth += 1
+                        else:
+                            # No content or just whitespace after ``` - it's a closing
+                            backtick_depth -= 1
+                            if backtick_depth == 0:
+                                # Found the matching closing ```
+                                close_match = m
+                                break
+                    # Pattern 2: ``` at start of remaining_text or after newline
                     if not close_match:
-                        for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
+                        for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
                             close_match = m
                             break
-                
-                if close_match:
-                    content = remaining_text[:close_match.start()].strip()
-                    files[filename] = content
+                        # Pattern 3: Any ``` followed by whitespace or end (most permissive)
+                        if not close_match:
+                            for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
+                                close_match = m
+                                break
+                    
+                    if close_match:
+                        content = remaining_text[:close_match.start()].strip()
+                        files[filename] = content
         
         # If found files with colon format, only return if we successfully extracted all matches
         # Otherwise, fall through to Pattern 2 which handles "File: `filename`" format
@@ -429,42 +449,53 @@ class FileWriter:
         
         # Try with bold first - use similar approach to handle nested blocks
         # More flexible: allow optional whitespace and newlines
-        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
+        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n\s*```\s*(\w+(?:-\w+)?)?\s*\n'
         matches = list(re.finditer(pattern_bold, text, re.DOTALL))
         
         if matches:
             for i, match in enumerate(matches):
                 filename = self._sanitize_filename(match.group(1))
+                language = match.group(2) or ''
                 start_pos = match.end()
                 
+                # Find end position (next File: marker or end of text)
                 if i + 1 < len(matches):
-                    end_search = matches[i + 1].start()
+                    end_pos = matches[i + 1].start()
                 else:
-                    end_search = len(text)
+                    end_pos = len(text)
                 
-                remaining_text = text[start_pos:end_search]
-                # Use depth tracking for nested code blocks
-                close_match = None
-                backtick_depth = 1
-                all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
+                # Extract content between this match and the next
+                remaining = text[start_pos:end_pos]
                 
-                for m in all_backtick_matches:
-                    match_end = m.end()
-                    line_end = remaining_text.find('\n', match_end)
-                    if line_end == -1:
-                        line_end = len(remaining_text)
-                    rest_of_line = remaining_text[match_end:line_end].strip()
-                    
-                    if rest_of_line and not rest_of_line.isspace():
-                        backtick_depth += 1
+                # For markdown files with nested code blocks, we need special handling
+                # Find the closing ``` that's at the same indentation level
+                if language in ('markdown', 'md'):
+                    # For markdown, find last ``` before next file or end
+                    # This handles nested code blocks
+                    last_fence = remaining.rfind('\n```')
+                    if last_fence > 0:
+                        content = remaining[:last_fence].strip()
                     else:
-                        backtick_depth -= 1
-                        if backtick_depth == 0:
-                            close_match = m
-                            break
+                        # Try without newline
+                        last_fence = remaining.rfind('```')
+                        if last_fence > 0:
+                            content = remaining[:last_fence].strip()
+                        else:
+                            content = remaining.strip()
+                else:
+                    # For non-markdown, use first closing fence
+                    fence_match = re.search(r'\n```\s*$', remaining, re.MULTILINE)
+                    if fence_match:
+                        content = remaining[:fence_match.start()].strip()
+                    else:
+                        # Try without requiring newline before
+                        fence_match = re.search(r'```\s*$', remaining, re.MULTILINE)
+                        if fence_match:
+                            content = remaining[:fence_match.start()].strip()
+                        else:
+                            content = remaining.strip()
                 
-                if close_match:
-                    content = remaining_text[:close_match.start()].strip()
+                if content:
                     files[filename] = content
         
         # If no matches with bold, try without bold (with backticks)
@@ -472,42 +503,49 @@ class FileWriter:
         # (matches variable is from Pattern 2 bold section above)
         if not matches or len(matches) == 0:
             # More flexible: allow optional whitespace and newlines
-            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
+            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n\s*```\s*(\w+(?:-\w+)?)?\s*\n'
             matches = list(re.finditer(pattern_no_bold, text, re.DOTALL))
             
             if matches:
                 for i, match in enumerate(matches):
                     filename = self._sanitize_filename(match.group(1))
+                    language = match.group(2) or ''
                     start_pos = match.end()
                     
+                    # Find end position (next File: marker or end of text)
                     if i + 1 < len(matches):
-                        end_search = matches[i + 1].start()
+                        end_pos = matches[i + 1].start()
                     else:
-                        end_search = len(text)
+                        end_pos = len(text)
                     
-                    remaining_text = text[start_pos:end_search]
-                    # Use depth tracking for nested code blocks
-                    close_match = None
-                    backtick_depth = 1
-                    all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
+                    # Extract content between this match and the next
+                    remaining = text[start_pos:end_pos]
                     
-                    for m in all_backtick_matches:
-                        match_end = m.end()
-                        line_end = remaining_text.find('\n', match_end)
-                        if line_end == -1:
-                            line_end = len(remaining_text)
-                        rest_of_line = remaining_text[match_end:line_end].strip()
-                        
-                        if rest_of_line and not rest_of_line.isspace():
-                            backtick_depth += 1
+                    # For markdown files with nested code blocks, we need special handling
+                    if language in ('markdown', 'md'):
+                        # For markdown, find last ``` before next file or end
+                        last_fence = remaining.rfind('\n```')
+                        if last_fence > 0:
+                            content = remaining[:last_fence].strip()
                         else:
-                            backtick_depth -= 1
-                            if backtick_depth == 0:
-                                close_match = m
-                                break
+                            last_fence = remaining.rfind('```')
+                            if last_fence > 0:
+                                content = remaining[:last_fence].strip()
+                            else:
+                                content = remaining.strip()
+                    else:
+                        # For non-markdown, use first closing fence
+                        fence_match = re.search(r'\n```\s*$', remaining, re.MULTILINE)
+                        if fence_match:
+                            content = remaining[:fence_match.start()].strip()
+                        else:
+                            fence_match = re.search(r'```\s*$', remaining, re.MULTILINE)
+                            if fence_match:
+                                content = remaining[:fence_match.start()].strip()
+                            else:
+                                content = remaining.strip()
                     
-                    if close_match:
-                        content = remaining_text[:close_match.start()].strip()
+                    if content:
                         files[filename] = content
         
         # Pattern 3: File: path/to/file.py (without backticks)
@@ -515,60 +553,52 @@ class FileWriter:
         # More flexible: allow optional whitespace and newlines
         # This pattern matches: "File: filename\n```language\n" or "File: filename\n```\n"
         # The pattern requires at least one newline between "File:" and the code block
-        pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n+\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
+        pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n\s*```\s*(\w+(?:-\w+)?)?\s*\n'
         matches = list(re.finditer(pattern_no_backticks, text, re.DOTALL))
         
         if matches:
                 logger.debug(f"extract_file_structure: Found {len(matches)} matches with Pattern 3 (File: without backticks)")
                 for i, match in enumerate(matches):
                     filename = self._sanitize_filename(match.group(1))
+                    language = match.group(2) or ''
                     start_pos = match.end()
                     
+                    # Find end position (next File: marker or end of text)
                     if i + 1 < len(matches):
-                        end_search = matches[i + 1].start()
+                        end_pos = matches[i + 1].start()
                     else:
-                        end_search = len(text)
+                        end_pos = len(text)
                     
-                    remaining_text = text[start_pos:end_search]
-                    logger.debug(f"extract_file_structure: Pattern 3 - Processing file '{filename}', remaining text length: {len(remaining_text)}, preview: {remaining_text[:100]}")
+                    # Extract content between this match and the next
+                    remaining = text[start_pos:end_pos]
                     
-                    # Use depth tracking for nested code blocks
-                    close_match = None
-                    backtick_depth = 1
-                    all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
-                    
-                    for m in all_backtick_matches:
-                        match_end = m.end()
-                        line_end = remaining_text.find('\n', match_end)
-                        if line_end == -1:
-                            line_end = len(remaining_text)
-                        rest_of_line = remaining_text[match_end:line_end].strip()
-                        
-                        if rest_of_line and not rest_of_line.isspace():
-                            backtick_depth += 1
+                    # For markdown files with nested code blocks, we need special handling
+                    if language in ('markdown', 'md'):
+                        # For markdown, find last ``` before next file or end
+                        last_fence = remaining.rfind('\n```')
+                        if last_fence > 0:
+                            content = remaining[:last_fence].strip()
                         else:
-                            backtick_depth -= 1
-                            if backtick_depth == 0:
-                                close_match = m
-                                break
-                    
-                    if close_match:
-                        content = remaining_text[:close_match.start()].strip()
-                        if content:
-                            files[filename] = content
-                            logger.debug(f"extract_file_structure: Successfully extracted file '{filename}' with {len(content)} chars")
-                        else:
-                            logger.warning(f"extract_file_structure: Found closing ``` but content is empty for '{filename}'")
+                            last_fence = remaining.rfind('```')
+                            if last_fence > 0:
+                                content = remaining[:last_fence].strip()
+                            else:
+                                content = remaining.strip()
                     else:
-                        logger.warning(f"extract_file_structure: Could not find closing ``` for '{filename}'. Remaining text preview: {remaining_text[:200]}")
-                        # As a fallback, if we can't find closing ```, try to extract up to the next "File:" marker
-                        # or use all remaining text if it's the last file
-                        if i + 1 >= len(matches):
-                            # Last file, use all remaining text
-                            content = remaining_text.strip()
-                            if content:
-                                files[filename] = content
-                                logger.debug(f"extract_file_structure: Using all remaining text for last file '{filename}' ({len(content)} chars)")
+                        # For non-markdown, use first closing fence
+                        fence_match = re.search(r'\n```\s*$', remaining, re.MULTILINE)
+                        if fence_match:
+                            content = remaining[:fence_match.start()].strip()
+                        else:
+                            fence_match = re.search(r'```\s*$', remaining, re.MULTILINE)
+                            if fence_match:
+                                content = remaining[:fence_match.start()].strip()
+                            else:
+                                content = remaining.strip()
+                    
+                    if content:
+                        files[filename] = content
+                        logger.debug(f"extract_file_structure: Successfully extracted file '{filename}' with {len(content)} chars")
         
         # Return files if any patterns matched, otherwise return empty dict
         return files

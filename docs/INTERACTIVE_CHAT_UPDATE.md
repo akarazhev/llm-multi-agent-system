@@ -274,7 +274,7 @@ result = await orchestrator.execute_feature_development(
 
 ## Documentation
 
-- **[Interactive Chat Guide](docs/INTERACTIVE_CHAT.md)** - Complete user guide
+- **[Interactive Chat Guide](INTERACTIVE_CHAT.md)** - Complete user guide
 - **[API Reference](docs/INTERACTIVE_CHAT.md#api-reference)** - Full API documentation
 - **[Examples](examples/interactive_chat_workflow.py)** - Working examples
 
@@ -316,7 +316,7 @@ Potential future additions:
 ## Support
 
 - **Issues**: Report issues on GitHub
-- **Documentation**: See [docs/INTERACTIVE_CHAT.md](docs/INTERACTIVE_CHAT.md)
+- **Documentation**: See [INTERACTIVE_CHAT.md](INTERACTIVE_CHAT.md)
 - **Examples**: Check [examples/interactive_chat_workflow.py](examples/interactive_chat_workflow.py)
 
 ## Credits

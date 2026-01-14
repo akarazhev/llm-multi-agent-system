@@ -1,10 +1,18 @@
 import os
 import yaml
 import json
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
 from dataclasses import dataclass, field
 from dotenv import load_dotenv
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class ConfigValidationError(Exception):
+    """Raised when configuration validation fails"""
+    pass
 
 
 @dataclass
@@ -15,16 +23,98 @@ class Settings:
     
     agents: Dict[str, Any] = field(default_factory=dict)
     
+    # LLM Configuration
     llm_timeout: int = 300
+    llm_max_retries: int = 3
+    llm_retry_initial_delay: float = 1.0
+    llm_retry_max_delay: float = 60.0
+    llm_circuit_breaker_threshold: int = 5
+    llm_circuit_breaker_timeout: float = 60.0
+    llm_stream_responses: bool = True
     
+    # Orchestration Configuration
     max_concurrent_agents: int = 5
     task_retry_attempts: int = 3
     task_timeout: int = 600
     
     enable_message_bus: bool = True
     enable_task_persistence: bool = False
+    enable_structured_logging: bool = True
+    enable_metrics: bool = True
     
     output_directory: str = "./output"
+    
+    def __post_init__(self):
+        """Validate settings after initialization"""
+        self.validate()
+    
+    def validate(self) -> None:
+        """
+        Validate configuration settings.
+        
+        Raises:
+            ConfigValidationError: If validation fails
+        """
+        errors: List[str] = []
+        
+        # Validate workspace
+        if not self.workspace:
+            errors.append("workspace cannot be empty")
+        elif not Path(self.workspace).exists():
+            logger.warning(f"Workspace directory does not exist: {self.workspace}")
+        
+        # Validate log level
+        valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if self.log_level.upper() not in valid_log_levels:
+            errors.append(f"log_level must be one of {valid_log_levels}, got '{self.log_level}'")
+        
+        # Validate timeouts
+        if self.llm_timeout <= 0:
+            errors.append(f"llm_timeout must be positive, got {self.llm_timeout}")
+        
+        if self.task_timeout <= 0:
+            errors.append(f"task_timeout must be positive, got {self.task_timeout}")
+        
+        # Validate retry configuration
+        if self.llm_max_retries < 0:
+            errors.append(f"llm_max_retries cannot be negative, got {self.llm_max_retries}")
+        
+        if self.llm_max_retries > 10:
+            logger.warning(f"llm_max_retries is very high ({self.llm_max_retries}), consider reducing")
+        
+        if self.llm_retry_initial_delay <= 0:
+            errors.append(f"llm_retry_initial_delay must be positive, got {self.llm_retry_initial_delay}")
+        
+        if self.llm_retry_max_delay <= self.llm_retry_initial_delay:
+            errors.append(f"llm_retry_max_delay ({self.llm_retry_max_delay}) must be greater than llm_retry_initial_delay ({self.llm_retry_initial_delay})")
+        
+        # Validate circuit breaker configuration
+        if self.llm_circuit_breaker_threshold <= 0:
+            errors.append(f"llm_circuit_breaker_threshold must be positive, got {self.llm_circuit_breaker_threshold}")
+        
+        if self.llm_circuit_breaker_timeout <= 0:
+            errors.append(f"llm_circuit_breaker_timeout must be positive, got {self.llm_circuit_breaker_timeout}")
+        
+        # Validate concurrent agents
+        if self.max_concurrent_agents <= 0:
+            errors.append(f"max_concurrent_agents must be positive, got {self.max_concurrent_agents}")
+        
+        if self.max_concurrent_agents > 20:
+            logger.warning(f"max_concurrent_agents is very high ({self.max_concurrent_agents}), this may cause resource issues")
+        
+        # Validate task retry attempts
+        if self.task_retry_attempts < 0:
+            errors.append(f"task_retry_attempts cannot be negative, got {self.task_retry_attempts}")
+        
+        # Validate output directory
+        if not self.output_directory:
+            errors.append("output_directory cannot be empty")
+        
+        # Raise all errors at once
+        if errors:
+            raise ConfigValidationError(
+                f"Configuration validation failed:\n" + "\n".join(f"  - {error}" for error in errors)
+            )
     
     @classmethod
     def from_dict(cls, config: Dict[str, Any]) -> 'Settings':
@@ -34,11 +124,19 @@ class Settings:
             log_file=config.get('log_file'),
             agents=config.get('agents', {}),
             llm_timeout=config.get('llm_timeout', config.get('cursor_timeout', 300)),
+            llm_max_retries=config.get('llm_max_retries', 3),
+            llm_retry_initial_delay=config.get('llm_retry_initial_delay', 1.0),
+            llm_retry_max_delay=config.get('llm_retry_max_delay', 60.0),
+            llm_circuit_breaker_threshold=config.get('llm_circuit_breaker_threshold', 5),
+            llm_circuit_breaker_timeout=config.get('llm_circuit_breaker_timeout', 60.0),
+            llm_stream_responses=config.get('llm_stream_responses', True),
             max_concurrent_agents=config.get('max_concurrent_agents', 5),
             task_retry_attempts=config.get('task_retry_attempts', 3),
             task_timeout=config.get('task_timeout', 600),
             enable_message_bus=config.get('enable_message_bus', True),
             enable_task_persistence=config.get('enable_task_persistence', False),
+            enable_structured_logging=config.get('enable_structured_logging', True),
+            enable_metrics=config.get('enable_metrics', True),
             output_directory=config.get('output_directory', './output')
         )
     
@@ -49,11 +147,19 @@ class Settings:
             'log_file': self.log_file,
             'agents': self.agents,
             'llm_timeout': self.llm_timeout,
+            'llm_max_retries': self.llm_max_retries,
+            'llm_retry_initial_delay': self.llm_retry_initial_delay,
+            'llm_retry_max_delay': self.llm_retry_max_delay,
+            'llm_circuit_breaker_threshold': self.llm_circuit_breaker_threshold,
+            'llm_circuit_breaker_timeout': self.llm_circuit_breaker_timeout,
+            'llm_stream_responses': self.llm_stream_responses,
             'max_concurrent_agents': self.max_concurrent_agents,
             'task_retry_attempts': self.task_retry_attempts,
             'task_timeout': self.task_timeout,
             'enable_message_bus': self.enable_message_bus,
             'enable_task_persistence': self.enable_task_persistence,
+            'enable_structured_logging': self.enable_structured_logging,
+            'enable_metrics': self.enable_metrics,
             'output_directory': self.output_directory
         }
 

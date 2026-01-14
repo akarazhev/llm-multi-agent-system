@@ -17,7 +17,8 @@ async def run_simple_workflow():
     
     orchestrator = LangGraphOrchestrator(
         workspace=config.workspace,
-        config=config.to_dict()
+        config=config.to_dict(),
+        enable_chat_display=True
     )
     
     requirement = "Create a REST API endpoint for user authentication with JWT tokens"

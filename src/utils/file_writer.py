@@ -429,13 +429,52 @@ class FileWriter:
         
         # Try with bold first - use similar approach to handle nested blocks
         # More flexible: allow optional whitespace and newlines
-        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*?\n(.*?)\n```'
+        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n\s*```\s*(\w+(?:-\w+)?)?\s*\n'
         matches = list(re.finditer(pattern_bold, text, re.DOTALL))
         
         if matches:
-            for match in matches:
+            for i, match in enumerate(matches):
                 filename = self._sanitize_filename(match.group(1))
-                content = match.group(2).strip()
+                language = match.group(2) or ''
+                start_pos = match.end()
+                
+                # Find end position (next File: marker or end of text)
+                if i + 1 < len(matches):
+                    end_pos = matches[i + 1].start()
+                else:
+                    end_pos = len(text)
+                
+                # Extract content between this match and the next
+                remaining = text[start_pos:end_pos]
+                
+                # For markdown files with nested code blocks, we need special handling
+                # Find the closing ``` that's at the same indentation level
+                if language in ('markdown', 'md'):
+                    # For markdown, find last ``` before next file or end
+                    # This handles nested code blocks
+                    last_fence = remaining.rfind('\n```')
+                    if last_fence > 0:
+                        content = remaining[:last_fence].strip()
+                    else:
+                        # Try without newline
+                        last_fence = remaining.rfind('```')
+                        if last_fence > 0:
+                            content = remaining[:last_fence].strip()
+                        else:
+                            content = remaining.strip()
+                else:
+                    # For non-markdown, use first closing fence
+                    fence_match = re.search(r'\n```\s*$', remaining, re.MULTILINE)
+                    if fence_match:
+                        content = remaining[:fence_match.start()].strip()
+                    else:
+                        # Try without requiring newline before
+                        fence_match = re.search(r'```\s*$', remaining, re.MULTILINE)
+                        if fence_match:
+                            content = remaining[:fence_match.start()].strip()
+                        else:
+                            content = remaining.strip()
+                
                 if content:
                     files[filename] = content
         
@@ -444,13 +483,48 @@ class FileWriter:
         # (matches variable is from Pattern 2 bold section above)
         if not matches or len(matches) == 0:
             # More flexible: allow optional whitespace and newlines
-            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*?\n(.*?)\n```'
+            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n\s*```\s*(\w+(?:-\w+)?)?\s*\n'
             matches = list(re.finditer(pattern_no_bold, text, re.DOTALL))
             
             if matches:
-                for match in matches:
+                for i, match in enumerate(matches):
                     filename = self._sanitize_filename(match.group(1))
-                    content = match.group(2).strip()
+                    language = match.group(2) or ''
+                    start_pos = match.end()
+                    
+                    # Find end position (next File: marker or end of text)
+                    if i + 1 < len(matches):
+                        end_pos = matches[i + 1].start()
+                    else:
+                        end_pos = len(text)
+                    
+                    # Extract content between this match and the next
+                    remaining = text[start_pos:end_pos]
+                    
+                    # For markdown files with nested code blocks, we need special handling
+                    if language in ('markdown', 'md'):
+                        # For markdown, find last ``` before next file or end
+                        last_fence = remaining.rfind('\n```')
+                        if last_fence > 0:
+                            content = remaining[:last_fence].strip()
+                        else:
+                            last_fence = remaining.rfind('```')
+                            if last_fence > 0:
+                                content = remaining[:last_fence].strip()
+                            else:
+                                content = remaining.strip()
+                    else:
+                        # For non-markdown, use first closing fence
+                        fence_match = re.search(r'\n```\s*$', remaining, re.MULTILINE)
+                        if fence_match:
+                            content = remaining[:fence_match.start()].strip()
+                        else:
+                            fence_match = re.search(r'```\s*$', remaining, re.MULTILINE)
+                            if fence_match:
+                                content = remaining[:fence_match.start()].strip()
+                            else:
+                                content = remaining.strip()
+                    
                     if content:
                         files[filename] = content
         
@@ -459,14 +533,49 @@ class FileWriter:
         # More flexible: allow optional whitespace and newlines
         # This pattern matches: "File: filename\n```language\n" or "File: filename\n```\n"
         # The pattern requires at least one newline between "File:" and the code block
-        pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n\s*```\s*(?:\w+(?:-\w+)*)?\s*?\n(.*?)\n```'
+        pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n\s*```\s*(\w+(?:-\w+)?)?\s*\n'
         matches = list(re.finditer(pattern_no_backticks, text, re.DOTALL))
         
         if matches:
                 logger.debug(f"extract_file_structure: Found {len(matches)} matches with Pattern 3 (File: without backticks)")
-                for match in matches:
+                for i, match in enumerate(matches):
                     filename = self._sanitize_filename(match.group(1))
-                    content = match.group(2).strip()
+                    language = match.group(2) or ''
+                    start_pos = match.end()
+                    
+                    # Find end position (next File: marker or end of text)
+                    if i + 1 < len(matches):
+                        end_pos = matches[i + 1].start()
+                    else:
+                        end_pos = len(text)
+                    
+                    # Extract content between this match and the next
+                    remaining = text[start_pos:end_pos]
+                    
+                    # For markdown files with nested code blocks, we need special handling
+                    if language in ('markdown', 'md'):
+                        # For markdown, find last ``` before next file or end
+                        last_fence = remaining.rfind('\n```')
+                        if last_fence > 0:
+                            content = remaining[:last_fence].strip()
+                        else:
+                            last_fence = remaining.rfind('```')
+                            if last_fence > 0:
+                                content = remaining[:last_fence].strip()
+                            else:
+                                content = remaining.strip()
+                    else:
+                        # For non-markdown, use first closing fence
+                        fence_match = re.search(r'\n```\s*$', remaining, re.MULTILINE)
+                        if fence_match:
+                            content = remaining[:fence_match.start()].strip()
+                        else:
+                            fence_match = re.search(r'```\s*$', remaining, re.MULTILINE)
+                            if fence_match:
+                                content = remaining[:fence_match.start()].strip()
+                            else:
+                                content = remaining.strip()
+                    
                     if content:
                         files[filename] = content
                         logger.debug(f"extract_file_structure: Successfully extracted file '{filename}' with {len(content)} chars")

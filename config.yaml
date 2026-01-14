@@ -1,16 +1,28 @@
 workspace: "."  # Current directory (project root)
 
+# Logging Configuration
 log_level: "INFO"
 log_file: "logs/agent_system.log"
+enable_structured_logging: true  # JSON-formatted logs for production
 
-llm_timeout: 300
+# LLM Configuration
+llm_timeout: 300  # Timeout for LLM API calls in seconds
+llm_max_retries: 3  # Maximum retry attempts for failed LLM calls
+llm_retry_initial_delay: 1.0  # Initial retry delay in seconds
+llm_retry_max_delay: 60.0  # Maximum retry delay in seconds
+llm_circuit_breaker_threshold: 5  # Failures before circuit breaker opens
+llm_circuit_breaker_timeout: 60.0  # Seconds before attempting recovery
+llm_stream_responses: true  # Enable streaming for better UX
 
+# Orchestration Configuration
 max_concurrent_agents: 5
 task_retry_attempts: 3
 task_timeout: 600
 
+# Feature Flags
 enable_message_bus: true
 enable_task_persistence: false
+enable_metrics: true  # Enable metrics collection
 
 output_directory: "./output"
 

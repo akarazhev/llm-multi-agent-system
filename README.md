@@ -33,6 +33,19 @@ This system orchestrates specialized AI agents that collaborate to handle comple
 - 📊 **Real-time Status Tracking** - Monitor agent progress and task completion with visual progress bars
 - 🧪 **Fully Tested** - Comprehensive test suite included
 
+### 🚀 Production Enhancements (New!)
+
+- ⚡ **Streaming Responses** - Real-time token streaming for immediate feedback (enabled by default)
+- 🔄 **Retry Logic** - Exponential backoff with jitter for transient failure recovery
+- 🛡️ **Circuit Breaker** - Prevents cascade failures with automatic recovery detection
+- 🔌 **Connection Pooling** - Efficient connection reuse with health monitoring
+- 📝 **Structured Logging** - JSON-formatted logs with correlation IDs for traceability
+- 📊 **Metrics Collection** - Built-in performance monitoring and statistics
+- ✅ **Config Validation** - Comprehensive validation with clear error messages
+- 🎯 **Enhanced System Prompts** - Professional, production-ready prompts for all agents
+
+**See**: [Production-Ready Guide](docs/PRODUCTION_READY_GUIDE.md) | [Migration Guide](docs/MIGRATION_GUIDE.md)
+
 ## 🏗️ Architecture
 
 ```
@@ -111,8 +124,22 @@ Edit `config.yaml`:
 ```yaml
 workspace: "."  # Your workspace path
 log_level: "INFO"
+
+# LLM Configuration (Production-Ready)
 llm_timeout: 300
+llm_max_retries: 3
+llm_retry_initial_delay: 1.0
+llm_retry_max_delay: 60.0
+llm_circuit_breaker_threshold: 5
+llm_circuit_breaker_timeout: 60.0
+llm_stream_responses: true  # Enable streaming
+
+# Orchestration
 max_concurrent_agents: 5
+
+# Monitoring & Logging
+enable_structured_logging: true
+enable_metrics: true
 
 # Agent configurations
 agents:
@@ -125,9 +152,25 @@ agents:
 Edit `.env`:
 
 ```bash
+# LLM Server Configuration
 OPENAI_API_BASE=http://127.0.0.1:8080/v1
 OPENAI_API_KEY=not-needed
 OPENAI_API_MODEL=devstral
+OPENAI_TEMPERATURE=0.7
+OPENAI_MAX_TOKENS=2048
+
+# Retry & Resilience
+LLM_MAX_RETRIES=3
+LLM_RETRY_INITIAL_DELAY=1.0
+LLM_RETRY_MAX_DELAY=60.0
+LLM_CIRCUIT_BREAKER_THRESHOLD=5
+LLM_CIRCUIT_BREAKER_TIMEOUT=60.0
+
+# Logging
+LOG_LEVEL=INFO
+STRUCTURED_LOGGING=true
+
+# See .env.example for full configuration options
 ```
 
 ## 💡 Usage

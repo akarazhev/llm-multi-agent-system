@@ -3,11 +3,14 @@ import subprocess
 import json
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Callable, AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime
 import logging
+import os
 from ..utils import FileWriter
+from ..utils.retry import retry_with_exponential_backoff, CircuitBreaker, CircuitBreakerError
+from ..utils.llm_client_pool import get_llm_client
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +71,16 @@ class BaseAgent(ABC):
         self.message_queue: asyncio.Queue = asyncio.Queue()
         self.file_writer = FileWriter(workspace)
         
+        # Production-ready enhancements
+        self.circuit_breaker = CircuitBreaker(
+            failure_threshold=int(os.getenv('LLM_CIRCUIT_BREAKER_THRESHOLD', '5')),
+            recovery_timeout=float(os.getenv('LLM_CIRCUIT_BREAKER_TIMEOUT', '60.0')),
+            half_open_attempts=int(os.getenv('LLM_CIRCUIT_BREAKER_HALF_OPEN', '3'))
+        )
+        self.max_retries = int(os.getenv('LLM_MAX_RETRIES', '3'))
+        self.retry_initial_delay = float(os.getenv('LLM_RETRY_INITIAL_DELAY', '1.0'))
+        self.retry_max_delay = float(os.getenv('LLM_RETRY_MAX_DELAY', '60.0'))
+        
     @abstractmethod
     async def process_task(self, task: Task) -> Dict[str, Any]:
         pass
@@ -80,11 +93,20 @@ class BaseAgent(ABC):
         self,
         prompt: str,
         files: Optional[List[str]] = None,
-        timeout: int = 300
+        timeout: int = 300,
+        stream: bool = True,
+        stream_callback: Optional[Callable[[str], None]] = None
     ) -> Dict[str, Any]:
         """
         Execute AI task using local llama-server.
         All processing happens locally via OpenAI-compatible API.
+        
+        Args:
+            prompt: The user prompt
+            files: Optional list of file paths to include in context
+            timeout: Timeout in seconds
+            stream: Whether to use streaming responses (default: True for better UX)
+            stream_callback: Optional callback function for streaming chunks
         """
         try:
             import os
@@ -131,7 +153,29 @@ class BaseAgent(ABC):
                 }
             
             logger.info(f"[{self.agent_id}] Using local llama-server at {api_base}")
-            return await self._call_local_llama_server(system_prompt, full_prompt, timeout)
+            
+            # Wrap with retry logic and circuit breaker
+            try:
+                return await retry_with_exponential_backoff(
+                    self.circuit_breaker.call(self._call_local_llama_server),
+                    system_prompt,
+                    full_prompt,
+                    timeout,
+                    0,  # retry_count
+                    stream,
+                    stream_callback,
+                    max_attempts=self.max_retries,
+                    initial_delay=self.retry_initial_delay,
+                    max_delay=self.retry_max_delay,
+                    retriable_exceptions=(asyncio.TimeoutError, ConnectionError, OSError),
+                    non_retriable_exceptions=(CircuitBreakerError, ValueError, TypeError)
+                )
+            except CircuitBreakerError as e:
+                logger.error(f"[{self.agent_id}] Circuit breaker is open: {e}")
+                return {
+                    "success": False,
+                    "error": f"LLM service is temporarily unavailable (circuit breaker open). Please try again later."
+                }
             
         except asyncio.TimeoutError:
             logger.error(f"[{self.agent_id}] Task timed out after {timeout} seconds")
@@ -197,39 +241,75 @@ class BaseAgent(ABC):
         
         return truncated_system, truncated_user, True
     
-    async def _call_local_llama_server(self, system_prompt: str, user_prompt: str, timeout: int, retry_count: int = 0) -> Dict[str, Any]:
-        """Call local llama-server using OpenAI-compatible API with automatic retry on context size errors"""
+    async def _call_local_llama_server(self, system_prompt: str, user_prompt: str, timeout: int, retry_count: int = 0, stream: bool = False, stream_callback: Optional[Callable[[str], None]] = None) -> Dict[str, Any]:
+        """Call local llama-server using OpenAI-compatible API with automatic retry on context size errors and streaming support"""
         try:
-            import os
             import re
-            from openai import AsyncOpenAI
             
             api_base = os.getenv('OPENAI_API_BASE', 'http://127.0.0.1:8080/v1')
             model = os.getenv('OPENAI_API_MODEL', 'devstral')
+            temperature = float(os.getenv('OPENAI_TEMPERATURE', '0.7'))
+            max_tokens = int(os.getenv('OPENAI_MAX_TOKENS', '2048'))
             
-            # Create OpenAI client with custom base URL
-            client = AsyncOpenAI(
-                base_url=api_base,
-                api_key="not-needed"  # Local server doesn't need real API key
-            )
-            
-            logger.info(f"[{self.agent_id}] Calling local llama-server with model: {model} (attempt {retry_count + 1})")
-            
-            # Make the API call
-            response = await asyncio.wait_for(
-                client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    temperature=0.7,
-                    max_tokens=1024  # Reduced to leave more room for prompt
-                ),
+            # Get client from connection pool
+            client = await get_llm_client(
+                api_base=api_base,
                 timeout=timeout
             )
             
-            content = response.choices[0].message.content
+            logger.info(f"[{self.agent_id}] Calling local llama-server with model: {model} (attempt {retry_count + 1}, stream: {stream})")
+            
+            # Make the API call
+            if stream:
+                # Streaming response
+                response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        stream=True
+                    ),
+                    timeout=timeout
+                )
+                
+                # Collect streamed chunks
+                content_chunks = []
+                async for chunk in response:
+                    if chunk.choices[0].delta.content:
+                        chunk_content = chunk.choices[0].delta.content
+                        content_chunks.append(chunk_content)
+                        
+                        # Call stream callback if provided
+                        if stream_callback:
+                            try:
+                                stream_callback(chunk_content)
+                            except Exception as e:
+                                logger.warning(f"[{self.agent_id}] Stream callback error: {e}")
+                        
+                        # Yield to allow other coroutines to process
+                        await asyncio.sleep(0)
+                
+                content = ''.join(content_chunks)
+            else:
+                # Non-streaming response
+                response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        temperature=temperature,
+                        max_tokens=max_tokens
+                    ),
+                    timeout=timeout
+                )
+                
+                content = response.choices[0].message.content
             
             return {
                 "success": True,
@@ -272,7 +352,7 @@ class BaseAgent(ABC):
                         logger.info(f"[{self.agent_id}] Retrying with truncated prompts...")
                         # Retry with truncated prompts
                         return await self._call_local_llama_server(
-                            truncated_system, truncated_user, timeout, retry_count=1
+                            truncated_system, truncated_user, timeout, retry_count=1, stream=stream, stream_callback=stream_callback
                         )
                 else:
                     logger.error(f"[{self.agent_id}] Context size error persisted after truncation")

@@ -261,7 +261,7 @@ async def build_blog_platform():
         print("7. Access API docs: http://localhost:8000/docs")
         print("\n" + "="*80 + "\n")
         
-        return result
+        return actual_state
         
     except Exception as e:
         print("\n" + "="*80)

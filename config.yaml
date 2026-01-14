@@ -1,0 +1,64 @@
+workspace: "."  # Current directory (project root)
+
+log_level: "INFO"
+log_file: "logs/agent_system.log"
+
+llm_timeout: 300
+
+max_concurrent_agents: 5
+task_retry_attempts: 3
+task_timeout: 600
+
+enable_message_bus: true
+enable_task_persistence: false
+
+output_directory: "./output"
+
+agents:
+  business_analyst:
+    enabled: true
+    config:
+      jira_integration: true
+      confluence_integration: true
+  
+  developer:
+    enabled: true
+    config:
+      languages:
+        - python
+        - javascript
+        - typescript
+      frameworks:
+        - fastapi
+        - react
+        - django
+      gitlab_integration: true
+  
+  qa_engineer:
+    enabled: true
+    config:
+      test_frameworks:
+        - pytest
+        - jest
+        - playwright
+      coverage_threshold: 80
+  
+  devops_engineer:
+    enabled: true
+    config:
+      platforms:
+        - docker
+        - kubernetes
+        - aws
+      ci_cd_tools:
+        - gitlab-ci
+        - github-actions
+  
+  technical_writer:
+    enabled: true
+    config:
+      formats:
+        - markdown
+        - confluence
+        - openapi
+      style_guide: "google"

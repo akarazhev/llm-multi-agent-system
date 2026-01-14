@@ -3,7 +3,7 @@
 ## Core Framework & Language
 
 ### Primary Language
-- **Python 3.11+**
+- **Python 3.12**
   - Modern async/await support
   - Type hints for better code quality
   - Rich ecosystem for AI/ML
@@ -259,9 +259,8 @@ pytest-asyncio>=0.21.0
 ## Version Compatibility
 
 ### Python
-- Minimum: 3.11
-- Recommended: 3.11 or 3.12
-- Tested with: 3.11.5
+- Required: 3.12
+- Tested with: 3.12.x
 
 ### PostgreSQL
 - Minimum: 14.0

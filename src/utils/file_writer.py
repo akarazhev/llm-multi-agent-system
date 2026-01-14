@@ -429,42 +429,14 @@ class FileWriter:
         
         # Try with bold first - use similar approach to handle nested blocks
         # More flexible: allow optional whitespace and newlines
-        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
+        pattern_bold = r'\*\*File:\s*`([^`]+)`\*\*\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*?\n(.*?)\n```'
         matches = list(re.finditer(pattern_bold, text, re.DOTALL))
         
         if matches:
-            for i, match in enumerate(matches):
+            for match in matches:
                 filename = self._sanitize_filename(match.group(1))
-                start_pos = match.end()
-                
-                if i + 1 < len(matches):
-                    end_search = matches[i + 1].start()
-                else:
-                    end_search = len(text)
-                
-                remaining_text = text[start_pos:end_search]
-                # Use depth tracking for nested code blocks
-                close_match = None
-                backtick_depth = 1
-                all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
-                
-                for m in all_backtick_matches:
-                    match_end = m.end()
-                    line_end = remaining_text.find('\n', match_end)
-                    if line_end == -1:
-                        line_end = len(remaining_text)
-                    rest_of_line = remaining_text[match_end:line_end].strip()
-                    
-                    if rest_of_line and not rest_of_line.isspace():
-                        backtick_depth += 1
-                    else:
-                        backtick_depth -= 1
-                        if backtick_depth == 0:
-                            close_match = m
-                            break
-                
-                if close_match:
-                    content = remaining_text[:close_match.start()].strip()
+                content = match.group(2).strip()
+                if content:
                     files[filename] = content
         
         # If no matches with bold, try without bold (with backticks)
@@ -472,42 +444,14 @@ class FileWriter:
         # (matches variable is from Pattern 2 bold section above)
         if not matches or len(matches) == 0:
             # More flexible: allow optional whitespace and newlines
-            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
+            pattern_no_bold = r'File:\s*`([^`]+)`\s*\n?\s*```\s*(?:\w+(?:-\w+)*)?\s*?\n(.*?)\n```'
             matches = list(re.finditer(pattern_no_bold, text, re.DOTALL))
             
             if matches:
-                for i, match in enumerate(matches):
+                for match in matches:
                     filename = self._sanitize_filename(match.group(1))
-                    start_pos = match.end()
-                    
-                    if i + 1 < len(matches):
-                        end_search = matches[i + 1].start()
-                    else:
-                        end_search = len(text)
-                    
-                    remaining_text = text[start_pos:end_search]
-                    # Use depth tracking for nested code blocks
-                    close_match = None
-                    backtick_depth = 1
-                    all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
-                    
-                    for m in all_backtick_matches:
-                        match_end = m.end()
-                        line_end = remaining_text.find('\n', match_end)
-                        if line_end == -1:
-                            line_end = len(remaining_text)
-                        rest_of_line = remaining_text[match_end:line_end].strip()
-                        
-                        if rest_of_line and not rest_of_line.isspace():
-                            backtick_depth += 1
-                        else:
-                            backtick_depth -= 1
-                            if backtick_depth == 0:
-                                close_match = m
-                                break
-                    
-                    if close_match:
-                        content = remaining_text[:close_match.start()].strip()
+                    content = match.group(2).strip()
+                    if content:
                         files[filename] = content
         
         # Pattern 3: File: path/to/file.py (without backticks)
@@ -515,60 +459,17 @@ class FileWriter:
         # More flexible: allow optional whitespace and newlines
         # This pattern matches: "File: filename\n```language\n" or "File: filename\n```\n"
         # The pattern requires at least one newline between "File:" and the code block
-        pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n+\s*```\s*(?:\w+(?:-\w+)*)?\s*\n?'
+        pattern_no_backticks = r'File:\s+([^\n]+?)\s*\n\s*```\s*(?:\w+(?:-\w+)*)?\s*?\n(.*?)\n```'
         matches = list(re.finditer(pattern_no_backticks, text, re.DOTALL))
         
         if matches:
                 logger.debug(f"extract_file_structure: Found {len(matches)} matches with Pattern 3 (File: without backticks)")
-                for i, match in enumerate(matches):
+                for match in matches:
                     filename = self._sanitize_filename(match.group(1))
-                    start_pos = match.end()
-                    
-                    if i + 1 < len(matches):
-                        end_search = matches[i + 1].start()
-                    else:
-                        end_search = len(text)
-                    
-                    remaining_text = text[start_pos:end_search]
-                    logger.debug(f"extract_file_structure: Pattern 3 - Processing file '{filename}', remaining text length: {len(remaining_text)}, preview: {remaining_text[:100]}")
-                    
-                    # Use depth tracking for nested code blocks
-                    close_match = None
-                    backtick_depth = 1
-                    all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
-                    
-                    for m in all_backtick_matches:
-                        match_end = m.end()
-                        line_end = remaining_text.find('\n', match_end)
-                        if line_end == -1:
-                            line_end = len(remaining_text)
-                        rest_of_line = remaining_text[match_end:line_end].strip()
-                        
-                        if rest_of_line and not rest_of_line.isspace():
-                            backtick_depth += 1
-                        else:
-                            backtick_depth -= 1
-                            if backtick_depth == 0:
-                                close_match = m
-                                break
-                    
-                    if close_match:
-                        content = remaining_text[:close_match.start()].strip()
-                        if content:
-                            files[filename] = content
-                            logger.debug(f"extract_file_structure: Successfully extracted file '{filename}' with {len(content)} chars")
-                        else:
-                            logger.warning(f"extract_file_structure: Found closing ``` but content is empty for '{filename}'")
-                    else:
-                        logger.warning(f"extract_file_structure: Could not find closing ``` for '{filename}'. Remaining text preview: {remaining_text[:200]}")
-                        # As a fallback, if we can't find closing ```, try to extract up to the next "File:" marker
-                        # or use all remaining text if it's the last file
-                        if i + 1 >= len(matches):
-                            # Last file, use all remaining text
-                            content = remaining_text.strip()
-                            if content:
-                                files[filename] = content
-                                logger.debug(f"extract_file_structure: Using all remaining text for last file '{filename}' ({len(content)} chars)")
+                    content = match.group(2).strip()
+                    if content:
+                        files[filename] = content
+                        logger.debug(f"extract_file_structure: Successfully extracted file '{filename}' with {len(content)} chars")
         
         # Return files if any patterns matched, otherwise return empty dict
         return files

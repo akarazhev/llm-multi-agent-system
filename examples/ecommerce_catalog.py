@@ -37,7 +37,8 @@ async def build_ecommerce_catalog():
     
     orchestrator = LangGraphOrchestrator(
         workspace=config.workspace,
-        config=config.to_dict()
+        config=config.to_dict(),
+        enable_chat_display=True
     )
     
     requirement = """

@@ -49,7 +49,8 @@ async def visualize_feature_development():
     print("Building workflow graph...")
     orchestrator = LangGraphOrchestrator(
         workspace=workspace,
-        config=config.__dict__ if hasattr(config, '__dict__') else config
+        config=config.__dict__ if hasattr(config, '__dict__') else config,
+        enable_chat_display=True
     )
     
     # Build the graph

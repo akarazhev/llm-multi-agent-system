@@ -36,7 +36,8 @@ async def build_task_management_api():
     
     orchestrator = LangGraphOrchestrator(
         workspace=config.workspace,
-        config=config.to_dict()
+        config=config.to_dict(),
+        enable_chat_display=True
     )
     
     requirement = """
@@ -156,7 +157,7 @@ async def build_task_management_api():
         print("5. Access Swagger docs: http://localhost:8000/docs")
         print("\n" + "="*80 + "\n")
         
-        return result
+        return actual_state
         
     except Exception as e:
         print("\n" + "="*80)

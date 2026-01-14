@@ -52,7 +52,8 @@ async def main():
     # Create orchestrator
     orchestrator = LangGraphOrchestrator(
         workspace=workspace,
-        config=config.__dict__ if hasattr(config, '__dict__') else config
+        config=config.__dict__ if hasattr(config, '__dict__') else config,
+        enable_chat_display=True
     )
     
     # Check for existing checkpoints
@@ -141,7 +142,7 @@ async def main():
         print(f"""
 from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
 
-orchestrator = LangGraphOrchestrator(workspace=".")
+orchestrator = LangGraphOrchestrator(workspace=".", enable_chat_display=True)
 final_state = await orchestrator.execute_feature_development(
     requirement="Resuming...",
     thread_id="{thread_id}"

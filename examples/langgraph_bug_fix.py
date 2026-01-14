@@ -48,7 +48,8 @@ async def main():
     print("Initializing LangGraph Orchestrator...")
     orchestrator = LangGraphOrchestrator(
         workspace=workspace,
-        config=config.__dict__ if hasattr(config, '__dict__') else config
+        config=config.__dict__ if hasattr(config, '__dict__') else config,
+        enable_chat_display=True
     )
     print("✓ Orchestrator initialized")
     print()

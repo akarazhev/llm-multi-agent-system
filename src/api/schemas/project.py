@@ -1,0 +1,64 @@
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class TechStack(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    languages: List[str]
+    frameworks: List[str]
+    databases: List[str]
+    tools: List[str]
+
+
+class ProjectStats(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    totalWorkflows: int
+    activeWorkflows: int
+    completedWorkflows: int
+    failedWorkflows: int
+    teamSize: int
+    aiAgentsCount: int
+    filesGenerated: int
+    linesOfCode: int
+
+
+class Project(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    id: str
+    name: str
+    description: str
+    icon: Optional[str] = None
+    status: str
+    type: str
+    ownerId: str = Field(alias="owner_id")
+    teamMembers: List[Dict] = Field(alias="team_members")
+    aiAgents: List[str] = Field(alias="ai_agents")
+    integrations: Dict
+    techStack: TechStack = Field(alias="tech_stack")
+    stats: ProjectStats
+    createdAt: str = Field(alias="created_at")
+    updatedAt: str = Field(alias="updated_at")
+    lastActivity: Optional[str] = Field(default=None, alias="last_activity")
+
+
+class ProjectFormData(BaseModel):
+    name: str
+    description: str
+    icon: Optional[str] = None
+    status: str
+    type: str
+    techStack: TechStack
+
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    icon: Optional[str] = None
+    status: Optional[str] = None
+    type: Optional[str] = None
+    techStack: Optional[TechStack] = None
+
+
+class AssignAgentsRequest(BaseModel):
+    agent_ids: List[str]

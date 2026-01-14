@@ -347,7 +347,7 @@ orchestrator = LangGraphOrchestrator(
 
 2. **Full Workflow** (requires llama-server)
    ```bash
-   ./scripts/start_llama_server.sh
+   # Ensure your local LLM server is running on port 8080
    python examples/interactive_chat_workflow.py
    # Option 1
    ```

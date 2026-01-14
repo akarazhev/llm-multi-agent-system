@@ -39,7 +39,7 @@ def check_llama_server():
             return True
         else:
             print("⚠️  llama-server is not running")
-            print("   Start it with: ./scripts/start_llama_server.sh")
+            print("   Ensure your local LLM server is running on port 8080")
             return False
     except Exception as e:
         print(f"⚠️  Error checking llama-server: {e}")
@@ -149,7 +149,7 @@ def main():
     llama_ok = check_llama_server()
     if not llama_ok:
         print("\n⚠️  Warning: llama-server not running.")
-        print("   You can start it later with: ./scripts/start_llama_server.sh")
+        print("   Ensure your local LLM server is running on port 8080")
         print("   Continuing with setup...")
     
     if not checks_passed:

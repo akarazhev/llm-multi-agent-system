@@ -294,7 +294,7 @@ This shows the full chat interface without requiring a running llama-server.
 
 ```bash
 # Start llama-server first
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 
 # Run full workflow with chat display
 python examples/interactive_chat_workflow.py

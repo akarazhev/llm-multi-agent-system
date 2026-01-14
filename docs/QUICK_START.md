@@ -185,9 +185,7 @@ agents:
 ### Step 1: Start Local LLM Server
 
 ```bash
-# Start llama-server
-./scripts/start_llama_server.sh
-
+# Ensure llama-server is running on port 8080
 # Wait for startup message:
 # "Server listening on http://127.0.0.1:8080"
 ```
@@ -195,9 +193,9 @@ agents:
 **Verify server is running:**
 ```bash
 # Check server status
-./scripts/check_llama_server.sh
+curl http://127.0.0.1:8080/health
 
-# Or manually
+# Or check models endpoint
 curl http://127.0.0.1:8080/v1/models
 ```
 
@@ -649,9 +647,7 @@ export OPENAI_API_BASE=http://127.0.0.1:8080/v1
 
 **Solution:**
 ```bash
-# Start the server
-./scripts/start_llama_server.sh
-
+# Ensure your local LLM server is running on port 8080
 # Verify it's running
 curl http://127.0.0.1:8080/health
 ```
@@ -687,7 +683,7 @@ task_timeout: 900    # 15 minutes
 **Solution:**
 ```bash
 # Check if GPU is being used
-./scripts/check_llama_server.sh
+curl http://127.0.0.1:8080/health
 
 # For Apple Silicon, ensure Metal is enabled
 export LLAMA_GPU_LAYERS=99
@@ -753,14 +749,9 @@ Now that you're set up, explore more:
 ## Quick Reference
 
 ```bash
-# Start llama-server
-./scripts/start_llama_server.sh
-
-# Stop llama-server
-./scripts/stop_llama_server.sh
-
+# Ensure llama-server is running on port 8080
 # Check server status
-./scripts/check_llama_server.sh
+curl http://127.0.0.1:8080/health
 
 # Run system
 python main.py

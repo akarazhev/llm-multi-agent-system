@@ -62,7 +62,7 @@ Visual indicator showing workflow completion percentage.
 
 1. Start your llama-server:
    ```bash
-   ./scripts/start_llama_server.sh
+   # Ensure your local LLM server is running on port 8080
    ```
 
 2. Run the interactive example:

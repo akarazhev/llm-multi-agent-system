@@ -119,7 +119,7 @@ OPENAI_API_MODEL=devstral
 ### 3. Start llama-server
 
 ```bash
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 ```
 
 Wait for "Server started" message.
@@ -163,7 +163,7 @@ echo "OPENAI_API_MODEL=devstral" >> .env
 
 **Fix:**
 ```bash
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 ```
 
 ### "Model not found"
@@ -199,7 +199,7 @@ You can use any GGUF model with llama-server:
 ```bash
 # Set before starting server
 export LLAMA_MODEL="unsloth/Qwen2.5-Coder-32B-Instruct-GGUF"
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 ```
 
 Popular models:
@@ -258,7 +258,7 @@ The llama-server binds to `127.0.0.1` (localhost only):
 ### Check Server Status
 
 ```bash
-./scripts/check_llama_server.sh
+curl http://127.0.0.1:8080/health
 ```
 
 ### View Logs
@@ -334,7 +334,7 @@ htop
 
 1. **Always start server first**
    ```bash
-   ./scripts/start_llama_server.sh
+   # Ensure your local LLM server is running on port 8080
    # Wait for "Server started"
    python simple_test.py
    ```

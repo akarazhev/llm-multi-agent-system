@@ -205,7 +205,7 @@ requests.exceptions.ConnectionError: Connection refused
 curl http://127.0.0.1:8080/health
 
 # 2. If not running, start it
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 
 # 3. Check the logs
 tail -f logs/llama-server.log
@@ -216,7 +216,7 @@ netstat -ano | findstr :8080  # Windows
 
 # 5. If port is in use, change it
 export LLAMA_PORT=8081
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 
 # Update .env
 OPENAI_API_BASE=http://127.0.0.1:8081/v1
@@ -246,7 +246,7 @@ llama-cli -hf unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:UD-Q4_K_XL
 
 # 3. Update start script with correct model path
 export LLAMA_MODEL_PATH="$(pwd)/models/your-model.gguf"
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 ```
 
 ### Issue: llama-server Crashes
@@ -265,7 +265,7 @@ vm_stat  # macOS
 # 2. Reduce memory usage
 export LLAMA_CTX_SIZE=4096  # Smaller context
 export LLAMA_GPU_LAYERS=0   # CPU only
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 
 # 3. Use smaller model
 export LLAMA_MODEL="unsloth/Llama-3.2-3B-Instruct-GGUF:Q4_K_M"
@@ -294,10 +294,10 @@ curl http://127.0.0.1:8080/v1/models
 # 2. Update .env to match
 # Change OPENAI_API_MODEL to match the actual model name
 
-# 3. Or restart llama-server with correct model
-./scripts/stop_llama_server.sh
+# 3. Or restart your local LLM server with correct model
+# Stop your local LLM server
 export LLAMA_MODEL="unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:UD-Q4_K_XL"
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 ```
 
 ## Agent Execution Issues
@@ -405,7 +405,7 @@ python tests/test_no_duplicates.py
 ```bash
 # 1. Enable GPU acceleration
 export LLAMA_GPU_LAYERS=99
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 
 # 2. Verify GPU is being used
 # macOS
@@ -644,7 +644,7 @@ sudo swapon /swapfile
 export LLAMA_THREADS=4  # Instead of auto-detect
 
 # 2. Lower process priority
-nice -n 19 ./scripts/start_llama_server.sh
+nice -n 19 # Ensure your local LLM server is running on port 8080
 
 # 3. Limit CPU usage (Linux)
 cpulimit -l 50 -p $(pgrep llama-server)
@@ -913,14 +913,14 @@ sudo journalctl -u agent-system.service -f
 
 ```bash
 # Restart everything
-./scripts/stop_llama_server.sh
-./scripts/start_llama_server.sh
+# Stop your local LLM server
+# Ensure your local LLM server is running on port 8080
 python main.py
 
 # Clean and restart
 rm -rf output/generated/*
 rm logs/*.log
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 python main.py
 
 # Reset configuration

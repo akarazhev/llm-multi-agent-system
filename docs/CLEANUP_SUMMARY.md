@@ -49,10 +49,14 @@ Performed a comprehensive review of the project to remove unused code, redundant
 **Non-Essential Scripts:**
 - `setup_env.bat` - Windows-only script (project targets Unix/macOS)
 - `fix_python_version.sh` - Troubleshooting script no longer needed
-- `configure_llama_server.sh` - Configuration tool (not essential)
-- `check_server_status.sh` - Duplicate of check_llama_server.sh (simpler version)
-- `benchmark_llama_server.sh` - Performance testing tool (optional)
-- `monitor_llama_server.sh` - Monitoring tool (optional)
+- `configure_llama_server.sh` - Configuration tool (not essential, removed)
+- `check_server_status.sh` - Duplicate of check_llama_server.sh (simpler version, removed)
+- `benchmark_llama_server.sh` - Performance testing tool (optional, removed)
+- `monitor_llama_server.sh` - Monitoring tool (optional, removed)
+- `start_llama_server.sh` - LLM server startup script (removed)
+- `stop_llama_server.sh` - LLM server stop script (removed)
+- `restart_llama_server.sh` - LLM server restart script (removed)
+- `check_llama_server.sh` - LLM server health check script (removed)
 
 ## Files Retained
 
@@ -72,14 +76,9 @@ Performed a comprehensive review of the project to remove unused code, redundant
 - `CONTRIBUTING.md` - Contribution guidelines
 - `CHANGELOG.md` - Version history
 
-### Essential Scripts (6 files in `scripts/`)
-- `start_llama_server.sh` - Start LLM server
-- `stop_llama_server.sh` - Stop LLM server
-- `restart_llama_server.sh` - Restart LLM server
-- `check_llama_server.sh` - Comprehensive health check
+### Essential Scripts (2 files in `scripts/`)
 - `setup_env.sh` - Environment setup
 - `setup_langgraph.sh` - LangGraph setup
-- `run_example.sh` - Example runner helper
 
 ### All Example Files (11 files retained)
 - `langgraph_feature_development.py` - LangGraph feature workflow

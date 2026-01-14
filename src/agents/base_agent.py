@@ -122,7 +122,7 @@ class BaseAgent(ABC):
                     "  OPENAI_API_BASE=http://127.0.0.1:8080/v1\n"
                     "  OPENAI_API_KEY=not-needed\n"
                     "  OPENAI_API_MODEL=devstral\n\n"
-                    "Start llama-server with: ./scripts/start_llama_server.sh"
+                    "Ensure your local LLM server is running on port 8080"
                 )
                 logger.error(f"[{self.agent_id}] {error_msg}")
                 return {

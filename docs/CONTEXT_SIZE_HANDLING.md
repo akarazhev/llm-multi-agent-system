@@ -74,11 +74,11 @@ Restart llama-server with a larger context window:
 
 ```bash
 # Stop current server
-./scripts/stop_llama_server.sh
+# Stop your local LLM server
 
 # Start with larger context size
 export LLAMA_CTX_SIZE=16384  # or 8192, 32768, etc.
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 ```
 
 **Trade-offs:**

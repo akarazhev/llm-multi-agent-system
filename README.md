@@ -98,8 +98,7 @@ pip install -r requirements.txt
 cp .env.example .env
 # Edit .env with your settings
 
-# Start local LLM server
-./scripts/start_llama_server.sh
+# Start local LLM server (ensure llama-server is running on port 8080)
 
 # Run the system (inside venv, use python)
 python main.py
@@ -499,7 +498,7 @@ echo "OPENAI_API_BASE=http://127.0.0.1:8080/v1" >> .env
 
 **"Connection refused"**
 ```bash
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 ```
 
 **Task timeout**

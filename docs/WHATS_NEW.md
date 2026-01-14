@@ -80,7 +80,7 @@ This runs an **instant demo** showing the chat interface without requiring llama
 
 ```bash
 # 1. Start llama-server
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 
 # 2. Run interactive example
 python examples/interactive_chat_workflow.py

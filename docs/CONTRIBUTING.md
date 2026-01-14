@@ -101,7 +101,7 @@ cp .env.example .env
 nano .env
 
 # Ensure llama-server is running
-./scripts/start_llama_server.sh
+# Ensure your local LLM server is running on port 8080
 ```
 
 ### 4. Verify Setup

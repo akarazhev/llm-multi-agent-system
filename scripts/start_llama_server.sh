@@ -21,7 +21,16 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Configuration (can be overridden by environment variables)
-MODEL="${LLAMA_MODEL:-unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:UD-Q4_K_XL}"
+# Model quantization options:
+#   - Q8_0: Higher quality, larger size (~24GB), better accuracy (default)
+#   - UD-Q4_K_XL: Smaller size (~12GB), faster inference, slightly lower quality
+# You can set MODEL_QUANTIZATION to switch between quantizations, or set LLAMA_MODEL directly
+MODEL_QUANTIZATION="${MODEL_QUANTIZATION:-Q8_0}"
+if [ -z "${LLAMA_MODEL:-}" ]; then
+    MODEL="unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:${MODEL_QUANTIZATION}"
+else
+    MODEL="$LLAMA_MODEL"
+fi
 HOST="${LLAMA_HOST:-127.0.0.1}"
 PORT="${LLAMA_PORT:-8080}"
 CTX_SIZE="${LLAMA_CTX_SIZE:-16384}"

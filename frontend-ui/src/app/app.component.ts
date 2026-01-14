@@ -35,7 +35,7 @@ interface NavItem {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  title = 'LLM Multi-Agent System';
+  title = 'SDLC 2.0';
   
   menuCollapsed = signal(false);
   

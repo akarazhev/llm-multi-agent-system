@@ -363,6 +363,11 @@ class FileWriter:
         if matches:
             for i, match in enumerate(matches):
                 filename = self._sanitize_filename(match.group(1))
+                # Extract language from the pattern (e.g., markdown from ```markdown:filename)
+                full_match = match.group(0)
+                language_match = re.search(r'```\s*(\w+(?:-\w+)*):', full_match)
+                language = language_match.group(1) if language_match else ''
+                
                 start_pos = match.end()
                 
                 # Find the matching closing ``` by counting backticks
@@ -374,47 +379,62 @@ class FileWriter:
                 
                 # Find the closing ``` before the next file marker
                 remaining_text = text[start_pos:end_search]
-                # Look for closing ``` - need to handle nested code blocks
-                # Count opening ``` markers and find the matching closing one
-                close_match = None
-                backtick_depth = 1  # We already passed one opening ```
                 
-                # Find all ``` markers (both opening and closing)
-                all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
-                
-                for m in all_backtick_matches:
-                    # Check what comes after the ``` to determine if it's opening or closing
-                    match_end = m.end()
-                    # Look at the rest of the line after ```
-                    line_end = remaining_text.find('\n', match_end)
-                    if line_end == -1:
-                        line_end = len(remaining_text)
-                    rest_of_line = remaining_text[match_end:line_end].strip()
-                    
-                    if rest_of_line and not rest_of_line.isspace():
-                        # Has content after ``` (like ```python or ```markdown) - it's an opening
-                        backtick_depth += 1
+                # For markdown files with nested code blocks, use rfind approach
+                if language in ('markdown', 'md'):
+                    # For markdown, find last ``` before next file or end
+                    last_fence = remaining_text.rfind('\n```')
+                    if last_fence > 0:
+                        content = remaining_text[:last_fence].strip()
                     else:
-                        # No content or just whitespace after ``` - it's a closing
-                        backtick_depth -= 1
-                        if backtick_depth == 0:
-                            # Found the matching closing ```
-                            close_match = m
-                            break
-                # Pattern 2: ``` at start of remaining_text or after newline
-                if not close_match:
-                    for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
-                        close_match = m
-                        break
-                    # Pattern 3: Any ``` followed by whitespace or end (most permissive)
+                        last_fence = remaining_text.rfind('```')
+                        if last_fence > 0:
+                            content = remaining_text[:last_fence].strip()
+                        else:
+                            content = remaining_text.strip()
+                    if content:
+                        files[filename] = content
+                else:
+                    # For non-markdown, use depth tracking
+                    close_match = None
+                    backtick_depth = 1  # We already passed one opening ```
+                    
+                    # Find all ``` markers (both opening and closing)
+                    all_backtick_matches = list(re.finditer(r'(?:^|\n)\s*```', remaining_text, re.MULTILINE))
+                    
+                    for m in all_backtick_matches:
+                        # Check what comes after the ``` to determine if it's opening or closing
+                        match_end = m.end()
+                        # Look at the rest of the line after ```
+                        line_end = remaining_text.find('\n', match_end)
+                        if line_end == -1:
+                            line_end = len(remaining_text)
+                        rest_of_line = remaining_text[match_end:line_end].strip()
+                        
+                        if rest_of_line and not rest_of_line.isspace():
+                            # Has content after ``` (like ```python or ```markdown) - it's an opening
+                            backtick_depth += 1
+                        else:
+                            # No content or just whitespace after ``` - it's a closing
+                            backtick_depth -= 1
+                            if backtick_depth == 0:
+                                # Found the matching closing ```
+                                close_match = m
+                                break
+                    # Pattern 2: ``` at start of remaining_text or after newline
                     if not close_match:
-                        for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
+                        for m in re.finditer(r'^```\s*(?:\n|$)', remaining_text, re.MULTILINE):
                             close_match = m
                             break
-                
-                if close_match:
-                    content = remaining_text[:close_match.start()].strip()
-                    files[filename] = content
+                        # Pattern 3: Any ``` followed by whitespace or end (most permissive)
+                        if not close_match:
+                            for m in re.finditer(r'```\s*(?:\n|$)', remaining_text):
+                                close_match = m
+                                break
+                    
+                    if close_match:
+                        content = remaining_text[:close_match.start()].strip()
+                        files[filename] = content
         
         # If found files with colon format, only return if we successfully extracted all matches
         # Otherwise, fall through to Pattern 2 which handles "File: `filename`" format

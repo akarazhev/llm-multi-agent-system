@@ -1,8 +1,11 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { KeycloakService } from 'keycloak-angular';
 import { routes } from './app.routes';
+import { authInterceptor } from './auth/auth.interceptor';
+import { initializeKeycloak } from './auth/keycloak.init';
 import { mockInterceptor } from './mocks/mock.interceptor';
 
 /**
@@ -13,8 +16,15 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([mockInterceptor]) // Use mock interceptor
+      withInterceptors([authInterceptor, mockInterceptor])
     ),
-    provideAnimationsAsync()
+    provideAnimationsAsync(),
+    KeycloakService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeKeycloak,
+      multi: true,
+      deps: [KeycloakService]
+    }
   ]
 };

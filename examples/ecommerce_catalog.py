@@ -223,7 +223,7 @@ async def build_ecommerce_catalog():
         print("6. Access API docs: http://localhost:8000/docs")
         print("\n" + "="*80 + "\n")
         
-        return result
+        return actual_state
         
     except Exception as e:
         print("\n" + "="*80)

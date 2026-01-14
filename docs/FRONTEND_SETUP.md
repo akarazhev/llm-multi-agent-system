@@ -44,11 +44,11 @@ npm start
 # Runs on http://localhost:4200
 ```
 
-### 3. Start Backend
+### 3. Start Backend API
 
 ```bash
 # From project root
-python main.py
+uvicorn src.api.main:app --reload --port 8000
 # Backend runs on http://localhost:8000
 ```
 
@@ -137,96 +137,74 @@ interface Workflow {
 }
 ```
 
-## Backend Integration Required
+## Backend Integration
 
-To connect the frontend to the backend, you need to:
+The production integration uses FastAPI with PostgreSQL persistence and Keycloak authentication.
 
-### 1. Add FastAPI Backend
-
-Create `backend_api.py`:
-
-```python
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
-from src.config.settings import load_config
-
-app = FastAPI(title="LLM Multi-Agent API")
-
-# CORS for frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-config = load_config()
-orchestrator = LangGraphOrchestrator(
-    workspace=config.workspace,
-    config=config.to_dict()
-)
-
-@app.get("/api/agents")
-async def get_agents():
-    """Get all agents status"""
-    agents = []
-    for agent_id, agent in orchestrator.agents.items():
-        agents.append(agent.get_status())
-    return agents
-
-@app.get("/api/workflows")
-async def get_workflows():
-    """Get all workflows"""
-    # Load from output directory
-    import json
-    from pathlib import Path
-    
-    workflows = []
-    output_dir = Path(config.output_directory)
-    
-    for file in output_dir.glob("langgraph_*.json"):
-        with open(file, 'r') as f:
-            workflow = json.load(f)
-            workflows.append(workflow)
-    
-    return workflows
-
-@app.post("/api/workflows")
-async def create_workflow(request: dict):
-    """Create new workflow"""
-    result = await orchestrator.execute_feature_development(
-        requirement=request["requirement"],
-        context=request.get("context", {})
-    )
-    return result
-
-# Add more endpoints...
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-```
-
-### 2. Run Backend API
+### 1. Start Backend API
 
 ```bash
-# Install FastAPI and Uvicorn
-pip install fastapi uvicorn
-
-# Run backend
-python backend_api.py
+uvicorn src.api.main:app --reload --port 8000
 ```
 
-### 3. Test Connection
+### 2. API Endpoints
 
-```bash
-# Test from terminal
-curl http://localhost:8000/api/agents
+```txt
+GET    /api/agents
+GET    /api/agents/{id}
+POST   /api/agents
+PUT    /api/agents/{id}
+DELETE /api/agents/{id}
 
-# Or open in browser
-http://localhost:8000/docs
+GET    /api/workflows
+GET    /api/workflows/{id}
+POST   /api/workflows
+PUT    /api/workflows/{id}
+POST   /api/workflows/{id}/cancel
+POST   /api/workflows/{id}/resume
+DELETE /api/workflows/{id}
+
+GET    /api/projects
+GET    /api/projects/{id}
+POST   /api/projects
+PUT    /api/projects/{id}
+POST   /api/projects/{id}/agents
+DELETE /api/projects/{id}
+
+GET    /api/communication/{workflowId}/messages
+GET    /api/communication/{workflowId}/threads
+GET    /api/communication/{workflowId}/stats
+```
+
+### 3. Authentication (Keycloak)
+
+Frontend configuration:
+
+```typescript
+export const environment = {
+  authEnabled: true,
+  keycloak: {
+    url: 'http://localhost:8081',
+    realm: 'llm-agents',
+    clientId: 'llm-agent-ui'
+  }
+};
+```
+
+Backend configuration:
+
+```yaml
+keycloak:
+  server_url: "http://localhost:8081"
+  realm: "llm-agents"
+  client_id: "llm-agent-ui"
+  audience: "llm-agent-api"
+```
+
+WebSocket connection format:
+
+```
+ws://localhost:8000/ws/workflows/{workflowId}?token={accessToken}
 ```
 
 ## Development Workflow
@@ -243,7 +221,7 @@ npm start
 
 ```bash
 # Terminal 1: Backend
-python backend_api.py
+uvicorn src.api.main:app --reload --port 8000
 
 # Terminal 2: Frontend
 cd frontend-ui
@@ -252,7 +230,7 @@ npm start
 
 ### 3. Full Stack Testing
 
-1. Start backend: `python backend_api.py`
+1. Start backend: `uvicorn src.api.main:app --reload --port 8000`
 2. Start frontend: `cd frontend-ui && npm start`
 3. Open browser: `http://localhost:4200`
 4. Test all features

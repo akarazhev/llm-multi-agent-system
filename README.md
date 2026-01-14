@@ -6,6 +6,32 @@
 
 > A production-ready multi-agent orchestration system powered by local LLMs for automated software development workflows.
 
+## Table of Contents
+
+- [Important: Python 3.12 Required](#️-important-python-312-required)
+- [Overview](#-overview)
+- [Architecture](#️-architecture)
+- [Quick Start](#-quick-start)
+- [Full Stack UI (Docker + Keycloak)](#-full-stack-ui-docker--keycloak)
+- [Usage](#-usage)
+- [Workflow Types](#-workflow-types)
+- [Agent Capabilities](#-agent-capabilities)
+- [Testing](#-testing)
+- [Project Structure](#-project-structure)
+- [Documentation](#-documentation)
+- [Privacy & Security](#-privacy--security)
+- [Configuration](#-configuration)
+- [Troubleshooting](#-troubleshooting)
+- [Use Cases](#-use-cases)
+- [System Requirements](#-system-requirements)
+- [Performance](#-performance)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
+- [Frontend UI](#-frontend-ui-new)
+- [Roadmap](#️-roadmap)
+- [Version History](#-version-history)
+
 ## ⚠️ Important: Python 3.12 Required
 
 **This project requires Python 3.12.x**
@@ -172,6 +198,39 @@ STRUCTURED_LOGGING=true
 
 # See .env.example for full configuration options
 ```
+
+## 🧩 Full Stack UI (Docker + Keycloak)
+
+This starts PostgreSQL + Keycloak via Docker, applies migrations, and launches backend + frontend.
+
+```bash
+# 1) Start infrastructure
+docker compose up -d
+
+# 2) Backend dependencies (inside venv)
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 3) Run migrations
+alembic upgrade head
+
+# 4) Start backend API
+uvicorn src.api.main:app --reload --port 8000
+
+# 5) Start frontend
+cd frontend-ui
+npm install
+npm start
+```
+
+Access:
+- Frontend: `http://localhost:4200`
+- Backend: `http://localhost:8000`
+- Keycloak Admin: `http://localhost:8081` (admin / admin)
+- Demo user: `demo / demo`
+
+Realm display name is **SDLC 2.0** (technical realm stays `llm-agents`).
 
 ## 💡 Usage
 
@@ -667,7 +726,7 @@ See [Frontend Documentation](frontend-ui/README.md) for details.
 - [ ] Multi-language support for prompts
 - [ ] Workflow templates marketplace
 - [ ] Real-time collaboration features
-- [ ] WebSocket live updates
+- [x] WebSocket live updates ✅ **COMPLETED!**
 
 ## 📈 Version History
 

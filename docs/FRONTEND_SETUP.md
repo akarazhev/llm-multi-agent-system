@@ -4,6 +4,21 @@
 
 The LLM Multi-Agent System now includes a modern Angular 20 frontend with Material Design.
 
+## Table of Contents
+
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [API Integration](#api-integration)
+- [Backend Integration](#backend-integration)
+- [Development Workflow](#development-workflow)
+- [Production Deployment](#production-deployment)
+- [Styling Guide](#styling-guide)
+- [Troubleshooting](#troubleshooting)
+- [Next Steps](#next-steps)
+- [Resources](#resources)
+
 ## Architecture
 
 ```
@@ -30,6 +45,13 @@ The LLM Multi-Agent System now includes a modern Angular 20 frontend with Materi
 
 ## Quick Start
 
+### 0. Start Infrastructure (Postgres + Keycloak)
+
+```bash
+# From project root
+docker compose up -d
+```
+
 ### 1. Install Frontend Dependencies
 
 ```bash
@@ -48,6 +70,8 @@ npm start
 
 ```bash
 # From project root
+source venv/bin/activate
+alembic upgrade head
 uvicorn src.api.main:app --reload --port 8000
 # Backend runs on http://localhost:8000
 ```
@@ -144,6 +168,10 @@ The production integration uses FastAPI with PostgreSQL persistence and Keycloak
 ### 1. Start Backend API
 
 ```bash
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+alembic upgrade head
 uvicorn src.api.main:app --reload --port 8000
 ```
 
@@ -190,6 +218,11 @@ export const environment = {
   }
 };
 ```
+
+Admin and demo access:
+- Admin: `http://localhost:8081` (admin / admin)
+- Demo user: `demo / demo`
+- Realm display name: **SDLC 2.0** (technical realm: `llm-agents`)
 
 Backend configuration:
 
@@ -325,15 +358,13 @@ rm -rf .angular/cache
 
 ## Next Steps
 
-1. **Real-time Updates**
-   - Add WebSocket support
-   - Live workflow progress
-   - Agent status updates
+1. **Role-Based Access**
+   - Add realm roles and map to UI permissions
+   - Restrict admin-only actions
 
-2. **Authentication**
-   - Add Keycloak integration
-   - User management
-   - Role-based access
+2. **Seed Data**
+   - Provide demo projects/agents/workflows
+   - Add script for repeatable demo data
 
 3. **Advanced Features**
    - Workflow templates
@@ -343,12 +374,12 @@ rm -rf .angular/cache
 ## Resources
 
 - Frontend code: `/frontend-ui`
-- Backend API: `/backend_api.py` (to be created)
+- Backend API: `/src/api/main.py`
 - Documentation: `/docs/FRONTEND_SETUP.md`
 - Examples: `/frontend-ui/README.md`
 
 ---
 
-**Status**: ✅ Frontend Ready - Backend Integration Required
+**Status**: ✅ Full stack integration available (FastAPI + Postgres + Keycloak)
 
 For questions or issues, see `/frontend-ui/README.md` or `/docs/TROUBLESHOOTING.md`.

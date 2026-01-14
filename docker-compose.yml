@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: llm_agents_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: llm_agents
+    volumes:
+      - llm_agents_pg_data:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2.5
+    container_name: llm_agents_keycloak
+    command: ["start-dev", "--http-port=8081"]
+    ports:
+      - "8081:8081"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    volumes:
+      - llm_agents_keycloak_data:/opt/keycloak/data
+
+volumes:
+  llm_agents_pg_data:
+  llm_agents_keycloak_data:

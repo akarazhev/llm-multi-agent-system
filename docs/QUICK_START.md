@@ -2,6 +2,22 @@
 
 Get up and running with the LLM Multi-Agent System in under 10 minutes.
 
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Starting the System](#starting-the-system)
+- [Running Examples](#running-examples)
+- [Understanding the Output](#understanding-the-output)
+- [Common Workflows](#common-workflows)
+- [Best Practices](#best-practices)
+- [Testing Your Installation](#testing-your-installation)
+- [Troubleshooting](#troubleshooting)
+- [Next Steps](#next-steps)
+- [Getting Help](#getting-help)
+- [Quick Reference](#quick-reference)
+
 ## Prerequisites
 
 Before you begin, ensure you have:
@@ -63,7 +79,7 @@ git clone https://github.com/yourusername/llm-multi-agent-system.git
 cd llm-multi-agent-system
 
 # 2. Create virtual environment
-python -m venv venv
+python3.12 -m venv venv
 
 # 3. Activate virtual environment
 source venv/bin/activate  # macOS/Linux
@@ -210,6 +226,11 @@ source venv/bin/activate
 # Run the system
 python main.py
 ```
+
+### Optional: Frontend UI
+
+If you want the Angular UI with FastAPI + PostgreSQL + Keycloak, follow:
+`docs/FRONTEND_SETUP.md`
 
 You'll see:
 ```

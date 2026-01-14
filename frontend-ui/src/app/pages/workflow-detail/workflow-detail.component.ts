@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +13,9 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatListModule } from '@angular/material/list';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { WorkflowService } from '../../shared/services/workflow.service';
 import { AgentService } from '../../shared/services/agent.service';
 import { ProjectService } from '../../shared/services/project.service';
@@ -22,6 +26,18 @@ import {
   WorkflowPriority,
   StepStatus
 } from '../../core/interfaces/workflow.interface';
+import {
+  AgentMessage,
+  MessageType,
+  MessageThread,
+  CommunicationStats
+} from '../../core/interfaces/agent-message.interface';
+import { AgentRole } from '../../core/interfaces/agent.interface';
+import {
+  getMessagesForWorkflow,
+  getThreadsForWorkflow,
+  getCommunicationStats
+} from '../../mocks/mock-communication';
 
 @Component({
   selector: 'app-workflow-detail',
@@ -29,6 +45,7 @@ import {
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -39,7 +56,10 @@ import {
     MatTabsModule,
     MatTooltipModule,
     MatDividerModule,
-    MatListModule
+    MatListModule,
+    MatButtonToggleModule,
+    MatFormFieldModule,
+    MatSelectModule
   ],
   templateUrl: './workflow-detail.component.html',
   styleUrl: './workflow-detail.component.scss'
@@ -252,6 +272,112 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  // ==================== Communication Features ====================
+
+  // Communication data
+  messages = computed(() => {
+    const w = this.workflow();
+    if (!w) return [];
+    return getMessagesForWorkflow(w.workflow_id);
+  });
+
+  messageThreads = computed(() => {
+    const w = this.workflow();
+    if (!w) return [];
+    return getThreadsForWorkflow(w.workflow_id);
+  });
+
+  communicationStats = computed(() => {
+    const w = this.workflow();
+    if (!w) return {
+      total_messages: 0,
+      messages_by_type: {},
+      messages_by_agent: {},
+      threads_count: 0,
+      open_threads: 0,
+      resolved_threads: 0,
+      decisions_count: 0,
+      average_response_time_seconds: 0
+    };
+    return getCommunicationStats(w.workflow_id);
+  });
+
+  // Communication filters
+  messageTypeFilter = signal<string>('all');
+  agentFilter = signal<string>('all');
+  viewMode = signal<'chat' | 'threads'>('chat');
+
+  // Filtered messages
+  filteredMessages = computed(() => {
+    let msgs = this.messages();
+    
+    const typeFilter = this.messageTypeFilter();
+    if (typeFilter !== 'all') {
+      msgs = msgs.filter(m => m.message_type === typeFilter);
+    }
+    
+    const agentFilterValue = this.agentFilter();
+    if (agentFilterValue !== 'all') {
+      msgs = msgs.filter(m => m.agent_id === agentFilterValue);
+    }
+    
+    return msgs;
+  });
+
+  // Communication helper methods
+  getAgentIcon(role: AgentRole): string {
+    switch (role) {
+      case AgentRole.BUSINESS_ANALYST: return 'analytics';
+      case AgentRole.DEVELOPER: return 'code';
+      case AgentRole.QA_ENGINEER: return 'bug_report';
+      case AgentRole.DEVOPS_ENGINEER: return 'cloud';
+      case AgentRole.TECHNICAL_WRITER: return 'description';
+      case AgentRole.ARCHITECT: return 'architecture';
+      case AgentRole.PRODUCT_MANAGER: return 'leaderboard';
+      case AgentRole.SECURITY_ENGINEER: return 'security';
+      default: return 'smart_toy';
+    }
+  }
+
+  getMessageTypeIcon(type: MessageType): string {
+    switch (type) {
+      case MessageType.QUESTION: return 'help';
+      case MessageType.PROPOSAL: return 'lightbulb';
+      case MessageType.ANSWER: return 'chat';
+      case MessageType.DECISION: return 'gavel';
+      case MessageType.CLARIFICATION: return 'info';
+      case MessageType.SYNCHRONIZATION: return 'sync';
+      case MessageType.ERROR_REPORT: return 'error';
+      case MessageType.COMPLETION: return 'check_circle';
+      default: return 'message';
+    }
+  }
+
+  getAttachmentIcon(type: string): string {
+    switch (type) {
+      case 'code': return 'code';
+      case 'file': return 'insert_drive_file';
+      case 'link': return 'link';
+      case 'image': return 'image';
+      default: return 'attach_file';
+    }
+  }
+
+  formatMessageContent(content: string): string {
+    // Simple formatting: convert newlines to <br>, preserve code blocks
+    return content
+      .replace(/\n/g, '<br>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+  }
+
+  formatSeconds(seconds: number): string {
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ${minutes % 60}m`;
   }
 
   // Expose Object for template use

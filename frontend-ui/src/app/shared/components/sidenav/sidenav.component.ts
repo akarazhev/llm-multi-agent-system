@@ -4,8 +4,9 @@ import { RouterModule } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 
-// Version is updated by pre-commit hook
-const APP_VERSION = '0.0.28';
+// Version is automatically updated by pre-commit hook
+// TODO: Import from package.json when TypeScript config is fixed
+const APP_VERSION = '0.0.29';
 
 interface NavItem {
   label: string;

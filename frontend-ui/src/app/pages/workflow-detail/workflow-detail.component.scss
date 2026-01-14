@@ -783,6 +783,484 @@
   color: vars.$text-secondary;
 }
 
+// ==================== Communication Tab ====================
+
+// Communication Stats Row
+.communication-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .stat-mini-card {
+    .mat-mdc-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+      text-align: center;
+      gap: 8px;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: vars.$primary;
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: vars.$text-primary;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: vars.$text-secondary;
+      }
+    }
+  }
+}
+
+// Filters
+.filters-card {
+  margin-bottom: 24px;
+
+  .filters-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    .filter-field {
+      min-width: 180px;
+      flex: 1;
+    }
+
+    .view-toggle {
+      margin-left: auto;
+    }
+  }
+}
+
+// Messages Container (Chat View)
+.messages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: vars.$bg-surface;
+  border-radius: 8px;
+  max-height: 800px;
+  overflow-y: auto;
+
+  .message-card {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: vars.$bg-surface;
+    border-radius: 8px;
+    border-left: 4px solid vars.$primary;
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &.is-reply {
+      margin-left: 48px;
+      border-left-color: vars.$text-secondary;
+      background: rgba(vars.$primary, 0.05);
+    }
+
+    // Message type styling
+    &.message-question {
+      border-left-color: #2196f3;
+    }
+
+    &.message-proposal {
+      border-left-color: #ff9800;
+    }
+
+    &.message-decision {
+      border-left-color: #4caf50;
+    }
+
+    &.message-error_report {
+      border-left-color: #f44336;
+    }
+
+    &.message-completion {
+      border-left-color: #4caf50;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: vars.$primary;
+      color: white;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      // Agent role colors
+      &.agent-business_analyst {
+        background: #2196f3;
+      }
+
+      &.agent-developer {
+        background: #4caf50;
+      }
+
+      &.agent-qa_engineer {
+        background: #ff9800;
+      }
+
+      &.agent-devops_engineer {
+        background: #9c27b0;
+      }
+
+      &.agent-technical_writer {
+        background: #3f51b5;
+      }
+
+      &.agent-security_engineer {
+        background: #f44336;
+      }
+
+      &.agent-architect {
+        background: #00bcd4;
+      }
+
+      &.agent-project_manager {
+        background: #795548;
+      }
+    }
+
+    .message-content-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        .message-author {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          strong {
+            font-size: 14px;
+            color: vars.$text-primary;
+          }
+
+          .message-type-chip {
+            height: 24px;
+            font-size: 11px;
+
+            &.type-question {
+              background: #e3f2fd;
+              color: #1976d2;
+            }
+
+            &.type-proposal {
+              background: #fff3e0;
+              color: #f57c00;
+            }
+
+            &.type-answer {
+              background: #f3e5f5;
+              color: #7b1fa2;
+            }
+
+            &.type-decision {
+              background: #e8f5e9;
+              color: #388e3c;
+            }
+
+            &.type-error_report {
+              background: #ffebee;
+              color: #c62828;
+            }
+
+            &.type-completion {
+              background: #e8f5e9;
+              color: #388e3c;
+            }
+          }
+
+          .urgency-chip {
+            height: 24px;
+            font-size: 11px;
+            font-weight: 600;
+
+            &.urgency-critical {
+              background: #f44336;
+              color: white;
+            }
+
+            &.urgency-high {
+              background: #ff9800;
+              color: white;
+            }
+
+            &.urgency-low {
+              background: #9e9e9e;
+              color: white;
+            }
+          }
+        }
+
+        .message-time {
+          font-size: 12px;
+          color: vars.$text-secondary;
+          cursor: help;
+        }
+      }
+
+      .message-addressed-to {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: vars.$text-secondary;
+        font-style: italic;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+
+      .message-content {
+        font-size: 14px;
+        line-height: 1.6;
+        color: vars.$text-primary;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+
+        p {
+          margin: 0;
+        }
+
+        code {
+          background: rgba(vars.$primary, 0.1);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-family: 'Courier New', monospace;
+          font-size: 13px;
+        }
+      }
+
+      .message-attachments {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+
+        .attachment-panel {
+          background: rgba(vars.$primary, 0.05);
+
+          .attachment-size {
+            font-size: 11px;
+            color: vars.$text-secondary;
+            margin-left: 4px;
+          }
+
+          .code-attachment,
+          .attachment-content {
+            margin: 0;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+          }
+
+          .attachment-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: vars.$primary;
+            text-decoration: none;
+            padding: 8px 12px;
+
+            &:hover {
+              text-decoration: underline;
+            }
+
+            mat-icon {
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+            }
+          }
+        }
+      }
+
+      .message-requires-response {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: #fff3e0;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #f57c00;
+        font-weight: 500;
+        width: fit-content;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+}
+
+// Threads Container
+.threads-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .thread-card {
+    &.thread-open {
+      border-left: 4px solid #ff9800;
+    }
+
+    &.thread-resolved {
+      border-left: 4px solid #4caf50;
+    }
+
+    &.thread-blocked {
+      border-left: 4px solid #f44336;
+    }
+
+    .mat-mdc-card-subtitle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+
+      .thread-status-open {
+        background: #fff3e0;
+        color: #f57c00;
+      }
+
+      .thread-status-resolved {
+        background: #e8f5e9;
+        color: #388e3c;
+      }
+
+      .thread-status-blocked {
+        background: #ffebee;
+        color: #c62828;
+      }
+    }
+
+    .thread-message {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+
+      &.reply-message {
+        margin-left: 48px;
+        padding-left: 16px;
+        border-left: 2px solid rgba(vars.$primary, 0.2);
+      }
+
+      .message-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: vars.$primary;
+        color: white;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+
+        &.agent-business_analyst {
+          background: #2196f3;
+        }
+
+        &.agent-developer {
+          background: #4caf50;
+        }
+
+        &.agent-qa_engineer {
+          background: #ff9800;
+        }
+
+        &.agent-devops_engineer {
+          background: #9c27b0;
+        }
+
+        &.agent-technical_writer {
+          background: #3f51b5;
+        }
+
+        &.agent-security_engineer {
+          background: #f44336;
+        }
+      }
+
+      .thread-message-content {
+        flex: 1;
+
+        strong {
+          font-size: 13px;
+          color: vars.$text-primary;
+          display: block;
+          margin-bottom: 4px;
+        }
+
+        p {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.5;
+          color: vars.$text-primary;
+        }
+
+        .message-time {
+          font-size: 11px;
+          color: vars.$text-secondary;
+          margin-top: 4px;
+          display: block;
+        }
+      }
+    }
+  }
+}
+
 // Responsive
 @media (max-width: 768px) {
   .overview-grid,

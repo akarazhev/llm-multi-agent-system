@@ -305,6 +305,237 @@
         </div>
       </mat-tab>
 
+      <!-- Communication Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <span class="tab-label">
+            <mat-icon>forum</mat-icon>
+            <span>Communication ({{ communicationStats().total_messages }})</span>
+          </span>
+        </ng-template>
+        <div class="tab-content">
+          @if (messages().length === 0) {
+            <mat-card class="empty-state">
+              <mat-card-content>
+                <mat-icon>forum_off</mat-icon>
+                <h3>No communication yet</h3>
+                <p>Agent messages will appear here as the workflow progresses.</p>
+              </mat-card-content>
+            </mat-card>
+          } @else {
+            <!-- Communication Stats -->
+            <div class="communication-stats-row">
+              <mat-card class="stat-mini-card">
+                <mat-card-content>
+                  <mat-icon>message</mat-icon>
+                  <div class="stat-value">{{ communicationStats().total_messages }}</div>
+                  <div class="stat-label">Messages</div>
+                </mat-card-content>
+              </mat-card>
+              <mat-card class="stat-mini-card">
+                <mat-card-content>
+                  <mat-icon>forum</mat-icon>
+                  <div class="stat-value">{{ communicationStats().threads_count }}</div>
+                  <div class="stat-label">Threads</div>
+                </mat-card-content>
+              </mat-card>
+              <mat-card class="stat-mini-card">
+                <mat-card-content>
+                  <mat-icon>check_circle</mat-icon>
+                  <div class="stat-value">{{ communicationStats().resolved_threads }}</div>
+                  <div class="stat-label">Resolved</div>
+                </mat-card-content>
+              </mat-card>
+              <mat-card class="stat-mini-card">
+                <mat-card-content>
+                  <mat-icon>gavel</mat-icon>
+                  <div class="stat-value">{{ communicationStats().decisions_count }}</div>
+                  <div class="stat-label">Decisions</div>
+                </mat-card-content>
+              </mat-card>
+              <mat-card class="stat-mini-card">
+                <mat-card-content>
+                  <mat-icon>schedule</mat-icon>
+                  <div class="stat-value">{{ formatSeconds(communicationStats().average_response_time_seconds) }}</div>
+                  <div class="stat-label">Avg Response</div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <!-- Filters -->
+            <mat-card class="filters-card">
+              <mat-card-content>
+                <div class="filters-row">
+                  <mat-form-field appearance="outline" class="filter-field">
+                    <mat-label>Message Type</mat-label>
+                    <mat-select [(value)]="messageTypeFilter">
+                      <mat-option value="all">All Types</mat-option>
+                      <mat-option value="question">Questions</mat-option>
+                      <mat-option value="proposal">Proposals</mat-option>
+                      <mat-option value="answer">Answers</mat-option>
+                      <mat-option value="decision">Decisions</mat-option>
+                      <mat-option value="error_report">Errors</mat-option>
+                      <mat-option value="completion">Completions</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="filter-field">
+                    <mat-label>Agent</mat-label>
+                    <mat-select [(value)]="agentFilter">
+                      <mat-option value="all">All Agents</mat-option>
+                      @for (agent of assignedAgents(); track agent.agent_id) {
+                        <mat-option [value]="agent.agent_id">{{ agent.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-button-toggle-group [(value)]="viewMode" class="view-toggle">
+                    <mat-button-toggle value="chat">
+                      <mat-icon>chat</mat-icon>
+                      Chat View
+                    </mat-button-toggle>
+                    <mat-button-toggle value="threads">
+                      <mat-icon>account_tree</mat-icon>
+                      Threads
+                    </mat-button-toggle>
+                  </mat-button-toggle-group>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Chat View -->
+            @if (viewMode() === 'chat') {
+              <div class="messages-container">
+                @for (message of filteredMessages(); track message.message_id) {
+                  <div class="message-card" [class]="'message-' + message.message_type" [class.is-reply]="!!message.parent_message_id">
+                    <div class="message-avatar" [class]="'agent-' + message.agent_role">
+                      <mat-icon>{{ getAgentIcon(message.agent_role) }}</mat-icon>
+                    </div>
+                    <div class="message-content-wrapper">
+                      <div class="message-header">
+                        <div class="message-author">
+                          <strong>{{ message.agent_name }}</strong>
+                          <mat-chip [class]="'type-' + message.message_type" class="message-type-chip">
+                            <span class="chip-content">
+                              <mat-icon>{{ getMessageTypeIcon(message.message_type) }}</mat-icon>
+                              <span>{{ message.message_type | titlecase }}</span>
+                            </span>
+                          </mat-chip>
+                          @if (message.urgency !== 'medium') {
+                            <mat-chip [class]="'urgency-' + message.urgency" class="urgency-chip">
+                              {{ message.urgency | uppercase }}
+                            </mat-chip>
+                          }
+                        </div>
+                        <span class="message-time" [matTooltip]="message.timestamp | date:'medium'">
+                          {{ getTimeAgo(message.timestamp) }}
+                        </span>
+                      </div>
+                      
+                      @if (message.addressed_to && message.addressed_to.length > 0) {
+                        <div class="message-addressed-to">
+                          <mat-icon>send</mat-icon>
+                          <span>To: {{ message.addressed_to_names?.join(', ') }}</span>
+                        </div>
+                      }
+
+                      <div class="message-content">
+                        <p [innerHTML]="formatMessageContent(message.content)"></p>
+                      </div>
+
+                      @if (message.attachments && message.attachments.length > 0) {
+                        <div class="message-attachments">
+                          @for (attachment of message.attachments; track attachment.attachment_id) {
+                            <mat-expansion-panel class="attachment-panel">
+                              <mat-expansion-panel-header>
+                                <mat-panel-title>
+                                  <mat-icon>{{ getAttachmentIcon(attachment.type) }}</mat-icon>
+                                  {{ attachment.name }}
+                                  @if (attachment.size) {
+                                    <span class="attachment-size">({{ formatBytes(attachment.size) }})</span>
+                                  }
+                                </mat-panel-title>
+                              </mat-expansion-panel-header>
+                              @if (attachment.type === 'code' && attachment.content) {
+                                <pre class="code-attachment"><code>{{ attachment.content }}</code></pre>
+                              } @else if (attachment.type === 'link' && attachment.url) {
+                                <a [href]="attachment.url" target="_blank" class="attachment-link">
+                                  {{ attachment.url }}
+                                  <mat-icon>open_in_new</mat-icon>
+                                </a>
+                              } @else if (attachment.content) {
+                                <pre class="attachment-content">{{ attachment.content }}</pre>
+                              }
+                            </mat-expansion-panel>
+                          }
+                        </div>
+                      }
+
+                      @if (message.requires_response && message.addressed_to) {
+                        <div class="message-requires-response">
+                          <mat-icon>mark_email_read</mat-icon>
+                          <span>Response required</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Threads View -->
+            @if (viewMode() === 'threads') {
+              <div class="threads-container">
+                @for (thread of messageThreads(); track thread.root_message.message_id) {
+                  <mat-card class="thread-card" [class]="'thread-' + thread.status">
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar>{{ getMessageTypeIcon(thread.root_message.message_type) }}</mat-icon>
+                      <mat-card-title>{{ thread.root_message.agent_name }}: {{ thread.root_message.content.substring(0, 60) }}...</mat-card-title>
+                      <mat-card-subtitle>
+                        {{ thread.replies.length }} replies • 
+                        <mat-chip [class]="'thread-status-' + thread.status">
+                          {{ thread.status | titlecase }}
+                        </mat-chip>
+                        @if (thread.decision) {
+                          • Decision: {{ thread.decision }}
+                        }
+                      </mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <!-- Root Message -->
+                      <div class="thread-message root-message">
+                        <div class="message-avatar" [class]="'agent-' + thread.root_message.agent_role">
+                          <mat-icon>{{ getAgentIcon(thread.root_message.agent_role) }}</mat-icon>
+                        </div>
+                        <div class="thread-message-content">
+                          <strong>{{ thread.root_message.agent_name }}</strong>
+                          <p>{{ thread.root_message.content }}</p>
+                          <span class="message-time">{{ getTimeAgo(thread.root_message.timestamp) }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Replies -->
+                      @for (reply of thread.replies; track reply.message_id) {
+                        <div class="thread-message reply-message">
+                          <div class="message-avatar" [class]="'agent-' + reply.agent_role">
+                            <mat-icon>{{ getAgentIcon(reply.agent_role) }}</mat-icon>
+                          </div>
+                          <div class="thread-message-content">
+                            <strong>{{ reply.agent_name }}</strong>
+                            <p>{{ reply.content }}</p>
+                            <span class="message-time">{{ getTimeAgo(reply.timestamp) }}</span>
+                          </div>
+                        </div>
+                      }
+                    </mat-card-content>
+                  </mat-card>
+                }
+              </div>
+            }
+          }
+        </div>
+      </mat-tab>
+
       <!-- Artifacts Tab -->
       <mat-tab>
         <ng-template mat-tab-label>

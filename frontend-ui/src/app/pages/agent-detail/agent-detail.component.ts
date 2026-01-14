@@ -50,12 +50,10 @@ export class AgentDetailComponent implements OnInit {
 
   private loadAgent(id: string): void {
     this.loading.set(true);
-    // Simulate API call
-    setTimeout(() => {
-      const foundAgent = this.agentService.getAgentById(id);
-      this.agent.set(foundAgent);
+    this.agentService.getAgentById(id).subscribe(agent => {
+      this.agent.set(agent);
       this.loading.set(false);
-    }, 500);
+    });
   }
 
   goBack(): void {

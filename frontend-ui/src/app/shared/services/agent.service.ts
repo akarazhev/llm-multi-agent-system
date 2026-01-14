@@ -1,12 +1,17 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { catchError, finalize, of, tap } from 'rxjs';
 import { Agent, AgentTemplate, CreateAgentRequest, AgentRole, AgentStatus } from '../../core/interfaces/agent.interface';
-import { MOCK_AGENTS, AGENT_TEMPLATES } from '../../mocks/mock-agents';
+import { AGENT_TEMPLATES } from '../../mocks/mock-agents';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AgentService {
-  private agents = signal<Agent[]>([...MOCK_AGENTS]);
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = environment.apiUrl;
+  private agents = signal<Agent[]>([]);
   private templates = signal<AgentTemplate[]>([...AGENT_TEMPLATES]);
   private loading = signal<boolean>(false);
 
@@ -42,18 +47,19 @@ export class AgentService {
    */
   loadAgents(): void {
     this.loading.set(true);
-    // Simulate API call
-    setTimeout(() => {
-      this.agents.set([...MOCK_AGENTS]);
-      this.loading.set(false);
-    }, 500);
+    this.http.get<Agent[]>(`${this.apiUrl}/agents`).pipe(
+      catchError(() => of([])),
+      finalize(() => this.loading.set(false))
+    ).subscribe(agents => this.agents.set(agents));
   }
 
   /**
    * Get agent by ID
    */
-  getAgentById(id: string): Agent | undefined {
-    return this.agents().find(a => a.agent_id === id);
+  getAgentById(id: string) {
+    return this.http.get<Agent>(`${this.apiUrl}/agents/${id}`).pipe(
+      catchError(() => of(undefined))
+    );
   }
 
   /**
@@ -73,44 +79,11 @@ export class AgentService {
   /**
    * Create a new agent
    */
-  createAgent(request: CreateAgentRequest): Agent {
-    const template = request.template_id 
-      ? this.getTemplateById(request.template_id)
-      : undefined;
-
-    const newAgent: Agent = {
-      agent_id: `agent_${Date.now()}`,
-      name: request.name,
-      role: request.role,
-      status: AgentStatus.IDLE,
-      description: request.description || '',
-      capabilities: template?.capabilities || [],
-      completed_tasks: 0,
-      failed_tasks: 0,
-      created_at: new Date().toISOString(),
-      configuration: {
-        ...(template?.default_configuration || {
-          model: 'llama3-70b',
-          temperature: 0.5,
-          max_tokens: 4000,
-          tools_enabled: [],
-          auto_approve: false,
-          max_retries: 3
-        }),
-        ...(request.configuration || {})
-      },
-      metrics: {
-        total_tasks: 0,
-        success_rate: 0,
-        avg_response_time: 0,
-        tokens_used: 0,
-        cost_estimate: 0
-      },
-      assigned_projects: []
-    };
-
-    this.agents.update(agents => [...agents, newAgent]);
-    return newAgent;
+  createAgent(request: CreateAgentRequest) {
+    return this.http.post<Agent>(`${this.apiUrl}/agents`, request).pipe(
+      tap(agent => this.agents.update(agents => [...agents, agent])),
+      catchError(() => of(undefined))
+    );
   }
 
   /**
@@ -126,7 +99,11 @@ export class AgentService {
    * Delete agent
    */
   deleteAgent(agentId: string): void {
-    this.agents.update(agents => agents.filter(a => a.agent_id !== agentId));
+    this.http.delete(`${this.apiUrl}/agents/${agentId}`).pipe(
+      catchError(() => of(null))
+    ).subscribe(() => {
+      this.agents.update(agents => agents.filter(a => a.agent_id !== agentId));
+    });
   }
 
   /**

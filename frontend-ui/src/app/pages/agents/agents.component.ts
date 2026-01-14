@@ -101,14 +101,17 @@ export class AgentsComponent {
 
     dialogRef.afterClosed().subscribe((request: CreateAgentRequest) => {
       if (request) {
-        const newAgent = this.agentService.createAgent(request);
-        this.snackBar.open(`Agent "${newAgent.name}" created successfully!`, 'Close', {
-          duration: 3000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top'
+        this.agentService.createAgent(request).subscribe(newAgent => {
+          if (newAgent) {
+            this.snackBar.open(`Agent "${newAgent.name}" created successfully!`, 'Close', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            // Switch to Active Agents tab
+            this.selectedTab.set(0);
+          }
         });
-        // Switch to Active Agents tab
-        this.selectedTab.set(0);
       }
     });
   }

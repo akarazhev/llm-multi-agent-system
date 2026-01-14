@@ -1,4 +1,6 @@
-import { Injectable, signal, computed, effect, OnDestroy } from '@angular/core';
+import { Injectable, signal, computed, OnDestroy, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { catchError, finalize, of, tap } from 'rxjs';
 import {
   Workflow,
   WorkflowTemplate,
@@ -7,13 +9,16 @@ import {
   WorkflowPriority,
   WorkflowCreateRequest
 } from '../../core/interfaces/workflow.interface';
-import { MOCK_WORKFLOWS, WORKFLOW_TEMPLATES } from '../../mocks/mock-workflows';
+import { WORKFLOW_TEMPLATES } from '../../mocks/mock-workflows';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkflowService implements OnDestroy {
-  private workflows = signal<Workflow[]>([...MOCK_WORKFLOWS]);
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = environment.apiUrl;
+  private workflows = signal<Workflow[]>([]);
   private templates = signal<WorkflowTemplate[]>([...WORKFLOW_TEMPLATES]);
   private loading = signal<boolean>(false);
   private autoRefreshInterval: any = null;
@@ -62,18 +67,19 @@ export class WorkflowService implements OnDestroy {
    */
   loadWorkflows(): void {
     this.loading.set(true);
-    // Simulate API call
-    setTimeout(() => {
-      this.workflows.set([...MOCK_WORKFLOWS]);
-      this.loading.set(false);
-    }, 500);
+    this.http.get<Workflow[]>(`${this.apiUrl}/workflows`).pipe(
+      catchError(() => of([])),
+      finalize(() => this.loading.set(false))
+    ).subscribe(workflows => this.workflows.set(workflows));
   }
 
   /**
    * Get workflow by ID
    */
-  getWorkflowById(id: string): Workflow | undefined {
-    return this.workflows().find(w => w.workflow_id === id);
+  getWorkflowById(id: string) {
+    return this.http.get<Workflow>(`${this.apiUrl}/workflows/${id}`).pipe(
+      catchError(() => of(undefined))
+    );
   }
 
   /**
@@ -107,44 +113,11 @@ export class WorkflowService implements OnDestroy {
   /**
    * Create a new workflow
    */
-  createWorkflow(request: WorkflowCreateRequest): Workflow {
-    const template = request.workflow_type
-      ? this.templates().find(t => t.workflow_type === request.workflow_type)
-      : undefined;
-
-    const newWorkflow: Workflow = {
-      workflow_id: `wf_${Date.now()}`,
-      name: request.name,
-      description: request.description || '',
-      workflow_type: request.workflow_type,
-      requirement: request.requirement,
-      status: WorkflowStatus.PENDING,
-      started_at: new Date().toISOString(),
-      completed_steps: [],
-      total_steps: template?.default_steps.length || 6,
-      progress_percentage: 0,
-      files_created: [],
-      errors: [],
-      project_id: request.project_id,
-      assigned_agents: request.assigned_agents || [],
-      created_by: 'user_001', // TODO: Get from auth service
-      tags: request.tags || [],
-      priority: request.priority || WorkflowPriority.MEDIUM,
-      metrics: {
-        total_duration: 0,
-        agent_time: {},
-        files_generated: 0,
-        lines_of_code: 0,
-        tests_created: 0,
-        cost_estimate: 0,
-        success_rate: 0
-      },
-      steps: [],
-      artifacts: []
-    };
-
-    this.workflows.update(workflows => [...workflows, newWorkflow]);
-    return newWorkflow;
+  createWorkflow(request: WorkflowCreateRequest) {
+    return this.http.post<Workflow>(`${this.apiUrl}/workflows`, request).pipe(
+      tap(workflow => this.workflows.update(workflows => [...workflows, workflow])),
+      catchError(() => of(undefined))
+    );
   }
 
   /**
@@ -160,16 +133,23 @@ export class WorkflowService implements OnDestroy {
    * Delete workflow
    */
   deleteWorkflow(workflowId: string): void {
-    this.workflows.update(workflows => workflows.filter(w => w.workflow_id !== workflowId));
+    this.http.delete(`${this.apiUrl}/workflows/${workflowId}`).pipe(
+      catchError(() => of(null))
+    ).subscribe(() => {
+      this.workflows.update(workflows => workflows.filter(w => w.workflow_id !== workflowId));
+    });
   }
 
   /**
    * Cancel workflow
    */
   cancelWorkflow(workflowId: string): void {
-    this.updateWorkflow(workflowId, {
-      status: WorkflowStatus.CANCELLED,
-      completed_at: new Date().toISOString()
+    this.http.post<Workflow>(`${this.apiUrl}/workflows/${workflowId}/cancel`, {}).pipe(
+      catchError(() => of(undefined))
+    ).subscribe(workflow => {
+      if (workflow) {
+        this.updateWorkflow(workflowId, workflow);
+      }
     });
   }
 
@@ -232,12 +212,7 @@ export class WorkflowService implements OnDestroy {
     }
     this.autoRefreshEnabled.set(true);
     this.autoRefreshInterval = setInterval(() => {
-      const runningWorkflows = this.workflows().filter(
-        w => w.status === WorkflowStatus.RUNNING
-      );
-      if (runningWorkflows.length > 0) {
-        this.simulateWorkflowProgress();
-      }
+      this.loadWorkflows();
     }, intervalMs);
   }
 
@@ -250,36 +225,6 @@ export class WorkflowService implements OnDestroy {
       this.autoRefreshInterval = null;
       this.autoRefreshEnabled.set(false);
     }
-  }
-
-  /**
-   * Simulate workflow progress (for mock data)
-   * In production, this would poll the backend API
-   */
-  private simulateWorkflowProgress(): void {
-    this.workflows.update(workflows =>
-      workflows.map(workflow => {
-        if (workflow.status === WorkflowStatus.RUNNING) {
-          // Simulate progress increment
-          const newProgress = Math.min(workflow.progress_percentage + Math.random() * 5, 100);
-          const completedSteps = Math.floor((newProgress / 100) * workflow.total_steps);
-          
-          return {
-            ...workflow,
-            progress_percentage: Math.round(newProgress),
-            completed_steps: workflow.completed_steps.slice(0, completedSteps),
-            duration: (workflow.duration || 0) + 5, // +5 seconds
-            // Complete workflow if 100%
-            ...(newProgress >= 100 && {
-              status: WorkflowStatus.COMPLETED,
-              completed_at: new Date().toISOString(),
-              current_step: undefined
-            })
-          };
-        }
-        return workflow;
-      })
-    );
   }
 
   /**

@@ -143,18 +143,15 @@ export class ProjectDetailComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((selectedAgentIds: string[]) => {
       if (selectedAgentIds) {
-        // Update project with new agent assignments
-        this.projectService.updateProject(this.project()!.id, {
-          aiAgents: selectedAgentIds
-        });
-        
-        // Reload project to get updated data
-        this.loadProject(this.project()!.id);
-        
-        this.snackBar.open('Agent assignments updated successfully!', 'Close', {
-          duration: 3000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top'
+        this.projectService.assignAgents(this.project()!.id, selectedAgentIds).subscribe(project => {
+          if (project) {
+            this.loadProject(this.project()!.id);
+            this.snackBar.open('Agent assignments updated successfully!', 'Close', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+          }
         });
       }
     });

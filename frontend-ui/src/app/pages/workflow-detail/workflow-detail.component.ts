@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,6 +20,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { WorkflowService } from '../../shared/services/workflow.service';
 import { AgentService } from '../../shared/services/agent.service';
 import { ProjectService } from '../../shared/services/project.service';
+import { CommunicationService } from '../../shared/services/communication.service';
+import { WebSocketService, WorkflowWsMessage } from '../../shared/services/websocket.service';
 import {
   Workflow,
   WorkflowStatus,
@@ -33,11 +36,6 @@ import {
   CommunicationStats
 } from '../../core/interfaces/agent-message.interface';
 import { AgentRole } from '../../core/interfaces/agent.interface';
-import {
-  getMessagesForWorkflow,
-  getThreadsForWorkflow,
-  getCommunicationStats
-} from '../../mocks/mock-communication';
 
 @Component({
   selector: 'app-workflow-detail',
@@ -70,9 +68,16 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
   private readonly workflowService = inject(WorkflowService);
   private readonly agentService = inject(AgentService);
   private readonly projectService = inject(ProjectService);
+  private readonly communicationService = inject(CommunicationService);
+  private readonly websocketService = inject(WebSocketService);
 
   workflow = signal<Workflow | undefined>(undefined);
   loading = signal(true);
+  messagesSignal = signal<AgentMessage[]>([]);
+  threadsSignal = signal<MessageThread[]>([]);
+  communicationStatsSignal = signal<CommunicationStats | null>(null);
+  private wsSubscription?: Subscription;
+  private routeSubscription?: Subscription;
 
   workflowExists = computed(() => !!this.workflow());
 
@@ -95,10 +100,16 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.routeSubscription = this.route.paramMap.subscribe(params => {
       const workflowId = params.get('id');
       if (workflowId) {
         this.loadWorkflow(workflowId);
+        this.loadCommunication(workflowId);
+        this.websocketService.connect(workflowId);
+        this.wsSubscription?.unsubscribe();
+        this.wsSubscription = this.websocketService.messages$.subscribe(message => {
+          this.handleWsMessage(message);
+        });
       }
     });
     // Enable auto-refresh for this workflow if it's running
@@ -107,17 +118,38 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.workflowService.disableAutoRefresh();
+    this.websocketService.disconnect();
+    this.wsSubscription?.unsubscribe();
+    this.routeSubscription?.unsubscribe();
   }
 
   private loadWorkflow(id: string): void {
     this.loading.set(true);
-    const workflow = this.workflowService.getWorkflowById(id);
-    if (workflow) {
+    this.workflowService.getWorkflowById(id).subscribe(workflow => {
       this.workflow.set(workflow);
-    } else {
-      this.workflow.set(undefined);
+      this.loading.set(false);
+    });
+  }
+
+  private loadCommunication(workflowId: string): void {
+    this.communicationService.getMessages(workflowId).subscribe(messages => {
+      this.messagesSignal.set(messages);
+    });
+    this.communicationService.getThreads(workflowId).subscribe(threads => {
+      this.threadsSignal.set(threads);
+    });
+    this.communicationService.getStats(workflowId).subscribe(stats => {
+      this.communicationStatsSignal.set(stats);
+    });
+  }
+
+  private handleWsMessage(message: WorkflowWsMessage): void {
+    if (message.event_type === 'workflow_status_changed') {
+      const workflowId = this.workflow()?.workflow_id;
+      if (workflowId) {
+        this.loadWorkflow(workflowId);
+      }
     }
-    this.loading.set(false);
   }
 
   goBack(): void {
@@ -278,20 +310,16 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
 
   // Communication data
   messages = computed(() => {
-    const w = this.workflow();
-    if (!w) return [];
-    return getMessagesForWorkflow(w.workflow_id);
+    return this.messagesSignal();
   });
 
   messageThreads = computed(() => {
-    const w = this.workflow();
-    if (!w) return [];
-    return getThreadsForWorkflow(w.workflow_id);
+    return this.threadsSignal();
   });
 
   communicationStats = computed(() => {
-    const w = this.workflow();
-    if (!w) return {
+    const stats = this.communicationStatsSignal();
+    return stats ?? {
       total_messages: 0,
       messages_by_type: {},
       messages_by_agent: {},
@@ -301,7 +329,6 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
       decisions_count: 0,
       average_response_time_seconds: 0
     };
-    return getCommunicationStats(w.workflow_id);
   });
 
   // Communication filters

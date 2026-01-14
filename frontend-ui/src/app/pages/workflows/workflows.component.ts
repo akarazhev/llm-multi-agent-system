@@ -227,9 +227,11 @@ export class WorkflowsComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        const newWorkflow = this.workflowService.createWorkflow(result);
-        console.log('Workflow created:', newWorkflow);
-        // Optionally show a success snackbar
+        this.workflowService.createWorkflow(result).subscribe(newWorkflow => {
+          if (newWorkflow) {
+            console.log('Workflow created:', newWorkflow);
+          }
+        });
       }
     });
   }

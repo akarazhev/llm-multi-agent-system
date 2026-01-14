@@ -147,12 +147,9 @@ export class ProjectCreateComponent {
 
     this.projectService.createProject(formData).subscribe({
       next: (project) => {
-        // Add to projects list
-        const projects = this.projectService.projects();
-        this.projectService.projects.set([...projects, project]);
-        
-        // Navigate to new project
-        this.router.navigate(['/projects', project.id]);
+        if (project) {
+          this.router.navigate(['/projects', project.id]);
+        }
       },
       error: (error) => {
         console.error('Error creating project:', error);

@@ -25,6 +25,39 @@ else
   exit 1
 fi
 
+echo "Waiting for Keycloak..."
+attempt=0
+until podman exec llm_agents_keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+  --server http://localhost:8081 \
+  --realm master \
+  --user admin \
+  --password admin >/dev/null 2>&1; do
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 15 ]; then
+    echo "Keycloak is not ready. Skipping demo user setup."
+    break
+  fi
+  sleep 4
+done
+
+if [ "$attempt" -lt 15 ]; then
+  if ! podman exec llm_agents_keycloak /opt/keycloak/bin/kcadm.sh get users \
+    -r llm-agents -q username=demo | tr -d '\n' | grep -q '"username":"demo"'; then
+    echo "Creating demo user..."
+    podman exec llm_agents_keycloak /opt/keycloak/bin/kcadm.sh create users \
+      -r llm-agents \
+      -s username=demo \
+      -s enabled=true >/dev/null
+
+    podman exec llm_agents_keycloak /opt/keycloak/bin/kcadm.sh set-password \
+      -r llm-agents \
+      --username demo \
+      --new-password demo >/dev/null
+  else
+    echo "Demo user already exists."
+  fi
+fi
+
 echo ""
 echo "Services started:"
 echo "- Frontend: http://localhost:4200"

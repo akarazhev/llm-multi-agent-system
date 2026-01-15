@@ -1,0 +1,36 @@
+@use '../../style/material-variables.scss' as mat-vars;
+
+.settings-container {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.settings-header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.subtitle {
+  color: mat-vars.$text-secondary;
+}
+
+.settings-card {
+  max-width: 720px;
+}
+
+.settings-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.loading-container {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+  color: mat-vars.$text-secondary;
+}

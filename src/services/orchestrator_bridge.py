@@ -1,10 +1,11 @@
 import asyncio
 import uuid
-from typing import Dict, Optional
+from datetime import datetime
+from typing import Dict, Optional, Tuple
 
 from src.config import load_config
 from src.db.database import async_session
-from src.db.models import Workflow
+from src.db.models import Agent, AgentMessage, Workflow
 from src.orchestrator.langgraph_orchestrator import LangGraphOrchestrator
 from src.api.websocket import manager
 
@@ -28,14 +29,30 @@ class OrchestratorBridge:
         orchestrator = self._get_orchestrator()
 
         async def _run() -> None:
+            await self._log_message(
+                workflow_id,
+                message_type="synchronization",
+                content="Workflow started by orchestrator.",
+            )
             await self._update_status(workflow_id, "running")
             try:
                 if workflow_type == "bug_fix":
                     await orchestrator.execute_bug_fix(requirement=requirement, bug_description=requirement)
                 else:
                     await orchestrator.execute_feature_development(requirement=requirement)
+                await self._log_message(
+                    workflow_id,
+                    message_type="completion",
+                    content="Workflow completed successfully.",
+                )
                 await self._update_status(workflow_id, "completed")
-            except Exception:
+            except Exception as error:
+                await self._log_message(
+                    workflow_id,
+                    message_type="error_report",
+                    content=f"Workflow failed: {error}",
+                    urgency="high",
+                )
                 await self._update_status(workflow_id, "failed")
 
         task = asyncio.create_task(_run())
@@ -56,6 +73,57 @@ class OrchestratorBridge:
                 "data": {"status": status},
             },
         )
+
+    async def _log_message(
+        self,
+        workflow_id: str,
+        message_type: str,
+        content: str,
+        urgency: str = "medium",
+    ) -> None:
+        async with async_session() as session:
+            workflow_uuid = uuid.UUID(workflow_id)
+            workflow = await session.get(Workflow, workflow_uuid)
+            if not workflow:
+                return
+
+            agent_id, agent_name, agent_role = await self._resolve_message_author(session, workflow)
+
+            message = AgentMessage(
+                message_id=uuid.uuid4(),
+                workflow_id=workflow_uuid,
+                agent_id=agent_id,
+                agent_name=agent_name,
+                agent_role=agent_role,
+                message_type=message_type,
+                content=content,
+                addressed_to=[],
+                addressed_to_names=[],
+                parent_message_id=None,
+                requires_response=False,
+                urgency=urgency,
+                attachments=[],
+                is_edited=False,
+                edited_at=None,
+                created_at=datetime.utcnow(),
+            )
+            session.add(message)
+            await session.commit()
+
+    async def _resolve_message_author(
+        self,
+        session,
+        workflow: Workflow,
+    ) -> Tuple[Optional[uuid.UUID], str, str]:
+        if workflow.assigned_agents:
+            try:
+                agent_uuid = uuid.UUID(workflow.assigned_agents[0])
+                agent = await session.get(Agent, agent_uuid)
+                if agent:
+                    return agent.agent_id, agent.name, agent.role
+            except (ValueError, TypeError):
+                pass
+        return None, "Orchestrator", "technical_writer"
 
 
 orchestrator_bridge = OrchestratorBridge()

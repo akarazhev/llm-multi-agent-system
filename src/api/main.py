@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import load_config
-from .routers import agents, communication, health, projects, workflows
+from .routers import agents, communication, demo, health, projects, settings, workflows
 from .websocket import router as websocket_router
 
 
@@ -27,6 +27,8 @@ def create_app() -> FastAPI:
     app.include_router(workflows.router, prefix="/api/workflows", tags=["workflows"])
     app.include_router(agents.router, prefix="/api/agents", tags=["agents"])
     app.include_router(communication.router, prefix="/api/communication", tags=["communication"])
+    app.include_router(demo.router, prefix="/api", tags=["demo"])
+    app.include_router(settings.router, prefix="/api", tags=["settings"])
     app.include_router(websocket_router, prefix="/ws")
 
     return app

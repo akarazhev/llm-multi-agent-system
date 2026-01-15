@@ -164,7 +164,64 @@
       </form>
     </mat-step>
 
-    <!-- Step 3: Review & Create -->
+    <!-- Step 3: Integrations -->
+    <mat-step [stepControl]="integrationsForm" label="Integrations (Optional)">
+      <form [formGroup]="integrationsForm">
+        <div class="step-content">
+          <h2>Integrations</h2>
+          <p class="step-description">Connect project documentation and repositories</p>
+
+          <div class="form-grid">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Git Platform</mat-label>
+              <mat-select formControlName="gitPlatform">
+                @for (platform of gitPlatforms; track platform) {
+                  <mat-option [value]="platform">{{ platform | titlecase }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Git Repository URL</mat-label>
+              <input matInput formControlName="gitUrl" placeholder="https://git.example.com/team/inventory-tool">
+              <mat-hint>Optional. Leave empty if not connected yet.</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Default Branch</mat-label>
+              <input matInput formControlName="gitBranch" placeholder="main">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Confluence Space URL</mat-label>
+              <input matInput formControlName="confluenceUrl" placeholder="https://confluence.example.com/display/INV">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Confluence Space Key</mat-label>
+              <input matInput formControlName="confluenceSpaceKey" placeholder="INV">
+            </mat-form-field>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <span class="button-content">
+                <mat-icon>arrow_back</mat-icon>
+                <span>Back</span>
+              </span>
+            </button>
+            <button mat-raised-button color="primary" matStepperNext>
+              <span class="button-content">
+                <span>Next</span>
+                <mat-icon>arrow_forward</mat-icon>
+              </span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-step>
+
+    <!-- Step 4: Review & Create -->
     <mat-step label="Review & Create">
       <div class="step-content">
         <h2>Review Your Project</h2>
@@ -205,7 +262,7 @@
               </div>
             </div>
 
-            @if (selectedLanguages().length > 0 || selectedFrameworks().length > 0 || 
+            @if (selectedLanguages().length > 0 || selectedFrameworks().length > 0 ||
                  selectedDatabases().length > 0 || selectedTools().length > 0) {
               <div class="review-section">
                 <h3>Technology Stack</h3>
@@ -251,6 +308,31 @@
                         <mat-chip>{{ tool }}</mat-chip>
                       }
                     </div>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (integrationsForm.get('gitUrl')?.value || integrationsForm.get('confluenceUrl')?.value || integrationsForm.get('confluenceSpaceKey')?.value) {
+              <div class="review-section">
+                <h3>Integrations</h3>
+                @if (integrationsForm.get('gitUrl')?.value) {
+                  <div class="review-item">
+                    <span class="review-label">Git:</span>
+                    <span class="review-value">
+                      {{ integrationsForm.get('gitPlatform')?.value | titlecase }} -
+                      {{ integrationsForm.get('gitBranch')?.value }} -
+                      {{ integrationsForm.get('gitUrl')?.value }}
+                    </span>
+                  </div>
+                }
+                @if (integrationsForm.get('confluenceUrl')?.value || integrationsForm.get('confluenceSpaceKey')?.value) {
+                  <div class="review-item">
+                    <span class="review-label">Confluence:</span>
+                    <span class="review-value">
+                      {{ integrationsForm.get('confluenceSpaceKey')?.value }} -
+                      {{ integrationsForm.get('confluenceUrl')?.value }}
+                    </span>
                   </div>
                 }
               </div>

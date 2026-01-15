@@ -154,10 +154,16 @@
       } @else {
         <h2>No projects yet</h2>
         <p>Create your first project to get started with AI-powered development</p>
-        <button mat-raised-button color="primary" (click)="createNewProject()">
-          <mat-icon>add</mat-icon>
-          Create First Project
-        </button>
+        <div class="empty-actions">
+          <button mat-raised-button color="primary" (click)="createNewProject()">
+            <mat-icon>add</mat-icon>
+            Create First Project
+          </button>
+          <button mat-stroked-button color="primary" (click)="createDemoProject()">
+            <mat-icon>auto_awesome</mat-icon>
+            Create Demo Project
+          </button>
+        </div>
       }
     </div>
   }

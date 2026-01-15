@@ -11,6 +11,7 @@ import os
 from ..utils import FileWriter
 from ..utils.retry import retry_with_exponential_backoff, CircuitBreaker, CircuitBreakerError
 from ..utils.llm_client_pool import get_llm_client
+from ..services.settings_service import settings_service
 
 logger = logging.getLogger(__name__)
 
@@ -246,15 +247,17 @@ class BaseAgent(ABC):
         try:
             import re
             
-            api_base = os.getenv('OPENAI_API_BASE', 'http://127.0.0.1:8080/v1')
-            model = os.getenv('OPENAI_API_MODEL', 'devstral')
+            settings = await settings_service.get_llm_settings()
+            api_base = settings.base_url
+            model = settings.model
             temperature = float(os.getenv('OPENAI_TEMPERATURE', '0.7'))
             max_tokens = int(os.getenv('OPENAI_MAX_TOKENS', '2048'))
             
             # Get client from connection pool
             client = await get_llm_client(
                 api_base=api_base,
-                timeout=timeout
+                api_key=settings.api_key,
+                timeout=settings.timeout or timeout
             )
             
             logger.info(f"[{self.agent_id}] Calling local llama-server with model: {model} (attempt {retry_count + 1}, stream: {stream})")

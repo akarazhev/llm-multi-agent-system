@@ -300,6 +300,13 @@
   }
 }
 
+.empty-actions {
+  display: inline-flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 // Responsive
 @media (max-width: 768px) {
   .projects-grid {

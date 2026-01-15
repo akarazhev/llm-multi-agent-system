@@ -18,7 +18,11 @@
     <button mat-icon-button matTooltip="Notifications">
       <mat-icon>notifications</mat-icon>
     </button>
-    <button mat-icon-button matTooltip="Settings">
+    <button
+      mat-icon-button
+      matTooltip="Settings"
+      aria-label="Open settings"
+      [routerLink]="['/settings']">
       <mat-icon>settings</mat-icon>
     </button>
   </div>

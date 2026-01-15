@@ -114,3 +114,15 @@ class Decision(Base):
     responsible_agents: Mapped[list] = mapped_column(JSONB, default=list)
     discussion_thread_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_messages.message_id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class AppSettings(Base):
+    __tablename__ = "app_settings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    llm_base_url: Mapped[str] = mapped_column(String(255), nullable=False)
+    llm_api_key: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    llm_model: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    llm_timeout: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -148,6 +148,7 @@ export class WorkflowDetailComponent implements OnInit, OnDestroy {
       const workflowId = this.workflow()?.workflow_id;
       if (workflowId) {
         this.loadWorkflow(workflowId);
+        this.loadCommunication(workflowId);
       }
     }
   }

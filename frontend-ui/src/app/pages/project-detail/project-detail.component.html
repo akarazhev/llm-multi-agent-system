@@ -216,6 +216,7 @@
                       <div matListItemTitle>Git Repository</div>
                       <div matListItemLine>
                         {{ project()!.integrations.git!.platform }} - {{ project()!.integrations.git!.branch }}
+                        · {{ project()!.integrations.git!.url }}
                       </div>
                       <span matListItemMeta [class.connected]="project()!.integrations.git!.connected">
                         {{ project()!.integrations.git!.connected ? 'Connected' : 'Disconnected' }}
@@ -236,7 +237,10 @@
                     <mat-list-item>
                       <mat-icon matListItemIcon [class.connected]="project()!.integrations.confluence!.connected">description</mat-icon>
                       <div matListItemTitle>Confluence</div>
-                      <div matListItemLine>Space: {{ project()!.integrations.confluence!.spaceKey }}</div>
+                      <div matListItemLine>
+                        Space: {{ project()!.integrations.confluence!.spaceKey }}
+                        · {{ project()!.integrations.confluence!.url }}
+                      </div>
                       <span matListItemMeta [class.connected]="project()!.integrations.confluence!.connected">
                         {{ project()!.integrations.confluence!.connected ? 'Connected' : 'Disconnected' }}
                       </span>

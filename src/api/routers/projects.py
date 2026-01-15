@@ -46,7 +46,7 @@ async def create_project(
         owner_id=user.get("username") or user.get("sub") or "unknown",
         team_members=[],
         ai_agents=[],
-        integrations={},
+        integrations=request.integrations.model_dump(exclude_none=True) if request.integrations else {},
         tech_stack=request.techStack.model_dump(),
         stats={
             "totalWorkflows": 0,
@@ -92,6 +92,8 @@ async def update_project(
         project.type = request.type
     if request.techStack is not None:
         project.tech_stack = request.techStack.model_dump()
+    if request.integrations is not None:
+        project.integrations = request.integrations.model_dump(exclude_none=True)
 
     project.updated_at = datetime.utcnow()
     await session.commit()

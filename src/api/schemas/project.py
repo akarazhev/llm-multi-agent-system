@@ -23,6 +23,31 @@ class ProjectStats(BaseModel):
     linesOfCode: int
 
 
+class GitIntegration(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    platform: str
+    url: str
+    branch: str
+    connected: bool = False
+    lastSync: Optional[str] = None
+
+
+class ConfluenceIntegration(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    url: str
+    spaceKey: str
+    connected: bool = False
+    lastSync: Optional[str] = None
+
+
+class ProjectIntegrations(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    git: Optional[GitIntegration] = None
+    confluence: Optional[ConfluenceIntegration] = None
+    jira: Optional[Dict] = None
+    slack: Optional[Dict] = None
+
+
 class Project(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     id: str
@@ -34,7 +59,7 @@ class Project(BaseModel):
     ownerId: str = Field(alias="owner_id")
     teamMembers: List[Dict] = Field(alias="team_members")
     aiAgents: List[str] = Field(alias="ai_agents")
-    integrations: Dict
+    integrations: ProjectIntegrations
     techStack: TechStack = Field(alias="tech_stack")
     stats: ProjectStats
     createdAt: str = Field(alias="created_at")
@@ -49,6 +74,7 @@ class ProjectFormData(BaseModel):
     status: str
     type: str
     techStack: TechStack
+    integrations: Optional[ProjectIntegrations] = None
 
 
 class ProjectUpdate(BaseModel):
@@ -58,6 +84,7 @@ class ProjectUpdate(BaseModel):
     status: Optional[str] = None
     type: Optional[str] = None
     techStack: Optional[TechStack] = None
+    integrations: Optional[ProjectIntegrations] = None
 
 
 class AssignAgentsRequest(BaseModel):

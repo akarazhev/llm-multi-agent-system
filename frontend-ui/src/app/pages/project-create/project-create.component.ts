@@ -35,6 +35,7 @@ import { ProjectFormData, ProjectType, ProjectStatus } from '../../core/interfac
 export class ProjectCreateComponent {
   basicInfoForm: FormGroup;
   techStackForm: FormGroup;
+  integrationsForm: FormGroup;
   
   creating = signal(false);
   
@@ -57,6 +58,7 @@ export class ProjectCreateComponent {
   frameworkOptions = ['Angular', 'React', 'Vue.js', 'Next.js', 'Express.js', 'FastAPI', 'Spring Boot', 'Django', 'Flask'];
   databaseOptions = ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'Elasticsearch', 'DynamoDB'];
   toolOptions = ['Docker', 'Kubernetes', 'Jest', 'Cypress', 'Webpack', 'Vite', 'ESLint', 'Prettier'];
+  gitPlatforms = ['github', 'gitlab', 'bitbucket'];
 
   selectedLanguages = signal<string[]>([]);
   selectedFrameworks = signal<string[]>([]);
@@ -81,6 +83,14 @@ export class ProjectCreateComponent {
       frameworks: [[]],
       databases: [[]],
       tools: [[]]
+    });
+
+    this.integrationsForm = this.fb.group({
+      gitPlatform: ['github'],
+      gitUrl: [''],
+      gitBranch: ['main'],
+      confluenceUrl: [''],
+      confluenceSpaceKey: ['']
     });
   }
 
@@ -142,7 +152,8 @@ export class ProjectCreateComponent {
         frameworks: this.selectedFrameworks(),
         databases: this.selectedDatabases(),
         tools: this.selectedTools()
-      }
+      },
+      integrations: this.buildIntegrationsPayload()
     };
 
     this.projectService.createProject(formData).subscribe({
@@ -160,6 +171,38 @@ export class ProjectCreateComponent {
 
   cancel(): void {
     this.router.navigate(['/projects']);
+  }
+
+  private buildIntegrationsPayload(): ProjectFormData['integrations'] {
+    const gitUrl = (this.integrationsForm.get('gitUrl')?.value as string || '').trim();
+    const confluenceUrl = (this.integrationsForm.get('confluenceUrl')?.value as string || '').trim();
+    const confluenceSpaceKey = (this.integrationsForm.get('confluenceSpaceKey')?.value as string || '').trim();
+
+    const gitPayload = gitUrl
+      ? {
+          platform: this.integrationsForm.get('gitPlatform')?.value as string,
+          url: gitUrl,
+          branch: (this.integrationsForm.get('gitBranch')?.value as string || 'main').trim(),
+          connected: true
+        }
+      : undefined;
+
+    const confluencePayload = confluenceUrl || confluenceSpaceKey
+      ? {
+          url: confluenceUrl,
+          spaceKey: confluenceSpaceKey,
+          connected: true
+        }
+      : undefined;
+
+    if (!gitPayload && !confluencePayload) {
+      return undefined;
+    }
+
+    return {
+      git: gitPayload,
+      confluence: confluencePayload
+    };
   }
 
   getProjectTypeIcon(type: ProjectType): string {

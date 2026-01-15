@@ -71,7 +71,8 @@ export class ProjectService {
       icon: data.icon ?? current.icon,
       status: data.status ?? current.status,
       type: data.type ?? current.type,
-      techStack: data.techStack ?? current.techStack
+      techStack: data.techStack ?? current.techStack,
+      integrations: data.integrations ?? current.integrations
     };
 
     return this.http.put<Project>(`${this.apiUrl}/projects/${id}`, payload).pipe(
@@ -106,6 +107,12 @@ export class ProjectService {
       map(() => true),
       catchError(() => of(false))
     ) as Observable<boolean>;
+  }
+
+  createDemoProject(): Observable<{ projectId: string; workflowId: string } | undefined> {
+    return this.http.post<{ projectId: string; workflowId: string }>(`${this.apiUrl}/demo/inventory`, {}).pipe(
+      catchError(() => of(undefined))
+    );
   }
 
   /**

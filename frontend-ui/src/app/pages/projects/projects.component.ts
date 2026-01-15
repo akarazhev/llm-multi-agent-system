@@ -139,6 +139,16 @@ export class ProjectsComponent implements OnInit {
     this.router.navigate(['/projects/new']);
   }
 
+  createDemoProject(): void {
+    this.projectService.createDemoProject().subscribe(result => {
+      if (result?.workflowId) {
+        this.router.navigate(['/workflows', result.workflowId]);
+      } else if (result?.projectId) {
+        this.router.navigate(['/projects', result.projectId]);
+      }
+    });
+  }
+
   onSearchChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchQuery = input.value;

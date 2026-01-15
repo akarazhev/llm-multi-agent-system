@@ -524,6 +524,7 @@ Comprehensive guides in the `docs/` directory:
 - **[START_HERE.md](docs/START_HERE.md)** - ⭐ Complete setup and getting started guide
 - **[LangGraph Integration](docs/LANGGRAPH_INTEGRATION.md)** - Advanced orchestration with parallel execution
 - **[Quick Start Guide](docs/QUICK_START.md)** - Get started in 5 minutes
+- **[First Project Guide (UI)](docs/PROJECT_FIRST_RUN.md)** - Create your first project in the UI
 - **[Architecture](docs/ARCHITECTURE.md)** - System design and components
 - **[Agent Specifications](docs/AGENT_SPECS.md)** - Detailed agent capabilities
 - **[Local-Only Mode](docs/LOCAL_ONLY_MODE.md)** - Privacy-first local execution

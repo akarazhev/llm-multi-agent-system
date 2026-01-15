@@ -250,6 +250,16 @@ npm start
 # Auto-reload on file changes
 ```
 
+### Settings (LLM Configuration)
+
+Open **Settings** from the gear icon in the top-right. Values are stored in the backend and used by the orchestrator.
+
+Fields:
+- LLM Base URL
+- API Key (optional)
+- Model
+- Timeout
+
 ### 2. Backend Development
 
 ```bash

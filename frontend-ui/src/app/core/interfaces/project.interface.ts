@@ -63,6 +63,7 @@ export interface JiraIntegration {
 }
 
 export interface ConfluenceIntegration {
+  url: string;
   spaceKey: string;
   connected: boolean;
   lastSync?: string;
@@ -98,4 +99,5 @@ export interface ProjectFormData {
   status: ProjectStatus;
   type: ProjectType;
   techStack: TechStack;
+  integrations?: ProjectIntegrations;
 }

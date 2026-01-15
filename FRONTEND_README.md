@@ -12,29 +12,19 @@ npm run start:mock
 
 Open `http://localhost:4200`.
 
-## Full Stack (Backend + Auth)
+## Full Stack (Docker Compose)
 
 ```bash
-# Infrastructure
-docker compose up -d
-
-# Backend
-python3.12 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn src.api.main:app --reload --port 8000
-
-# Frontend
-cd frontend-ui
-npm install
-npm start
+docker compose up -d --build
 ```
 
 Keycloak:
 - Admin: `http://localhost:8081` (admin / admin)
 - Demo user: `demo / demo`
 - Realm display name: **SDLC 2.0** (technical realm: `llm-agents`)
+
+Notes:
+- If port `4200` is busy, stop local `npm start` or change the compose port mapping.
 
 ## Documentation
 

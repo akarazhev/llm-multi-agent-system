@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { ProjectService } from '../../shared/services/project.service';
-import { ProjectFormData, ProjectType, ProjectStatus } from '../../core/interfaces/project.interface';
+import { GitIntegration, ProjectFormData, ProjectType, ProjectStatus } from '../../core/interfaces/project.interface';
 
 @Component({
   selector: 'app-project-create',
@@ -58,7 +58,7 @@ export class ProjectCreateComponent {
   frameworkOptions = ['Angular', 'React', 'Vue.js', 'Next.js', 'Express.js', 'FastAPI', 'Spring Boot', 'Django', 'Flask'];
   databaseOptions = ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'Elasticsearch', 'DynamoDB'];
   toolOptions = ['Docker', 'Kubernetes', 'Jest', 'Cypress', 'Webpack', 'Vite', 'ESLint', 'Prettier'];
-  gitPlatforms = ['github', 'gitlab', 'bitbucket'];
+  gitPlatforms: GitIntegration['platform'][] = ['github', 'gitlab', 'bitbucket'];
 
   selectedLanguages = signal<string[]>([]);
   selectedFrameworks = signal<string[]>([]);
@@ -180,7 +180,7 @@ export class ProjectCreateComponent {
 
     const gitPayload = gitUrl
       ? {
-          platform: this.integrationsForm.get('gitPlatform')?.value as string,
+          platform: this.integrationsForm.get('gitPlatform')?.value as GitIntegration['platform'],
           url: gitUrl,
           branch: (this.integrationsForm.get('gitBranch')?.value as string || 'main').trim(),
           connected: true

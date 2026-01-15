@@ -1,0 +1,32 @@
+workspace: "/app"
+
+log_level: "INFO"
+log_file: "/app/logs/agent_system.log"
+enable_structured_logging: true
+
+llm_timeout: 300
+llm_max_retries: 3
+llm_retry_initial_delay: 1.0
+llm_retry_max_delay: 60.0
+llm_circuit_breaker_threshold: 5
+llm_circuit_breaker_timeout: 60.0
+llm_stream_responses: true
+
+max_concurrent_agents: 5
+task_retry_attempts: 3
+task_timeout: 600
+
+enable_message_bus: true
+enable_task_persistence: false
+enable_metrics: true
+
+output_directory: "/app/output"
+
+database_url: "postgresql+asyncpg://postgres:password@postgres:5432/llm_agents"
+
+keycloak:
+  server_url: "http://keycloak:8081"
+  issuer_url: "http://localhost:8081"
+  realm: "llm-agents"
+  client_id: "llm-agent-ui"
+  audience: "llm-agent-api"

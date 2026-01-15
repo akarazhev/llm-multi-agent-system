@@ -12,7 +12,7 @@
 - [Overview](#-overview)
 - [Architecture](#️-architecture)
 - [Quick Start](#-quick-start)
-- [Full Stack UI (Docker + Keycloak)](#-full-stack-ui-docker--keycloak)
+- [Full Stack UI (Docker Compose)](#-full-stack-ui-docker-compose)
 - [Usage](#-usage)
 - [Workflow Types](#-workflow-types)
 - [Agent Capabilities](#-agent-capabilities)
@@ -199,29 +199,12 @@ STRUCTURED_LOGGING=true
 # See .env.example for full configuration options
 ```
 
-## 🧩 Full Stack UI (Docker + Keycloak)
+## 🧩 Full Stack UI (Docker Compose)
 
-This starts PostgreSQL + Keycloak via Docker, applies migrations, and launches backend + frontend.
+This starts PostgreSQL, Keycloak, backend, and frontend via Docker Compose.
 
 ```bash
-# 1) Start infrastructure
-docker compose up -d
-
-# 2) Backend dependencies (inside venv)
-python3.12 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# 3) Run migrations
-alembic upgrade head
-
-# 4) Start backend API
-uvicorn src.api.main:app --reload --port 8000
-
-# 5) Start frontend
-cd frontend-ui
-npm install
-npm start
+docker compose up -d --build
 ```
 
 Access:
@@ -230,7 +213,9 @@ Access:
 - Keycloak Admin: `http://localhost:8081` (admin / admin)
 - Demo user: `demo / demo`
 
-Realm display name is **SDLC 2.0** (technical realm stays `llm-agents`).
+Notes:
+- If port `4200` is busy, stop local `npm start` or change the compose port mapping.
+- Keycloak realm display name is **SDLC 2.0** (technical realm stays `llm-agents`).
 
 ## 💡 Usage
 

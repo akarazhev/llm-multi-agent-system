@@ -51,6 +51,7 @@ export const mockProjects: Project[] = [
         lastSync: '2026-01-14T00:25:00Z'
       },
       confluence: {
+        url: 'https://confluence.example.com/display/SPP',
         spaceKey: 'SPP-DOCS',
         connected: true,
         lastSync: '2026-01-13T22:00:00Z'

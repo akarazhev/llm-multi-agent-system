@@ -79,6 +79,17 @@
                   "with": "src/environments/environment.mock.ts"
                 }
               ]
+            },
+            "docker": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.docker.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -94,6 +105,9 @@
             },
             "mock": {
               "buildTarget": "llm-agent-ui:build:mock"
+            },
+            "docker": {
+              "buildTarget": "llm-agent-ui:build:docker"
             }
           },
           "defaultConfiguration": "development"

@@ -45,40 +45,40 @@ The LLM Multi-Agent System now includes a modern Angular 20 frontend with Materi
 
 ## Quick Start
 
-### 0. Start Infrastructure (Postgres + Keycloak)
+### Option A: Full Stack via Docker Compose (Recommended)
 
 ```bash
-# From project root
-docker compose up -d
+docker compose up -d --build
 ```
 
-### 1. Install Frontend Dependencies
+Access:
+- Frontend: `http://localhost:4200`
+- Backend: `http://localhost:8000`
+- Keycloak Admin: `http://localhost:8081` (admin / admin)
+- Demo user: `demo / demo`
+
+Notes:
+- If port `4200` is busy, stop local `npm start` or change the compose port mapping.
+- Realm display name is **SDLC 2.0** (technical realm stays `llm-agents`).
+
+### Option B: Local Frontend + Local Backend
 
 ```bash
+# 1) Start infrastructure
+docker compose up -d
+
+# 2) Frontend
 cd frontend-ui
 npm install
-```
-
-### 2. Start Frontend (Development)
-
-```bash
 npm start
-# Runs on http://localhost:4200
-```
 
-### 3. Start Backend API
-
-```bash
-# From project root
+# 3) Backend (inside venv)
+python3.12 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
 alembic upgrade head
 uvicorn src.api.main:app --reload --port 8000
-# Backend runs on http://localhost:8000
 ```
-
-### 4. Access Application
-
-Open browser: `http://localhost:4200`
 
 ## Features
 

@@ -22,8 +22,39 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_URL: http://localhost:8081
+      KC_HOSTNAME_STRICT: "false"
     volumes:
       - llm_agents_keycloak_data:/opt/keycloak/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: llm_agents_backend
+    ports:
+      - "8000:8000"
+    environment:
+      AGENT_CONFIG_PATH: /app/config.docker.yaml
+    depends_on:
+      - postgres
+      - keycloak
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: llm_agents_frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   llm_agents_pg_data:

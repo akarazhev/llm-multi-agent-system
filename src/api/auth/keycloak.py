@@ -14,15 +14,17 @@ class KeycloakSettings:
     server_url: str
     realm: str
     client_id: str
+    issuer_url: Optional[str] = None
     audience: Optional[str] = None
 
     @property
     def issuer(self) -> str:
-        return f"{self.server_url}/realms/{self.realm}"
+        base_url = self.issuer_url or self.server_url
+        return f"{base_url}/realms/{self.realm}"
 
     @property
     def jwks_url(self) -> str:
-        return f"{self.issuer}/protocol/openid-connect/certs"
+        return f"{self.server_url}/realms/{self.realm}/protocol/openid-connect/certs"
 
 
 class KeycloakJwksCache:
@@ -50,10 +52,17 @@ def load_keycloak_settings() -> KeycloakSettings:
     config = load_config()
     raw = config.keycloak or {}
     server_url = raw.get("server_url", "http://localhost:8081")
+    issuer_url = raw.get("issuer_url")
     realm = raw.get("realm", "llm-agents")
     client_id = raw.get("client_id", "llm-agent-ui")
     audience = raw.get("audience")
-    return KeycloakSettings(server_url=server_url, realm=realm, client_id=client_id, audience=audience)
+    return KeycloakSettings(
+        server_url=server_url,
+        issuer_url=issuer_url,
+        realm=realm,
+        client_id=client_id,
+        audience=audience,
+    )
 
 
 def extract_roles(payload: Dict[str, Any], client_id: str) -> Set[str]:

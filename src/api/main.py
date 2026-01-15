@@ -7,7 +7,7 @@ from .websocket import router as websocket_router
 
 
 def create_app() -> FastAPI:
-    settings = load_config()
+    config = load_config()
     app = FastAPI(
         title="LLM Multi-Agent System API",
         version="0.1.0",

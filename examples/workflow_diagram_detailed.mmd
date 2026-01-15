@@ -1,0 +1,62 @@
+%% Feature Development Workflow - Detailed Diagram
+%% Generated based on visualize_workflow.py for demo purposes
+
+flowchart TD
+    Start([Workflow Start]) --> BA["`**Business Analyst**
+    Requirements Analysis
+    • User stories
+    • Requirements analysis`"]
+    
+    BA --> |Output:<br/>business_analysis<br/>files_created| Arch["`**Developer**
+    Architecture Design
+    • System design
+    • Technical specifications`"]
+    
+    Arch --> |Output:<br/>architecture<br/>files_created| Impl["`**Developer**
+    Implementation
+    • Feature development
+    • Code creation`"]
+    
+    Impl --> |Output:<br/>implementation<br/>files_created| Cond{"`**Conditional Check**
+    Should Continue?
+    Check: implementation.status`"}
+    
+    Cond --> |Success| QA["`**QA Engineer**
+    Testing
+    • Test suite creation
+    • Test execution`"]
+    Cond --> |Success| DevOps["`**DevOps Engineer**
+    Infrastructure
+    • Deployment setup
+    • CI/CD configuration`"]
+    Cond --> |Failed| EndFail([❌ Workflow Failed])
+    
+    QA --> |Output:<br/>tests<br/>files_created| Join{Join Point}
+    DevOps --> |Output:<br/>infrastructure<br/>files_created| Join
+    
+    Join --> Doc["`**Technical Writer**
+    Documentation
+    • API documentation
+    • User guides
+    • Technical docs`"]
+    
+    Doc --> |Output:<br/>documentation<br/>files_created<br/>status=completed| EndSuccess([✅ Workflow Completed])
+    
+    %% Styling for better visualization
+    classDef businessAnalyst fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    classDef developer fill:#e8f5e9,stroke:#388e3c,stroke-width:3px
+    classDef qa fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    classDef devops fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
+    classDef writer fill:#fce4ec,stroke:#c2185b,stroke-width:3px
+    classDef conditional fill:#fff9c4,stroke:#f9a825,stroke-width:2px
+    classDef startEnd fill:#e0e0e0,stroke:#424242,stroke-width:2px
+    classDef join fill:#b2dfdb,stroke:#00695c,stroke-width:2px
+    
+    class BA businessAnalyst
+    class Arch,Impl developer
+    class QA qa
+    class DevOps devops
+    class Doc writer
+    class Cond conditional
+    class Start,EndSuccess,EndFail startEnd
+    class Join join

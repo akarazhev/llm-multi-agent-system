@@ -1,0 +1,106 @@
+%% System Architecture Diagram
+%% LLM Multi-Agent System - Complete Architecture
+
+graph TB
+    subgraph "Client Layer"
+        WebUI[Angular 20 Frontend<br/>Material Design 3<br/>Port: 4200]
+        CLI[CLI Interface<br/>main.py]
+        API_Client[Programmatic API<br/>Python SDK]
+    end
+
+    subgraph "API Gateway Layer"
+        FastAPI[FastAPI Backend<br/>REST API + WebSocket<br/>Port: 8000]
+        Auth[Keycloak<br/>Authentication<br/>Port: 8081]
+    end
+
+    subgraph "Orchestration Layer"
+        LangGraph[LangGraph Orchestrator<br/>State Management<br/>Workflow Execution]
+        TaskMgr[Task Manager<br/>Queue & Dependencies]
+        WorkflowEngine[Workflow Engine<br/>Templates & Execution]
+    end
+
+    subgraph "Agent Layer"
+        BA[Business Analyst Agent<br/>Requirements Analysis]
+        Dev[Developer Agent<br/>Architecture & Implementation]
+        QA[QA Engineer Agent<br/>Testing & Quality]
+        DevOps[DevOps Engineer Agent<br/>Infrastructure & CI/CD]
+        Writer[Technical Writer Agent<br/>Documentation]
+    end
+
+    subgraph "LLM Integration Layer"
+        LLM_Client[LLM Client Pool<br/>Connection Management]
+        LocalLLM[Local llama-server<br/>Devstral Model<br/>Port: 8080]
+        ExternalLLM[External LLM Providers<br/>OpenAI / Anthropic<br/>Optional]
+    end
+
+    subgraph "Data Layer"
+        PostgreSQL[(PostgreSQL 16<br/>Persistent Storage<br/>Port: 5432)]
+        ChromaDB[(ChromaDB<br/>Vector Database<br/>Embeddings)]
+        Redis[(Redis 7+<br/>Cache & Queue)]
+        Checkpoints[(Checkpoint Storage<br/>SQLite<br/>Workflow State)]
+    end
+
+    subgraph "Infrastructure"
+        Docker[Docker Compose<br/>Container Orchestration]
+        FileSystem[File System<br/>Workspace & Output]
+    end
+
+    %% Client to API connections
+    WebUI -->|REST API<br/>WebSocket| FastAPI
+    CLI -->|Direct Call| LangGraph
+    API_Client -->|Python API| LangGraph
+
+    %% API to Orchestration
+    FastAPI -->|HTTP/WS| LangGraph
+    FastAPI -->|Auth| Auth
+
+    %% Orchestration to Agents
+    LangGraph --> TaskMgr
+    LangGraph --> WorkflowEngine
+    LangGraph --> BA
+    LangGraph --> Dev
+    LangGraph --> QA
+    LangGraph --> DevOps
+    LangGraph --> Writer
+
+    %% Agents to LLM
+    BA --> LLM_Client
+    Dev --> LLM_Client
+    QA --> LLM_Client
+    DevOps --> LLM_Client
+    Writer --> LLM_Client
+
+    %% LLM Client to Providers
+    LLM_Client --> LocalLLM
+    LLM_Client -.->|Optional| ExternalLLM
+
+    %% Data connections
+    FastAPI --> PostgreSQL
+    LangGraph --> PostgreSQL
+    LangGraph --> Checkpoints
+    LangGraph --> ChromaDB
+    LangGraph --> Redis
+    LangGraph --> FileSystem
+
+    %% Infrastructure
+    Docker --> FastAPI
+    Docker --> PostgreSQL
+    Docker --> Auth
+    Docker --> WebUI
+
+    %% Styling
+    classDef frontend fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef api fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef orchestration fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef agent fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef llm fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef data fill:#e0e0e0,stroke:#424242,stroke-width:2px
+    classDef infra fill:#fff9c4,stroke:#f9a825,stroke-width:2px
+
+    class WebUI,CLI,API_Client frontend
+    class FastAPI,Auth api
+    class LangGraph,TaskMgr,WorkflowEngine orchestration
+    class BA,Dev,QA,DevOps,Writer agent
+    class LLM_Client,LocalLLM,ExternalLLM llm
+    class PostgreSQL,ChromaDB,Redis,Checkpoints,FileSystem data
+    class Docker infra

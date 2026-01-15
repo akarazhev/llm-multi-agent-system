@@ -1,0 +1,31 @@
+%% Feature Development Workflow Diagram
+%% Generated based on visualize_workflow.py
+
+graph TD
+    Start([Start]) --> BA[Business Analyst<br/>Requirements Analysis]
+    
+    BA --> |business_analysis<br/>files_created| Arch[Developer<br/>Architecture Design]
+    
+    Arch --> |architecture<br/>files_created| Impl[Developer<br/>Implementation]
+    
+    Impl --> |implementation<br/>files_created| Cond{Should Continue?<br/>Check Status}
+    
+    Cond --> |Success| QA[QA Engineer<br/>Testing]
+    Cond --> |Success| DevOps[DevOps Engineer<br/>Infrastructure]
+    Cond --> |Failed| EndFail([End - Failed])
+    
+    QA --> |tests<br/>files_created| Doc[Technical Writer<br/>Documentation]
+    DevOps --> |infrastructure<br/>files_created| Doc
+    
+    Doc --> |documentation<br/>files_created<br/>status=completed| EndSuccess([End - Completed])
+    
+    %% Styling
+    classDef agentNode fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
+    classDef conditional fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef startEnd fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+    classDef parallel fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+    
+    class BA,Arch,Impl,QA,DevOps,Doc agentNode
+    class Cond conditional
+    class Start,EndSuccess,EndFail startEnd
+    class QA,DevOps parallel

@@ -1,0 +1,62 @@
+%% Deployment Architecture Diagram
+%% Docker Compose Deployment View
+
+graph TB
+    subgraph "Docker Compose Environment"
+        subgraph "Frontend Container"
+            Frontend[Angular 20 App<br/>nginx<br/>Port: 4200]
+        end
+
+        subgraph "Backend Container"
+            Backend[FastAPI Application<br/>Python 3.12<br/>Port: 8000]
+            Orchestrator[LangGraph Orchestrator<br/>Agent Management]
+            Agents[Agent Instances<br/>BA, Dev, QA, DevOps, Writer]
+        end
+
+        subgraph "Database Container"
+            Postgres[PostgreSQL 16<br/>Port: 5432<br/>Volume: llm_agents_pg_data]
+        end
+
+        subgraph "Auth Container"
+            Keycloak[Keycloak 26.2.5<br/>Port: 8081<br/>Volume: llm_agents_keycloak_data]
+        end
+    end
+
+    subgraph "Host Machine"
+        LocalLLM[Local llama-server<br/>Devstral Model<br/>Port: 8080<br/>Not Containerized]
+        Workspace[Workspace Directory<br/>File System<br/>Mounted Volume]
+        Output[Output Directory<br/>Generated Files<br/>Mounted Volume]
+    end
+
+    subgraph "External Services"
+        ExternalLLM[External LLM APIs<br/>OpenAI / Anthropic<br/>Optional]
+    end
+
+    %% Container connections
+    Frontend -->|HTTP REST API| Backend
+    Frontend -->|WebSocket| Backend
+    Frontend -.->|OAuth 2.0| Keycloak
+
+    Backend -->|SQL Queries| Postgres
+    Backend -->|Auth Validation| Keycloak
+    Backend --> Orchestrator
+    Orchestrator --> Agents
+
+    Agents -->|HTTP API| LocalLLM
+    Agents -.->|Optional| ExternalLLM
+
+    Backend -->|Read/Write| Workspace
+    Backend -->|Write Results| Output
+    Orchestrator -->|Read/Write| Workspace
+    Orchestrator -->|Write Results| Output
+
+    %% Styling
+    classDef container fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef host fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef external fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef database fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+
+    class Frontend,Backend,Orchestrator,Agents,Keycloak container
+    class LocalLLM,Workspace,Output host
+    class ExternalLLM external
+    class Postgres database

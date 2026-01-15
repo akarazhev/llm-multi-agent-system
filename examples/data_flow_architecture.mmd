@@ -1,0 +1,47 @@
+%% Data Flow Architecture Diagram
+%% Shows how data moves through the system during workflow execution
+
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant API
+    participant Orchestrator
+    participant Agent
+    participant LLM
+    participant Database
+    participant FileSystem
+
+    User->>Frontend: Submit Requirement
+    Frontend->>API: POST /api/workflows
+    API->>Orchestrator: Create Workflow
+    Orchestrator->>Database: Save Workflow State
+    Database-->>Orchestrator: Workflow ID
+    
+    loop For Each Workflow Step
+        Orchestrator->>Database: Check Dependencies
+        Database-->>Orchestrator: Dependencies Met
+        
+        Orchestrator->>Agent: Assign Task
+        Agent->>FileSystem: Read Context Files
+        FileSystem-->>Agent: File Contents
+        
+        Agent->>LLM: Send Prompt + Context
+        LLM-->>Agent: Generated Response
+        
+        Agent->>FileSystem: Parse & Write Files
+        FileSystem-->>Agent: Files Created
+        
+        Agent->>Database: Save Task Result
+        Agent-->>Orchestrator: Task Complete
+        
+        Orchestrator->>Database: Update Workflow State
+        Orchestrator->>API: Progress Update
+        API->>Frontend: WebSocket Event
+        Frontend->>User: Show Progress
+    end
+    
+    Orchestrator->>Database: Mark Workflow Complete
+    Orchestrator->>FileSystem: Save Final Results
+    Orchestrator->>API: Workflow Complete
+    API->>Frontend: Final Status
+    Frontend->>User: Display Results

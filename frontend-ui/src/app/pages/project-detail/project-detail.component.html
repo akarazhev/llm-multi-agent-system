@@ -159,41 +159,41 @@
                 <mat-card-title>Technology Stack</mat-card-title>
               </mat-card-header>
               <mat-card-content>
-                @if (project()!.techStack.languages.length > 0) {
+                @if (techStack().languages.length > 0) {
                   <div class="tech-section">
                     <h4>Languages</h4>
                     <div class="tech-chips">
-                      @for (lang of project()!.techStack.languages; track lang) {
+                      @for (lang of techStack().languages; track lang) {
                         <mat-chip>{{ lang }}</mat-chip>
                       }
                     </div>
                   </div>
                 }
-                @if (project()!.techStack.frameworks.length > 0) {
+                @if (techStack().frameworks.length > 0) {
                   <div class="tech-section">
                     <h4>Frameworks</h4>
                     <div class="tech-chips">
-                      @for (fw of project()!.techStack.frameworks; track fw) {
+                      @for (fw of techStack().frameworks; track fw) {
                         <mat-chip>{{ fw }}</mat-chip>
                       }
                     </div>
                   </div>
                 }
-                @if (project()!.techStack.databases.length > 0) {
+                @if (techStack().databases.length > 0) {
                   <div class="tech-section">
                     <h4>Databases</h4>
                     <div class="tech-chips">
-                      @for (db of project()!.techStack.databases; track db) {
+                      @for (db of techStack().databases; track db) {
                         <mat-chip>{{ db }}</mat-chip>
                       }
                     </div>
                   </div>
                 }
-                @if (project()!.techStack.tools.length > 0) {
+                @if (techStack().tools.length > 0) {
                   <div class="tech-section">
                     <h4>Tools</h4>
                     <div class="tech-chips">
-                      @for (tool of project()!.techStack.tools; track tool) {
+                      @for (tool of techStack().tools; track tool) {
                         <mat-chip>{{ tool }}</mat-chip>
                       }
                     </div>

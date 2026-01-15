@@ -1,5 +1,7 @@
+from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -89,14 +91,14 @@ class WorkflowArtifact(BaseModel):
 
 class Workflow(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    workflow_id: str
+    workflow_id: UUID
     name: str
     description: str
     workflow_type: WorkflowType
     requirement: str
     status: WorkflowStatus
-    started_at: str
-    completed_at: Optional[str] = None
+    started_at: datetime
+    completed_at: Optional[datetime] = None
     duration: Optional[int] = None
     current_step: Optional[str] = None
     completed_steps: List[str]
@@ -104,7 +106,7 @@ class Workflow(BaseModel):
     progress_percentage: int
     files_created: List[str]
     errors: List[WorkflowError]
-    project_id: Optional[str] = None
+    project_id: Optional[UUID] = None
     assigned_agents: List[str]
     created_by: str
     tags: List[str]

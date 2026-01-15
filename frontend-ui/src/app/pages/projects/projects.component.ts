@@ -104,15 +104,17 @@ export class ProjectsComponent implements OnInit {
 
   getTechStackDisplay(project: Project): string[] {
     const stack: string[] = [];
-    
-    if (project.techStack.languages.length > 0) {
-      stack.push(...project.techStack.languages.slice(0, 3));
+
+    const techStack = project.techStack ?? { languages: [], frameworks: [], databases: [], tools: [] };
+
+    if (techStack.languages.length > 0) {
+      stack.push(...techStack.languages.slice(0, 3));
     }
-    
-    if (project.techStack.frameworks.length > 0 && stack.length < 3) {
-      stack.push(...project.techStack.frameworks.slice(0, 3 - stack.length));
+
+    if (techStack.frameworks.length > 0 && stack.length < 3) {
+      stack.push(...techStack.frameworks.slice(0, 3 - stack.length));
     }
-    
+
     return stack;
   }
 

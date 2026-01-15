@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -25,7 +27,7 @@ class AgentMetrics(BaseModel):
 
 class Agent(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    agent_id: str
+    agent_id: UUID
     name: str
     role: str
     status: str
@@ -35,8 +37,8 @@ class Agent(BaseModel):
     completed_tasks: int
     failed_tasks: int
     avg_task_duration: Optional[float] = None
-    created_at: str
-    last_active: Optional[str] = None
+    created_at: datetime
+    last_active: Optional[datetime] = None
     configuration: AgentConfiguration
     metrics: AgentMetrics
     assigned_projects: Optional[List[str]] = None

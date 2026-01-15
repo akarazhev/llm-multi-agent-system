@@ -43,6 +43,7 @@ export class ProjectDetailComponent implements OnInit {
   loading = signal(true);
 
   projectExists = computed(() => !!this.project());
+  techStack = computed(() => this.project()?.techStack ?? { languages: [], frameworks: [], databases: [], tools: [] });
 
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);

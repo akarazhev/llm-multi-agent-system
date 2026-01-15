@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Dict, List, Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -50,7 +52,7 @@ class ProjectIntegrations(BaseModel):
 
 class Project(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-    id: str
+    id: UUID
     name: str
     description: str
     icon: Optional[str] = None
@@ -62,9 +64,9 @@ class Project(BaseModel):
     integrations: ProjectIntegrations
     techStack: TechStack = Field(alias="tech_stack")
     stats: ProjectStats
-    createdAt: str = Field(alias="created_at")
-    updatedAt: str = Field(alias="updated_at")
-    lastActivity: Optional[str] = Field(default=None, alias="last_activity")
+    createdAt: datetime = Field(alias="created_at")
+    updatedAt: datetime = Field(alias="updated_at")
+    lastActivity: Optional[datetime] = Field(default=None, alias="last_activity")
 
 
 class ProjectFormData(BaseModel):
